@@ -120,8 +120,8 @@ cftc/
 
 ```bash
 # 1. Clone
-git clone https://github.com/<your-user>/cftc.git
-cd cftc
+git clone https://github.com/Danylo-D87/equilibrium-cot-analyzer.git
+cd equilibrium-cot-analyzer
 
 # 2. Backend — install dependencies and run pipeline
 cd backend
@@ -271,8 +271,8 @@ cftc/
 
 ```bash
 # 1. Клонувати
-git clone https://github.com/<your-user>/cftc.git
-cd cftc
+git clone https://github.com/Danylo-D87/equilibrium-cot-analyzer.git
+cd equilibrium-cot-analyzer
 
 # 2. Бекенд — встановити залежності та запустити пайплайн
 cd backend
