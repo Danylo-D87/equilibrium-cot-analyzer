@@ -1,0 +1,41 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+venv/
+.venv/
+*.db
+*.db-journal
+pipeline.lock
+
+# === Node ===
+node_modules/
+dist/
+.vite/
+
+# === Generated data (rebuild via pipeline) ===
+frontend/public/data/*.json
+
+# === Logs ===
+backend/logs/
+*.log
+frontend/fix_log.txt
+
+# === OS ===
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === Legacy/debug scripts ===
+backend/_legacy_*
+
+# === Build ===
+*.map

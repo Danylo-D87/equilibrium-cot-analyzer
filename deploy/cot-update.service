@@ -1,0 +1,24 @@
+[Unit]
+Description=COT Data Weekly Update
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=cftc
+Group=cftc
+WorkingDirectory=/opt/cftc/backend
+ExecStart=/opt/cftc/deploy/update.sh
+TimeoutStartSec=600
+StandardOutput=append:/opt/cftc/backend/logs/systemd.log
+StandardError=append:/opt/cftc/backend/logs/systemd.log
+
+# Restart on failure with delay
+Restart=on-failure
+RestartSec=300
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/cftc
+PrivateTmp=yes

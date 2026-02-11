@@ -1,0 +1,9 @@
+# COT Auto-Update cron schedule
+# CFTC publishes data every Friday ~15:30 ET (20:30 UTC)
+# Run Saturday 00:00 UTC to ensure data is available
+
+# Weekly update
+0 0 * * 6  /opt/cftc/deploy/update.sh >> /opt/cftc/backend/logs/cron.log 2>&1
+
+# Daily health check (optional — just logs, no download)
+0 12 * * *  cd /opt/cftc/backend && /opt/cftc/venv/bin/python data_health_check.py >> /opt/cftc/backend/logs/health.log 2>&1
