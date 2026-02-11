@@ -57,7 +57,13 @@ function App() {
                 setMarkets(data);
                 const savedCode = localStorage.getItem('selectedMarket');
                 const found = savedCode && data.find(m => m.code === savedCode);
-                setSelectedMarket(found || data[0] || null);
+                if (found) {
+                    setSelectedMarket(found);
+                } else {
+                    // Default to BITCOIN (133741) for TFF, or first market
+                    const btc = reportType === 'tff' ? data.find(m => m.code === '133741') : null;
+                    setSelectedMarket(btc || data[0] || null);
+                }
             } catch (err) {
                 if (!cancelled) setError(err.message);
             } finally {
@@ -150,8 +156,8 @@ function App() {
                     <button
                         onClick={() => setActiveTab('report')}
                         className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 ${activeTab === 'report'
-                                ? 'text-[#e5e5e5]'
-                                : 'text-[#404040] hover:text-[#737373]'
+                            ? 'text-[#e5e5e5]'
+                            : 'text-[#404040] hover:text-[#737373]'
                             }`}
                     >
                         Report
@@ -160,8 +166,8 @@ function App() {
                     <button
                         onClick={() => setActiveTab('screener')}
                         className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 ${activeTab === 'screener'
-                                ? 'text-[#e5e5e5]'
-                                : 'text-[#404040] hover:text-[#737373]'
+                            ? 'text-[#e5e5e5]'
+                            : 'text-[#404040] hover:text-[#737373]'
                             }`}
                     >
                         Screener
@@ -179,8 +185,8 @@ function App() {
                             <button
                                 onClick={() => setReportType(rt.key)}
                                 className={`px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase transition-colors duration-200 rounded-sm ${reportType === rt.key
-                                        ? 'text-[#e5e5e5] bg-[#1a1a1a]'
-                                        : 'text-[#404040] hover:text-[#737373]'
+                                    ? 'text-[#e5e5e5] bg-[#1a1a1a]'
+                                    : 'text-[#404040] hover:text-[#737373]'
                                     }`}
                             >
                                 {rt.key === 'disagg' ? 'Disagg' : rt.label}
@@ -197,8 +203,8 @@ function App() {
                             <button
                                 onClick={() => setSubtype(st.key)}
                                 className={`px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase transition-colors duration-200 rounded-sm ${subtype === st.key
-                                        ? 'text-[#e5e5e5] bg-[#1a1a1a]'
-                                        : 'text-[#404040] hover:text-[#737373]'
+                                    ? 'text-[#e5e5e5] bg-[#1a1a1a]'
+                                    : 'text-[#404040] hover:text-[#737373]'
                                     }`}
                             >
                                 {st.key === 'fo' ? 'FO' : 'CO'}

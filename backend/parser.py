@@ -31,23 +31,20 @@ class Parser:
         """
         Parse current-week TXT file (NO header row).
         Column names are assigned from COLUMN_NAMES_MAP.
+        Uses csv.reader to correctly handle quoted fields (e.g. market names with commas).
         """
         col_names = COLUMN_NAMES_MAP[report_type]
 
         rows = []
-        for line in txt.strip().splitlines():
-            # Split by comma; current-week files may have trailing comma
-            values = line.split(',')
-
+        reader = csv.reader(io.StringIO(txt.strip()))
+        for values in reader:
             # Trim trailing empty values
             while values and values[-1].strip() == '':
                 values.pop()
 
             if len(values) < len(col_names):
-                # Pad with empty strings if line is too short
                 values.extend([''] * (len(col_names) - len(values)))
             elif len(values) > len(col_names):
-                # Truncate if line has extra values
                 values = values[:len(col_names)]
 
             row_dict = {}
@@ -87,7 +84,7 @@ class Parser:
                 }
 
                 for csv_col, db_col in column_map.items():
-                    raw_val = row.get(csv_col, '').strip()
+                    raw_val = row.get(csv_col, '').strip().strip('"')
                     if db_col == 'report_date':
                         result[db_col] = self._normalize_date(raw_val)
                     elif db_col in ('market_and_exchange', 'exchange_code',
