@@ -60,9 +60,10 @@ function App() {
                 if (found) {
                     setSelectedMarket(found);
                 } else {
-                    // Default to BITCOIN (133741) for TFF, or first market
-                    const btc = reportType === 'tff' ? data.find(m => m.code === '133741') : null;
-                    setSelectedMarket(btc || data[0] || null);
+                    // Default market per report type
+                    const defaults = { legacy: '099741', disagg: '088691', tff: '133741' };
+                    const def = data.find(m => m.code === defaults[reportType]);
+                    setSelectedMarket(def || data[0] || null);
                 }
             } catch (err) {
                 if (!cancelled) setError(err.message);
