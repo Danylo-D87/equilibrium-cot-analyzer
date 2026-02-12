@@ -27,10 +27,6 @@ frontend/fix_log.txt
 Thumbs.db
 Desktop.ini
 
-# === Environment secrets ===
-.env
-!deploy/.env.example
-
 # === IDE ===
 .vscode/
 .idea/

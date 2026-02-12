@@ -114,12 +114,19 @@ class COTPipeline:
                      f"force={force_reload}, skip_prices={skip_prices}")
         logger.info("=" * 70)
 
-        # Step 1: Download price data once (shared across all report types)
+        # Step 1: Download and store COT data for each report_type × subtype
+        for rt in types:
+            for st in subs:
+                try:
+                    self._process_variant(rt, st, force_reload)
+                except Exception as e:
+                    logger.error(f"[PIPELINE] Failed {rt}/{st}: {e}", exc_info=True)
+
+        # Step 2: Download price data (AFTER COT data is in DB so we know all market codes)
         price_data = {}
         if not skip_prices:
             try:
                 pd = PriceDownloader()
-                # Collect all market codes from all report types first
                 all_codes = set()
                 for rt in types:
                     for st in subs:
@@ -130,16 +137,10 @@ class COTPipeline:
                 if all_codes:
                     price_data = pd.download_all(list(all_codes))
                     logger.info(f"[PIPELINE] Downloaded prices for {len(price_data)} markets")
+                else:
+                    logger.warning("[PIPELINE] No market codes found — skipping price download")
             except Exception as e:
                 logger.warning(f"[PIPELINE] Price download failed: {e}")
-
-        # Step 2: Process each report_type × subtype
-        for rt in types:
-            for st in subs:
-                try:
-                    self._process_variant(rt, st, force_reload)
-                except Exception as e:
-                    logger.error(f"[PIPELINE] Failed {rt}/{st}: {e}", exc_info=True)
 
         # Step 3: Export all variants
         for rt in types:

@@ -10,12 +10,12 @@ NODE_VERSION="20"
 echo "=== COT Analyzer — VM Setup ==="
 
 # 1. System packages
-echo "[1/10] Installing system packages..."
+echo "[1/9] Installing system packages..."
 apt-get update -qq
 apt-get install -y -qq python3 python3-venv python3-pip nginx git curl
 
 # 2. Node.js (for frontend build)
-echo "[2/10] Installing Node.js ${NODE_VERSION}..."
+echo "[2/9] Installing Node.js ${NODE_VERSION}..."
 if ! command -v node &>/dev/null; then
     curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
     apt-get install -y -qq nodejs
@@ -23,13 +23,13 @@ fi
 echo "  Node: $(node --version), npm: $(npm --version)"
 
 # 3. Create app user
-echo "[3/10] Creating app user..."
+echo "[3/9] Creating app user..."
 if ! id "$APP_USER" &>/dev/null; then
     useradd --system --home-dir "$APP_DIR" --shell /bin/bash "$APP_USER"
 fi
 
 # 4. Setup project directory
-echo "[4/10] Setting up project..."
+echo "[4/9] Setting up project..."
 mkdir -p "$APP_DIR"
 chown "$APP_USER:$APP_USER" "$APP_DIR"
 
@@ -40,7 +40,7 @@ if [ ! -f "$APP_DIR/backend/pipeline.py" ]; then
 fi
 
 # 5. Python venv + deps
-echo "[5/10] Setting up Python environment..."
+echo "[5/9] Setting up Python environment..."
 sudo -u "$APP_USER" bash -c "
     cd $APP_DIR
     python3 -m venv venv
@@ -50,7 +50,7 @@ sudo -u "$APP_USER" bash -c "
 "
 
 # 6. Build frontend
-echo "[6/10] Building frontend..."
+echo "[6/9] Building frontend..."
 sudo -u "$APP_USER" bash -c "
     cd $APP_DIR/frontend
     npm ci --silent
@@ -58,7 +58,7 @@ sudo -u "$APP_USER" bash -c "
 "
 
 # 7. Nginx + systemd
-echo "[7/10] Configuring nginx & systemd timer..."
+echo "[7/9] Configuring nginx & systemd timer..."
 cp "$APP_DIR/deploy/nginx-cot.conf" /etc/nginx/sites-available/cot
 ln -sf /etc/nginx/sites-available/cot /etc/nginx/sites-enabled/cot
 rm -f /etc/nginx/sites-enabled/default
@@ -76,7 +76,7 @@ sudo -u "$APP_USER" mkdir -p "$APP_DIR/backend/logs"
 
 # 8. Initial data load (COT reports + prices from Yahoo Finance)
 echo ""
-echo "[8/10] Running initial data load (COT + prices)..."
+echo "[8/9] Running initial data load (COT + prices)..."
 echo "       This may take 5-15 minutes (downloading 5 years of data)..."
 echo ""
 
@@ -97,7 +97,7 @@ fi
 
 # 9. Health check & verification
 echo ""
-echo "[9/10] Verifying data & services..."
+echo "[9/9] Verifying data & services..."
 echo ""
 
 # Check JSON files were exported
@@ -137,48 +137,13 @@ systemctl list-timers --no-pager | grep -E 'cot|NEXT' || echo "         Timer no
 echo ""
 echo "=========================================="
 echo "=== Setup Complete ==="
-echo "=========================================="
+echo "========================================="
 echo ""
 echo "  📊 JSON files: $JSON_COUNT"
 echo "  🔄 Auto-update: every Saturday 00:00 UTC"
 echo "  📁 Data dir: $DATA_DIR"
 echo "  📋 Logs: $APP_DIR/backend/logs/"
 echo ""
-
-# 10. Telegram bot setup
-echo "[10/10] Setting up Telegram bot service..."
-
-cp "$APP_DIR/deploy/cot-tgbot.service" /etc/systemd/system/
-systemctl daemon-reload
-
-# Create .env file if it doesn't exist
-if [ ! -f "$APP_DIR/.env" ]; then
-    cp "$APP_DIR/deploy/.env.example" "$APP_DIR/.env" 2>/dev/null || \
-    cat > "$APP_DIR/.env" <<'ENVEOF'
-# Telegram Bot Configuration
-# Get token from @BotFather, chat ID from @userinfobot
-TG_BOT_TOKEN=
-TG_CHAT_ID=
-ANALYTICS_PORT=8700
-ENVEOF
-    chown "$APP_USER:$APP_USER" "$APP_DIR/.env"
-    chmod 600 "$APP_DIR/.env"
-    echo "  Created $APP_DIR/.env — fill in TG_BOT_TOKEN and TG_CHAT_ID!"
-fi
-
-# Check if tokens are configured
-if grep -q '^TG_BOT_TOKEN=$' "$APP_DIR/.env" 2>/dev/null; then
-    echo ""
-    echo "  ⚠️  Telegram bot NOT started — tokens not configured yet."
-    echo "  To enable:"
-    echo "    1. Get bot token from @BotFather in Telegram"
-    echo "    2. Get your chat ID from @userinfobot in Telegram"
-    echo "    3. Edit $APP_DIR/.env and set TG_BOT_TOKEN and TG_CHAT_ID"
-    echo "    4. Run: sudo systemctl enable --now cot-tgbot.service"
-else
-    systemctl enable --now cot-tgbot.service
-    echo "  ✅ Telegram bot started!"
-fi
 
 echo ""
 echo "=========================================="
@@ -187,9 +152,7 @@ echo "=========================================="
 echo ""
 echo "  Useful commands:"
 echo "    systemctl status cot-update.timer        # Timer status"
-echo "    systemctl status cot-tgbot.service       # Bot status"
 echo "    journalctl -u cot-update.service -f      # Update logs"
-echo "    journalctl -u cot-tgbot.service -f       # Bot logs"
 echo "    $APP_DIR/deploy/update.sh --force         # Force manual update"
 echo ""
 echo "  (Optional) Add domain + HTTPS:"
