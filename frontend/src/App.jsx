@@ -13,6 +13,25 @@ async function fetchJson(url) {
     return JSON.parse(text);
 }
 
+// Lightweight visit tracking — fire-and-forget on first page load
+function trackVisit() {
+    try {
+        fetch('/api/visit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                path: window.location.pathname,
+                referrer: document.referrer || '',
+            }),
+        }).catch(() => { });
+    } catch (_) { }
+}
+// Track once per session
+if (!sessionStorage.getItem('_visited')) {
+    trackVisit();
+    sessionStorage.setItem('_visited', '1');
+}
+
 const REPORT_TYPES = [
     { key: 'legacy', label: 'Legacy' },
     { key: 'disagg', label: 'Disaggregated' },
