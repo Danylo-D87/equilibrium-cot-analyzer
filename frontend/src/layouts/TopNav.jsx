@@ -29,11 +29,10 @@ export default function TopNav() {
                         <Link
                             key={item.to}
                             to={item.to}
-                            className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 rounded-sm ${
-                                isActive
+                            className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 rounded-sm ${isActive
                                     ? 'text-primary bg-surface-highlight'
                                     : 'text-muted hover:text-text-secondary'
-                            }`}
+                                }`}
                         >
                             {item.label}
                         </Link>

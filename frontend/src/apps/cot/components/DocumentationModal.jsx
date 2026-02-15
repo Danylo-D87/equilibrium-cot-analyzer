@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useEscapeKey } from '@/hooks/useEscapeKey';
+import Modal from '@/components/ui/Modal';
 
 /* =====================================================
    Bilingual content helper
@@ -99,7 +99,7 @@ const SECTIONS = {
 
 function Formula({ children }) {
     return (
-        <div className="my-3 px-4 py-3 bg-[#0a0a0a] border border-[#262626] rounded-sm font-mono text-[11.5px] text-[#a3a3a3] leading-relaxed whitespace-pre-wrap">
+        <div className="my-3 px-4 py-3 bg-surface border border-border rounded-sm font-mono text-[11.5px] text-text-secondary leading-relaxed whitespace-pre-wrap">
             {children}
         </div>
     );
@@ -107,11 +107,11 @@ function Formula({ children }) {
 
 function Tag({ color = 'emerald', children }) {
     const colors = {
-        emerald: 'bg-white/[0.05] text-[#e5e5e5] border-[#262626]',
+        emerald: 'bg-white/5 text-text-primary border-border',
         red: 'bg-red-500/10 text-red-400 border-red-500/20',
         amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-        blue: 'bg-white/[0.04] text-[#a3a3a3] border-[#262626]',
-        gray: 'bg-[#0a0a0a] text-[#525252] border-[#262626]',
+        blue: 'bg-white/[0.04] text-text-secondary border-border',
+        gray: 'bg-surface text-muted border-border',
         green: 'bg-green-500/10 text-green-400 border-green-500/20',
         purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
     };
@@ -124,8 +124,8 @@ function Tag({ color = 'emerald', children }) {
 
 function Note({ children }) {
     return (
-        <div className="my-4 px-4 py-3 bg-[#0a0a0a] border-l-2 border-[#404040] rounded-r-sm text-[11.5px] text-[#a3a3a3] leading-relaxed">
-            <span className="text-[#e5e5e5] font-semibold mr-1.5">📌</span>
+        <div className="my-4 px-4 py-3 bg-surface border-l-2 border-border-hover rounded-r-sm text-[11.5px] text-text-secondary leading-relaxed">
+            <span className="text-text-primary font-semibold mr-1.5">📌</span>
             {children}
         </div>
     );
@@ -136,8 +136,8 @@ function InfoTable({ rows }) {
         <div className="my-4 space-y-2 text-[11.5px]">
             {rows.map((r, i) => (
                 <div key={i} className="flex gap-3">
-                    <span className="text-[#525252] min-w-[140px] flex-shrink-0">{r[0]}</span>
-                    <span className="text-[#e5e5e5]">{r[1]}</span>
+                    <span className="text-muted min-w-[140px] flex-shrink-0">{r[0]}</span>
+                    <span className="text-text-primary">{r[1]}</span>
                 </div>
             ))}
         </div>
@@ -146,12 +146,12 @@ function InfoTable({ rows }) {
 
 function ParticipantCard({ name, tag, tagColor, description }) {
     return (
-        <div className="px-4 py-3 bg-white/[0.02] border border-[#262626] rounded-sm mb-3">
+        <div className="px-4 py-3 bg-white/[0.02] border border-border rounded-sm mb-3">
             <div className="flex items-center gap-2 mb-2">
                 <Tag color={tagColor}>{tag}</Tag>
-                <span className="text-[#e5e5e5] font-semibold text-[12px]">{name}</span>
+                <span className="text-text-primary font-semibold text-[12px]">{name}</span>
             </div>
-            <div className="text-[11.5px] text-[#a3a3a3] leading-relaxed">{description}</div>
+            <div className="text-[11.5px] text-text-secondary leading-relaxed">{description}</div>
         </div>
     );
 }
@@ -1105,8 +1105,6 @@ export default function DocumentationModal({ isOpen, onClose }) {
         try { localStorage.setItem('docLang', lang); } catch { }
     }, [lang]);
 
-    useEscapeKey(onClose, isOpen);
-
     // Scroll spy
     useEffect(() => {
         if (!isOpen || !contentRef.current) return;
@@ -1126,8 +1124,6 @@ export default function DocumentationModal({ isOpen, onClose }) {
         container.addEventListener('scroll', handleScroll, { passive: true });
         return () => container.removeEventListener('scroll', handleScroll);
     }, [isOpen, activeSection]);
-
-    if (!isOpen) return null;
 
     const sectionBuilder = SECTIONS[docTab];
     const currentSections = sectionBuilder ? sectionBuilder(lang) : [];
@@ -1151,39 +1147,27 @@ export default function DocumentationModal({ isOpen, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/75 backdrop-blur-md"
-                onClick={onClose}
-                style={{ animation: 'modalFadeIn 0.2s ease-out' }}
-            />
-
-            {/* Modal */}
-            <div
-                className="relative w-[90vw] max-w-[1100px] h-[85vh] bg-[#0a0a0a] border border-[#262626] rounded-sm shadow-2xl shadow-black/60 flex overflow-hidden"
-                style={{ animation: 'modalSlideIn 0.25s ease-out' }}
-            >
+        <Modal isOpen={isOpen} onClose={onClose} size="lg" backdropBlur="md">
                 {/* ─── Left sidebar ─── */}
-                <nav className="w-[250px] flex-shrink-0 border-r border-[#262626] flex flex-col bg-[#050505]">
-                    <div className="px-5 py-5 border-b border-[#262626]">
+                <nav className="w-[250px] flex-shrink-0 border-r border-border flex flex-col bg-background">
+                    <div className="px-5 py-5 border-b border-border">
                         <h2 className="text-[13px] font-bold tracking-widest text-white uppercase">
                             {T.docTitle[lang]}
                         </h2>
-                        <p className="text-[10px] text-[#525252] mt-1 tracking-wider uppercase">
+                        <p className="text-[10px] text-muted mt-1 tracking-wider uppercase">
                             {T.docSubtitle[lang]}
                         </p>
                     </div>
 
                     {/* Doc Tab Switcher */}
-                    <div className="px-3 py-3 border-b border-[#262626] flex gap-1">
+                    <div className="px-3 py-3 border-b border-border flex gap-1">
                         {['report', 'charts', 'screener'].map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => switchDocTab(tab)}
                                 className={`flex-1 px-2 py-1.5 rounded-sm text-[10px] font-semibold tracking-widest uppercase transition-all duration-200 ${docTab === tab
-                                    ? 'bg-[#e5e5e5] text-black'
-                                    : 'text-[#525252] hover:text-[#a3a3a3] hover:bg-[#121212]'
+                                    ? 'bg-text-primary text-black'
+                                    : 'text-muted hover:text-text-secondary hover:bg-surface-hover'
                                     }`}
                             >
                                 {tab === 'report' ? T.tabReport[lang] : tab === 'charts' ? T.tabCharts[lang] : T.tabScreener[lang]}
@@ -1201,8 +1185,8 @@ export default function DocumentationModal({ isOpen, onClose }) {
                                         if (section.children) toggleGroup(section.id);
                                     }}
                                     className={`w-full text-left px-5 py-2 text-[11px] flex items-center gap-2.5 transition-all duration-150 ${activeSection === section.id
-                                        ? 'text-white bg-[#121212] border-r-2 border-[#e5e5e5]'
-                                        : 'text-[#525252] hover:text-[#a3a3a3] hover:bg-[#121212]'
+                                        ? 'text-white bg-surface-hover border-r-2 border-text-primary'
+                                        : 'text-muted hover:text-text-secondary hover:bg-surface-hover'
                                         }`}
                                 >
                                     <span className="text-[9px] opacity-60">{section.icon}</span>
@@ -1212,14 +1196,14 @@ export default function DocumentationModal({ isOpen, onClose }) {
                                     )}
                                 </button>
                                 {section.children && expandedGroups[section.id] && (
-                                    <div className="ml-7 border-l border-[#262626]">
+                                    <div className="ml-7 border-l border-border">
                                         {section.children.map(child => (
                                             <button
                                                 key={child.id}
                                                 onClick={() => scrollTo(child.id)}
                                                 className={`w-full text-left px-3 py-1.5 text-[10px] transition-colors ${activeSection === child.id
                                                     ? 'text-white font-medium'
-                                                    : 'text-[#525252] hover:text-[#a3a3a3]'
+                                                    : 'text-muted hover:text-text-secondary'
                                                     }`}
                                             >
                                                 {child.title}
@@ -1235,18 +1219,18 @@ export default function DocumentationModal({ isOpen, onClose }) {
                 {/* ─── Right content area ─── */}
                 <div className="flex-1 flex flex-col min-w-0">
                     {/* Header bar */}
-                    <div className="flex-shrink-0 h-12 border-b border-[#262626] flex items-center justify-between px-6 bg-[#0a0a0a]">
-                        <span className="text-[11px] text-[#525252] tracking-wider font-medium uppercase">
+                    <div className="flex-shrink-0 h-12 border-b border-border flex items-center justify-between px-6 bg-surface">
+                        <span className="text-[11px] text-muted tracking-wider font-medium uppercase">
                             {T.headerLabel[lang]}
                         </span>
                         <div className="flex items-center gap-3">
                             {/* Language toggle */}
-                            <div className="flex items-center gap-0.5 bg-[#050505] border border-[#262626] rounded-sm p-0.5">
+                            <div className="flex items-center gap-0.5 bg-background border border-border rounded-sm p-0.5">
                                 <button
                                     onClick={() => setLang('ua')}
                                     className={`px-2.5 py-1 rounded-sm text-[10px] font-bold tracking-wider transition-all duration-200 ${lang === 'ua'
-                                        ? 'bg-[#e5e5e5] text-black'
-                                        : 'text-[#525252] hover:text-[#a3a3a3]'
+                                        ? 'bg-text-primary text-black'
+                                        : 'text-muted hover:text-text-secondary'
                                         }`}
                                 >
                                     UA
@@ -1254,8 +1238,8 @@ export default function DocumentationModal({ isOpen, onClose }) {
                                 <button
                                     onClick={() => setLang('en')}
                                     className={`px-2.5 py-1 rounded-sm text-[10px] font-bold tracking-wider transition-all duration-200 ${lang === 'en'
-                                        ? 'bg-[#e5e5e5] text-black'
-                                        : 'text-[#525252] hover:text-[#a3a3a3]'
+                                        ? 'bg-text-primary text-black'
+                                        : 'text-muted hover:text-text-secondary'
                                         }`}
                                 >
                                     EN
@@ -1264,7 +1248,7 @@ export default function DocumentationModal({ isOpen, onClose }) {
                             {/* Close */}
                             <button
                                 onClick={onClose}
-                                className="w-8 h-8 flex items-center justify-center rounded-sm text-[#525252] hover:text-white hover:bg-[#121212] border border-transparent hover:border-[#262626] transition-all duration-200"
+                                className="w-8 h-8 flex items-center justify-center rounded-sm text-muted hover:text-white hover:bg-surface-hover border border-transparent hover:border-border transition-all duration-200"
                                 title={T.closeTitle[lang]}
                             >
                                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -1281,7 +1265,6 @@ export default function DocumentationModal({ isOpen, onClose }) {
                         {docTab === 'charts' && <ChartsDocContent lang={lang} />}
                     </div>
                 </div>
-            </div>
-        </div>
+        </Modal>
     );
 }

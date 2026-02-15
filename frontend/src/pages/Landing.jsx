@@ -21,19 +21,17 @@ const APPS = [
 function AppCard({ app }) {
     const content = (
         <div
-            className={`group relative rounded-lg border p-6 transition-all duration-300 ${
-                app.ready
+            className={`group relative rounded-lg border p-6 transition-all duration-300 ${app.ready
                     ? 'border-border bg-surface hover:border-border-hover hover:bg-surface-hover cursor-pointer'
                     : 'border-border-subtle bg-surface opacity-50 cursor-default'
-            }`}
+                }`}
         >
             {/* Icon area */}
             <div
-                className={`w-10 h-10 rounded-md flex items-center justify-center mb-4 ${
-                    app.ready
+                className={`w-10 h-10 rounded-md flex items-center justify-center mb-4 ${app.ready
                         ? 'bg-surface-highlight text-text-secondary group-hover:text-primary transition-colors duration-300'
                         : 'bg-surface-hover text-muted'
-                }`}
+                    }`}
             >
                 {app.key === 'cot' ? (
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
