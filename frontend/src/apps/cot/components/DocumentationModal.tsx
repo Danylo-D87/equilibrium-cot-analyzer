@@ -68,6 +68,7 @@ export default function DocumentationModal({ isOpen, onClose }: DocumentationMod
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="lg" backdropBlur="md">
+            <div className="flex flex-row h-full min-h-0">
             {/* ─── Left sidebar ─── */}
             <nav className="w-[250px] flex-shrink-0 border-r border-border flex flex-col bg-background">
                 <div className="px-5 py-5 border-b border-border">
@@ -184,6 +185,7 @@ export default function DocumentationModal({ isOpen, onClose }: DocumentationMod
                     {docTab === 'screener' && <ScreenerDocContent lang={lang} />}
                     {docTab === 'charts' && <ChartsDocContent lang={lang} />}
                 </div>
+            </div>
             </div>
         </Modal>
     );
