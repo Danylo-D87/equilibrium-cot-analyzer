@@ -12,10 +12,10 @@ export default function Spinner({ size = 6, message }: SpinnerProps) {
     return (
         <div className="flex items-center justify-center gap-3">
             <div
-                className={`animate-spin rounded-full border-t-2 border-b-2 border-[#e5e5e5]`}
+                className={`animate-spin rounded-full border-t-2 border-b-2 border-primary`}
                 style={{ width: `${size * 4}px`, height: `${size * 4}px` }}
             />
-            {message && <span className="text-[#525252] text-xs">{message}</span>}
+            {message && <span className="text-muted text-xs">{message}</span>}
         </div>
     );
 }

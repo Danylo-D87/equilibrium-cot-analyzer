@@ -36,12 +36,12 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
             return (
                 <div className="flex flex-col items-center justify-center p-8 text-center gap-3">
                     <div className="text-red-400 text-lg font-semibold">Something went wrong</div>
-                    <div className="text-[#525252] text-xs max-w-md">
+                    <div className="text-muted text-xs max-w-md">
                         {this.state.error?.message || 'An unexpected error occurred.'}
                     </div>
                     <button
                         onClick={() => this.setState({ hasError: false, error: null })}
-                        className="mt-2 px-4 py-1.5 text-xs bg-[#1a1a1a] border border-[#333] rounded hover:bg-[#252525] text-[#a3a3a3] transition-colors"
+                        className="mt-2 px-4 py-1.5 text-xs bg-border-subtle border border-border rounded hover:bg-surface-hover text-text-secondary transition-colors"
                     >
                         Try again
                     </button>

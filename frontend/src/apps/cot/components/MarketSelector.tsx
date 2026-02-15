@@ -175,7 +175,7 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
 
     // Search icon
     const SearchIcon = () => (
-        <svg className="w-3.5 h-3.5 text-[#525252]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-3.5 h-3.5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
     );
@@ -199,8 +199,8 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                     onKeyDown={handleKeyDown}
                     className="
                         h-9 pl-10 pr-3
-                        bg-[#0a0a0a] border rounded-sm
-                        text-[12px] text-[#e5e5e5] placeholder-[#525252]
+                        bg-surface border rounded-sm
+                        text-[12px] text-primary placeholder-muted
                         focus:outline-none
                         transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
                     "
@@ -214,7 +214,7 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                 {/* Selected market exchange badge */}
                 {!open && selected?.exchange_code && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <span className="text-[9px] font-bold tracking-[0.15em] text-[#525252] uppercase">
+                        <span className="text-[9px] font-bold tracking-[0.15em] text-muted uppercase">
                             {selected.exchange_code}
                         </span>
                     </div>
@@ -226,7 +226,7 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                 <div
                     className="
                         absolute top-full left-0 mt-2
-                        bg-[#0a0a0a] border border-[#262626] rounded-sm
+                        bg-surface border border-border rounded-sm
                         shadow-2xl shadow-black/70
                         max-h-[420px] overflow-hidden
                         z-50
@@ -238,7 +238,7 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                 >
                     {/* Category pills navigation */}
                     {!query && grouped.length > 1 && (
-                        <div className="flex-shrink-0 border-b border-[#262626] px-2.5 py-2 flex gap-1 flex-wrap bg-[#0a0a0a]">
+                        <div className="flex-shrink-0 border-b border-border px-2.5 py-2 flex gap-1 flex-wrap bg-surface">
                             {grouped.map(g => {
                                 const isActive = activeCategory === g.category;
                                 return (
@@ -249,8 +249,8 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                                             px-2 py-0.5 rounded-sm text-[9px] font-semibold tracking-wider uppercase
                                             transition-all duration-200
                                             ${isActive
-                                                ? 'bg-[#e5e5e5] text-black'
-                                                : 'text-[#525252] hover:text-[#a3a3a3] hover:bg-[#121212] border border-[#262626]'
+                                                ? 'bg-primary text-black'
+                                                : 'text-muted hover:text-text-secondary hover:bg-surface-hover border border-border'
                                             }
                                         `}
                                     >
@@ -269,8 +269,8 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                     >
                         {flat.length === 0 ? (
                             <div className="px-4 py-10 text-center">
-                                <p className="text-[#525252] text-xs font-medium uppercase tracking-wider">No markets found</p>
-                                <p className="text-[#262626] text-[10px] mt-1.5 uppercase tracking-wide">Try a different search</p>
+                                <p className="text-muted text-xs font-medium uppercase tracking-wider">No markets found</p>
+                                <p className="text-border text-[10px] mt-1.5 uppercase tracking-wide">Try a different search</p>
                             </div>
                         ) : (
                             grouped.map(group => (
@@ -278,12 +278,12 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                                     {/* Category header */}
                                     <div
                                         ref={el => { categoryRefs.current[group.category] = el; }}
-                                        className="sticky top-0 z-10 px-3.5 py-2 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-[#262626]/50"
+                                        className="sticky top-0 z-10 px-3.5 py-2 bg-surface/95 backdrop-blur-sm border-b border-border/50"
                                     >
-                                        <span className="text-[9px] font-bold tracking-[0.15em] text-[#525252] uppercase">
+                                        <span className="text-[9px] font-bold tracking-[0.15em] text-muted uppercase">
                                             {group.display}
                                         </span>
-                                        <span className="text-[9px] text-[#262626] ml-2 font-medium">{group.markets.length}</span>
+                                        <span className="text-[9px] text-border ml-2 font-medium">{group.markets.length}</span>
                                     </div>
 
                                     {/* Market items */}
@@ -302,28 +302,28 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                                                     w-full text-left px-3.5 py-[7px] flex items-center gap-2.5
                                                     transition-all duration-200 cursor-pointer
                                                     ${isActive
-                                                        ? 'bg-[#121212]'
-                                                        : 'hover:bg-[#121212]/60'
+                                                        ? 'bg-surface-hover'
+                                                        : 'hover:bg-surface-hover/60'
                                                     }
                                                 `}
                                             >
                                                 {/* Selected dot */}
                                                 <div className="w-1.5 flex-shrink-0">
                                                     {isSelected && (
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-[#e5e5e5]" />
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                                                     )}
                                                 </div>
 
                                                 {/* Name */}
                                                 <span className={`
                                                     text-[11.5px] truncate flex-1
-                                                    ${isSelected ? 'text-white font-medium' : 'text-[#a3a3a3]'}
+                                                    ${isSelected ? 'text-white font-medium' : 'text-text-secondary'}
                                                 `}>
                                                     {m.name.split(' - ')[0]}
                                                 </span>
 
                                                 {/* Exchange tag */}
-                                                <span className="text-[9px] text-[#525252] flex-shrink-0 font-bold tracking-[0.15em] uppercase px-1.5 py-0.5 rounded-[2px] bg-[#0a0a0a] border border-[#262626]">
+                                                <span className="text-[9px] text-muted flex-shrink-0 font-bold tracking-[0.15em] uppercase px-1.5 py-0.5 rounded-[2px] bg-surface border border-border">
                                                     {m.exchange_code || m.exchange}
                                                 </span>
                                             </button>

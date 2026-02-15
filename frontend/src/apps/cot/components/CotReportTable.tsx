@@ -1,7 +1,10 @@
-﻿import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { formatNumber, formatPct, formatDate } from '../utils/formatters';
 import { GREEN, RED, getColorBySign, getColorMono, getColorCentered, getColorCrowded } from '../utils/colors';
 import type { MarketData, Group, Week, CrowdedLevel } from '../types';
+
+const ROW_HEIGHT = 22;
 
 interface CotReportTableProps {
     data: MarketData | null;
@@ -157,8 +160,16 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
     }, [COLUMN_DEFS]);
 
     if (!weeks.length) {
-        return <div className="text-[#525252] text-center py-12 text-xs uppercase tracking-widest font-medium">No data available</div>;
+        return <div className="text-muted text-center py-12 text-xs uppercase tracking-widest font-medium">No data available</div>;
     }
+
+    // Virtualizer for data rows
+    const rowVirtualizer = useVirtualizer({
+        count: weeks.length,
+        getScrollElement: () => containerRef.current,
+        estimateSize: () => ROW_HEIGHT,
+        overscan: 25,
+    });
 
     // Stat rows order
     const statRows = [
@@ -181,14 +192,14 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
             >
                 {/* Header Level 1 — Group names */}
                 <thead className="sticky top-0 z-20">
-                    <tr className="bg-[#0a0a0a]">
+                    <tr className="bg-surface">
                         {groupHeaders.map(g => {
                             const isMarketName = g.name === 'date';
                             return (
                                 <th
                                     key={g.key}
                                     colSpan={g.span}
-                                    className={`px-1 py-2 text-[10px] font-bold text-[#525252] border-b border-r border-[#262626]/50 text-center uppercase tracking-widest bg-[#0a0a0a] ${isMarketName ? 'overflow-hidden text-ellipsis' : 'whitespace-nowrap'}`}
+                                    className={`px-1 py-2 text-[10px] font-bold text-muted border-b border-r border-border/50 text-center uppercase tracking-widest bg-surface ${isMarketName ? 'overflow-hidden text-ellipsis' : 'whitespace-nowrap'}`}
                                     style={isMarketName ? { maxWidth: 80, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : undefined}
                                     title={isMarketName ? (market?.name ? market.name.split(' - ')[0] : '') : undefined}
                                 >
@@ -199,11 +210,11 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
                     </tr>
 
                     {/* Header Level 2 — Column names */}
-                    <tr className="bg-[#080808]">
+                    <tr className="bg-surface">
                         {COLUMN_DEFS.map(col => (
                             <th
                                 key={col.key}
-                                className={`px-1 py-1.5 text-[10px] font-bold text-[#525252] border-b border-r border-[#262626]/50 text-center whitespace-nowrap uppercase tracking-wider bg-[#080808] ${col.sticky ? 'sticky left-0 z-30 bg-[#080808]' : ''
+                                className={`px-1 py-1.5 text-[10px] font-bold text-muted border-b border-r border-border/50 text-center whitespace-nowrap uppercase tracking-wider bg-surface ${col.sticky ? 'sticky left-0 z-30 bg-surface' : ''
                                     }`}
                                 style={{ width: col.width, minWidth: col.width, maxWidth: col.sticky ? col.width : undefined }}
                             >
@@ -220,11 +231,11 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
                         const rowData = statsRecord?.[sr.key];
                         if (!rowData) return null;
                         return (
-                            <tr key={sr.key} className="bg-[#080808] border-b border-[#262626]/40">
+                            <tr key={sr.key} className="bg-surface border-b border-border/40">
                                 {COLUMN_DEFS.map(col => (
                                     <td
                                         key={col.key}
-                                        className={`px-1 py-1 text-right text-[#525252] font-medium border-r border-[#262626]/30 whitespace-nowrap ${col.sticky ? 'sticky left-0 z-10 bg-[#080808] text-left font-bold text-[#a3a3a3] uppercase tracking-wider' : ''
+                                        className={`px-1 py-1 text-right text-muted font-medium border-r border-border/30 whitespace-nowrap ${col.sticky ? 'sticky left-0 z-10 bg-surface text-left font-bold text-text-secondary uppercase tracking-wider' : ''
                                             }`}
                                         style={{ width: col.width, minWidth: col.width, maxWidth: col.sticky ? col.width : undefined }}
                                     >
@@ -242,14 +253,21 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
 
                     {/* Separator */}
                     <tr>
-                        <td colSpan={COLUMN_DEFS.length} className="h-px bg-[#e5e5e5]/20" />
+                        <td colSpan={COLUMN_DEFS.length} className="h-px bg-primary/20" />
                     </tr>
 
-                    {/* Data rows (newest first) */}
-                    {weeks.map((week, i) => (
+                    {/* Data rows (virtualized, newest first) */}
+                    {rowVirtualizer.getVirtualItems()[0]?.start > 0 && (
+                        <tr><td colSpan={COLUMN_DEFS.length} style={{ height: rowVirtualizer.getVirtualItems()[0].start, padding: 0, border: 'none' }} /></tr>
+                    )}
+                    {rowVirtualizer.getVirtualItems().map(virtualRow => {
+                        const week = weeks[virtualRow.index];
+                        return (
                         <tr
-                            key={week.date || i}
-                            className="border-b border-[#262626]/30 hover:bg-[#121212]/50 transition-colors duration-200"
+                            key={week.date || virtualRow.index}
+                            data-index={virtualRow.index}
+                            ref={rowVirtualizer.measureElement}
+                            className="border-b border-border/30 hover:bg-surface-hover/50 transition-colors duration-200"
                         >
                             {COLUMN_DEFS.map(col => {
                                 const raw = week[col.key];
@@ -258,7 +276,7 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
                                 return (
                                     <td
                                         key={col.key}
-                                        className={`px-1 py-0.5 text-right whitespace-nowrap border-r border-[#262626]/30 ${col.sticky ? 'sticky left-0 z-10 bg-[#050505] text-left text-[#a3a3a3]' : ''
+                                        className={`px-1 py-0.5 text-right whitespace-nowrap border-r border-border/30 ${col.sticky ? 'sticky left-0 z-10 bg-background text-left text-text-secondary' : ''
                                             }`}
                                         style={{
                                             width: col.width,
@@ -272,7 +290,14 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
                                 );
                             })}
                         </tr>
-                    ))}
+                        );
+                    })}
+                    {(() => {
+                        const items = rowVirtualizer.getVirtualItems();
+                        const last = items[items.length - 1];
+                        const pad = last ? rowVirtualizer.getTotalSize() - last.end : 0;
+                        return pad > 0 ? <tr><td colSpan={COLUMN_DEFS.length} style={{ height: pad, padding: 0, border: 'none' }} /></tr> : null;
+                    })()}
                 </tbody>
             </table>
         </div>
@@ -319,13 +344,13 @@ function renderCellContent(raw: unknown, col: ColumnDef, _week: Week): React.Rea
 
     // Date column
     if (type === 'date') {
-        return <span className="text-[#a3a3a3] font-mono">{formatDate(raw as string | null | undefined)}</span>;
+        return <span className="text-text-secondary font-mono">{formatDate(raw as string | null | undefined)}</span>;
     }
 
     // Crowded level with BUY/SELL overlay
     if (type === 'crowded') {
         const crowded = raw as CrowdedLevel | null | undefined;
-        if (!crowded || crowded.value == null) return <span className="text-[#525252]">—</span>;
+        if (!crowded || crowded.value == null) return <span className="text-muted">—</span>;
 
         const signal = crowded.signal;
         if (signal === 'BUY') {
@@ -347,13 +372,13 @@ function renderCellContent(raw: unknown, col: ColumnDef, _week: Week): React.Rea
 
     // Centered (COT Index, WCI) — just percentage
     if (type === 'centered') {
-        if (raw == null) return <span className="text-[#525252]">—</span>;
+        if (raw == null) return <span className="text-muted">—</span>;
         return <span>{formatPct(raw as number)}</span>;
     }
 
     // Percentage columns
     if (type === 'pct') {
-        if (raw == null) return <span className="text-[#525252]">—</span>;
+        if (raw == null) return <span className="text-muted">—</span>;
         return (
             <span>
                 {formatPct(raw as number)}
@@ -368,7 +393,7 @@ function renderCellContent(raw: unknown, col: ColumnDef, _week: Week): React.Rea
 
     // Change columns — with arrows
     if (type === 'change' || type === 'change_long' || type === 'change_short') {
-        if (raw == null) return <span className="text-[#525252]">—</span>;
+        if (raw == null) return <span className="text-muted">—</span>;
         return (
             <span>
                 {formatNumber(raw as number)}
@@ -379,7 +404,7 @@ function renderCellContent(raw: unknown, col: ColumnDef, _week: Week): React.Rea
 
     // Net position
     if (type === 'net') {
-        if (raw == null) return <span className="text-[#525252]">—</span>;
+        if (raw == null) return <span className="text-muted">—</span>;
         return <span>{formatNumber(raw as number)}</span>;
     }
 
