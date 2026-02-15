@@ -1,12 +1,23 @@
-# Market Analytics Platform
+# 📊 Market Analytics Platform
 
 > **CFTC Commitment of Traders data — automated pipeline, live API & interactive dashboard**
 
-🇺🇸 [English](#english) · 🇺🇦 [Українська](#українська)
+🇺🇸 [English](#-english) · 🇺🇦 [Українська](#-українська)
 
 ---
 
-<a id="english"></a>
+## 📚 Documentation / Документація
+
+| Document | Description / Опис |
+|----------|-------------------|
+| 📖 **[README.md](README.md)** | Main overview / Головний огляд (this file) |
+| 🐍 **[backend/BACKEND_README.md](backend/BACKEND_README.md)** | Backend: API, pipeline, database, configuration |
+| ⚛️ **[frontend/FRONTEND_README.md](frontend/FRONTEND_README.md)** | Frontend: components, state, routing, charts |
+| 🚀 **[deploy/DEPLOY.md](deploy/DEPLOY.md)** | Deployment: nginx, systemd, HTTPS, monitoring |
+
+---
+
+<a id="-english"></a>
 
 ## 🇺🇸 English
 
@@ -20,137 +31,168 @@ Designed as a **modular, extensible platform** — COT is the first module, with
 
 ### Features
 
-- **3 report types** — Legacy, Disaggregated, and Traders in Financial Futures (TFF)
-- **2 subtypes** — Futures Only (FO) and Futures + Options Combined (CO)
-- **500+ markets** across commodities, financials, currencies, energy, metals, agriculture
-- **Calculated indicators** — COT Index (3m / 1y / 3y), WCI, Net positions, % of OI, Crowded Level
-- **8 COT signals** — Extreme, Crossover, Momentum, Divergence, Flip, WCI, Crowding, Contrarian
-- **Interactive charts** — TradingView Lightweight Charts with price overlay (via Yahoo Finance)
-- **Multi-market screener** — heatmap with sortable columns and signal filters
-- **Bubble chart** — visualize crowding across all markets at a glance
-- **Live REST API** — FastAPI with Swagger docs, TTL cache, typed endpoints
-- **Built-in auto-updates** — APScheduler runs the pipeline every Friday at 23:00 Kyiv time
-- **Bilingual documentation** — built-in docs in English and Ukrainian
+| Category | Details |
+|----------|---------|
+| **Report Types** | Legacy, Disaggregated, Traders in Financial Futures (TFF) |
+| **Subtypes** | Futures Only (FO), Futures + Options Combined (CO) |
+| **Markets** | 500+ across commodities, financials, currencies, energy, metals, agriculture, crypto |
+| **Indicators** | COT Index (3m / 1y / 3y), WCI (26w), Net positions, % of OI, Crowded Level |
+| **COT Signals** | 8 signals — Strong Bullish, Accumulation, Floor Building, Strong Bearish, Distribution, Topping Out, Profit Taking, Liquidation |
+| **Charts** | TradingView Lightweight Charts with price overlay, Net Positions, Delta Histogram, COT Index + Price overlay |
+| **Screener** | Multi-market heatmap with sortable columns, signal & category filters |
+| **Bubble Chart** | Visualize crowding across all markets at a glance |
+| **API** | FastAPI with Swagger/ReDoc docs, TTL cache, typed endpoints |
+| **Auto-Updates** | APScheduler: COT pipeline every Friday 23:00 Kyiv, prices daily at 00:00 |
+| **Docs** | Built-in bilingual documentation (English & Ukrainian) |
 
 ### Architecture
 
 ```
-┌────────────────────────────────────────────────────┐
-│                 Backend (Python)                    │
-│                                                    │
-│  app/core/         → config, database, cache,      │
-│                      exceptions, logging, scheduler│
-│                                                    │
-│  app/modules/cot/  → downloader → parser →         │
-│                      storage (SQLite) →             │
-│                      calculator → exporter → JSON   │
-│                                                    │
-│  app/modules/prices/ → Yahoo Finance integration   │
-│                                                    │
-│  app/main.py       → FastAPI app + APScheduler     │
-│  scripts/          → CLI: server, pipeline, health │
-├────────────────────────────────────────────────────┤
-│        REST API: /api/v1/cot/* (FastAPI)           │
-├────────────────────┬───────────────────────────────┘
-                     │
-┌────────────────────▼───────────────────────────────┐
-│               Frontend (React)                      │
-│                                                     │
-│  CotReportTable — weekly data table                 │
-│  ScreenerTable  — multi-market heatmap              │
-│  ChartModal     — TradingView charts + prices       │
-│  BubbleChartModal — bubble visualization            │
-│  DocumentationModal — bilingual docs                │
-│                                                     │
-│  Vite + Tailwind CSS → dist/                        │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                    Backend (Python)                       │
+│                                                          │
+│  app/core/          → config, database (SQLite WAL),     │
+│                       cache (TTL), exceptions,           │
+│                       logging, scheduler (APScheduler)   │
+│                                                          │
+│  app/modules/cot/   → downloader → parser →              │
+│                       storage (SQLite) →                  │
+│                       calculator → exporter → JSON        │
+│                                                          │
+│  app/modules/prices/ → Yahoo Finance (100+ tickers)      │
+│                                                          │
+│  app/main.py        → FastAPI app + APScheduler          │
+│  scripts/           → CLI: server, pipeline, health      │
+├──────────────────────────────────────────────────────────┤
+│        REST API: /api/v1/cot/* (FastAPI + Swagger)       │
+├─────────────────────┬────────────────────────────────────┘
+                      │  JSON
+┌─────────────────────▼────────────────────────────────────┐
+│                   Frontend (React)                        │
+│                                                          │
+│  CotApp           → report/screener view switcher        │
+│  CotReportTable   → weekly data table with heatmaps     │
+│  ScreenerTable    → multi-market screener + filters      │
+│  ChartModal       → TradingView + Net/Delta/Indicator    │
+│  BubbleChartModal → bubble crowding visualization        │
+│  DocumentationModal → bilingual docs (UA/EN)             │
+│                                                          │
+│  Zustand + TanStack Query → state & data fetching        │
+│  Vite + Tailwind CSS → dist/                             │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ### Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Python 3.10+, FastAPI, APScheduler, SQLite, requests, yfinance, pytz |
-| Frontend | React 18, Vite, Tailwind CSS, Recharts, TradingView Lightweight Charts |
-| Deployment | nginx, systemd, uvicorn |
+| **Backend** | Python 3.10+, FastAPI, APScheduler 3.x, SQLite (WAL), requests, yfinance, pytz |
+| **Frontend** | React 18, Vite 5, TypeScript, Tailwind CSS 3, Recharts 2, TradingView Lightweight Charts, Zustand 5, TanStack Query 5, React Router 7 |
+| **Deployment** | nginx, systemd, uvicorn |
+| **Design** | Dark theme, Inter + Cinzel fonts, bronze accent palette (#c4a87c) |
 
 ### Project Structure
 
 ```
 cftc/
-├── backend/
+├── README.md                              # 📖 Main documentation (this file)
+│
+├── backend/                               # 🐍 Python backend
+│   ├── BACKEND_README.md                  # 📖 Backend documentation
+│   ├── pyproject.toml                     # Project metadata & entry points
+│   ├── requirements.txt                   # Pinned dependencies
 │   ├── app/
-│   │   ├── main.py                # FastAPI app factory + lifespan
-│   │   ├── core/                  # Shared infrastructure
-│   │   │   ├── config.py          # App settings (env-driven)
-│   │   │   ├── database.py        # SQLite connection (WAL mode)
-│   │   │   ├── cache.py           # Generic TTL cache
-│   │   │   ├── exceptions.py      # Exception hierarchy → HTTP errors
-│   │   │   ├── logging.py         # Structured logging setup
-│   │   │   └── scheduler.py       # APScheduler wrapper (pytz)
+│   │   ├── __init__.py
+│   │   ├── main.py                        # FastAPI app factory + lifespan
+│   │   ├── core/                          # Shared infrastructure
+│   │   │   ├── config.py                  # App settings (env-driven)
+│   │   │   ├── database.py                # SQLite connection (WAL mode)
+│   │   │   ├── cache.py                   # Generic TTL cache (thread-safe)
+│   │   │   ├── exceptions.py              # Exception hierarchy → HTTP errors
+│   │   │   ├── logging.py                 # Structured logging setup
+│   │   │   ├── migrations.py              # Version-based DB migrations
+│   │   │   └── scheduler.py               # APScheduler wrapper
 │   │   ├── modules/
-│   │   │   ├── cot/               # COT reports module
-│   │   │   │   ├── config.py      # COT-specific settings
-│   │   │   │   ├── constants.py   # Column mappings for 3 report types
-│   │   │   │   ├── storage.py     # SQLite data-access layer
-│   │   │   │   ├── downloader.py  # CFTC ZIP/CSV downloader
-│   │   │   │   ├── parser.py      # CSV → normalized g1-g5 rows
-│   │   │   │   ├── calculator.py  # COT Index, WCI, signals
-│   │   │   │   ├── exporter.py    # Static JSON export
-│   │   │   │   ├── pipeline.py    # Full pipeline orchestrator
-│   │   │   │   ├── service.py     # Read-only API service
-│   │   │   │   ├── router.py      # /api/v1/cot/* endpoints
-│   │   │   │   ├── dependencies.py# FastAPI DI
-│   │   │   │   └── scheduler.py   # Friday 23:00 Kyiv auto-update
-│   │   │   └── prices/            # Price data module
-│   │   │       ├── config.py      # ~60 CFTC → Yahoo ticker mappings
-│   │   │       ├── yahoo.py       # Yahoo Finance downloader
-│   │   │       └── service.py     # PriceService
+│   │   │   ├── cot/                       # 📊 COT reports module
+│   │   │   │   ├── config.py              # COT-specific settings
+│   │   │   │   ├── constants.py           # Column mappings (3 report types)
+│   │   │   │   ├── downloader.py          # CFTC ZIP/CSV downloader
+│   │   │   │   ├── parser.py              # CSV → normalized g1–g5 rows
+│   │   │   │   ├── storage.py             # SQLite data-access layer
+│   │   │   │   ├── calculator.py          # COT Index, WCI, signals
+│   │   │   │   ├── exporter.py            # Static JSON export
+│   │   │   │   ├── pipeline.py            # Full pipeline orchestrator
+│   │   │   │   ├── service.py             # Read-only API service
+│   │   │   │   ├── router.py              # /api/v1/cot/* endpoints
+│   │   │   │   ├── dependencies.py        # FastAPI dependency injection
+│   │   │   │   └── scheduler.py           # Cron jobs (Fri 23:00 + daily 00:00)
+│   │   │   └── prices/                    # 💰 Price data module
+│   │   │       ├── config.py              # 100+ CFTC → Yahoo ticker mappings
+│   │   │       ├── yahoo.py               # Yahoo Finance downloader
+│   │   │       └── service.py             # PriceService (ThreadPool, 23h cache)
 │   │   └── utils/
-│   │       └── categories.py      # Market categorization helpers
-│   ├── scripts/                   # CLI entry points
-│   │   ├── run_server.py          # Start API server
-│   │   ├── run_pipeline.py        # Run data pipeline
-│   │   ├── auto_update.py         # Cron entry point
-│   │   └── health_check.py        # Data diagnostics
-│   ├── data/                      # SQLite DB (runtime)
-│   ├── tests/                     # Test suite
-│   ├── pyproject.toml
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx
-│   │   ├── components/
-│   │   │   ├── CotReportTable.jsx
-│   │   │   ├── ScreenerTable.jsx
-│   │   │   ├── ChartModal.jsx
-│   │   │   ├── BubbleChartModal.jsx
-│   │   │   ├── MarketSelector.jsx
-│   │   │   ├── DocumentationModal.jsx
-│   │   │   └── ui/               # ErrorBoundary, Spinner
-│   │   ├── hooks/                # useEscapeKey
-│   │   └── utils/                # colors, constants, formatters
-│   ├── public/data/              # Exported JSON (not committed)
-│   ├── package.json
-│   └── vite.config.js
-├── deploy/
-│   ├── DEPLOY.md                 # VM deployment guide
-│   ├── setup-vm.sh               # One-command server setup
-│   ├── cot-api.service           # Systemd unit for FastAPI
-│   └── nginx-cot.conf            # Nginx configuration
-└── README.md
+│   │       └── categories.py              # Market categorization helpers
+│   ├── scripts/                           # CLI entry points
+│   │   ├── run_server.py                  # Start uvicorn server
+│   │   ├── run_pipeline.py                # Run data pipeline
+│   │   ├── auto_update.py                 # Cron/timer entry point
+│   │   └── health_check.py               # Data diagnostics
+│   ├── data/                              # Runtime data
+│   │   ├── app.db                         # SQLite database (generated)
+│   │   ├── ticker_map.json                # CFTC→Yahoo ticker mappings
+│   │   └── logs/                          # Log files
+│   └── tests/                             # Test suite
+│
+├── frontend/                              # ⚛️ React frontend
+│   ├── FRONTEND_README.md                 # 📖 Frontend documentation
+│   ├── package.json                       # Dependencies & scripts
+│   ├── vite.config.js                     # Vite config (proxy, aliases)
+│   ├── tsconfig.json                      # TypeScript config
+│   ├── tailwind.config.js                 # Tailwind CSS config
+│   ├── index.html                         # HTML entry point
+│   ├── public/data/                       # 📦 Exported JSON files
+│   └── src/
+│       ├── main.tsx                       # React entry point
+│       ├── App.tsx                        # Root (QueryProvider + Router)
+│       ├── router.tsx                     # Route definitions
+│       ├── index.css                      # Global styles + Tailwind
+│       ├── apps/cot/                      # COT Analyzer app
+│       │   ├── CotApp.tsx                 # Main view (tabs, selectors)
+│       │   ├── store.ts                   # Zustand store (persisted)
+│       │   └── components/                # COT-specific components
+│       │       ├── CotReportTable.tsx      # Weekly data table
+│       │       ├── ScreenerTable.tsx       # Multi-market screener
+│       │       ├── MarketSelector.tsx      # Market picker
+│       │       ├── DocumentationModal.tsx  # Docs modal
+│       │       ├── charts/                # Chart components
+│       │       └── documentation/         # Doc content
+│       ├── components/                    # Shared components
+│       │   ├── ui/                        # Badge, Button, Modal, Spinner...
+│       │   └── landing/                   # Landing page graphics
+│       ├── hooks/                         # useClickOutside, useEscapeKey...
+│       ├── layouts/                       # AppShell, TopNav
+│       ├── lib/                           # api.ts, queryClient.ts, cn.ts
+│       ├── pages/                         # Landing.tsx
+│       └── types/                         # TypeScript definitions
+│
+└── deploy/                                # 🚀 Deployment
+    ├── DEPLOY.md                          # 📖 Deployment guide
+    ├── full-setup.sh                      # Full server setup from scratch
+    ├── update-code.sh                     # Pull code + rebuild + restart
+    ├── cot-api.service                    # Systemd unit file
+    └── nginx-cot.conf                     # Nginx configuration
 ```
 
 ### Quick Start (Local Development)
 
-**Prerequisites**: Python 3.10+, Node.js 18+
+**Prerequisites:** Python 3.10+, Node.js 18+
 
 ```bash
 # 1. Clone
 git clone https://github.com/Danylo-D87/equilibrium-cot-analyzer.git
 cd equilibrium-cot-analyzer
 
-# 2. Backend — install dependencies and load data
+# 2. Backend — install & load data
 cd backend
 python -m venv venv
 venv\Scripts\activate          # Windows
@@ -158,10 +200,10 @@ venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 python scripts/run_pipeline.py --verbose
 
-# 3. Start API server (in a separate terminal)
+# 3. Start API server (separate terminal)
 python scripts/run_server.py
 
-# 4. Frontend — install and start dev server
+# 4. Frontend — install & dev server
 cd ../frontend
 npm install
 npm run dev
@@ -169,36 +211,50 @@ npm run dev
 
 Open `http://localhost:5173` — Vite proxies `/api/*` to the backend at `:8000`.
 
-### API Endpoints
+### API Overview
 
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/v1/cot/markets/{type}/{subtype}` | List all markets |
-| `GET` | `/api/v1/cot/markets/{type}/{subtype}/{code}` | Market detail + timeseries |
-| `GET` | `/api/v1/cot/screener/{type}/{subtype}` | Screener (latest analytics) |
-| `GET` | `/api/v1/cot/groups/{type}` | Group definitions |
-| `GET` | `/api/v1/cot/status` | Data freshness & scheduler status |
+| `GET` | `/api/v1/cot/markets/{type}/{subtype}/{code}` | Market detail + timeseries + prices |
+| `GET` | `/api/v1/cot/screener/{type}/{subtype}` | Screener (latest analytics per market) |
+| `GET` | `/api/v1/cot/groups/{type}` | Trader group definitions |
+| `GET` | `/api/v1/cot/status` | Data freshness, DB stats & scheduler |
 
-Swagger docs: `http://localhost:8000/api/docs`
+📝 **Swagger:** `http://localhost:8000/api/docs` · **ReDoc:** `http://localhost:8000/api/redoc`
 
-### Production Deployment
-
-See [deploy/DEPLOY.md](deploy/DEPLOY.md) for full VM deployment with nginx, systemd, and auto-updates.
+> For detailed API documentation → [backend/BACKEND_README.md](backend/BACKEND_README.md)
 
 ### Data Sources
 
 | Data | Source | Schedule |
 |------|--------|----------|
 | COT Reports | [CFTC.gov](https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm) | Weekly (Friday 15:30 ET) |
-| Price Data | [Yahoo Finance](https://finance.yahoo.com/) via `yfinance` | On pipeline run |
+| Price Data | [Yahoo Finance](https://finance.yahoo.com/) via `yfinance` | Daily at 00:00 Kyiv time |
+
+### Production Deployment
+
+See [deploy/DEPLOY.md](deploy/DEPLOY.md) for full VM deployment with nginx, systemd, and auto-updates.
+
+```
+nginx (port 80/443)
+├── /           → frontend/dist (SPA)
+├── /api/*      → proxy → FastAPI (port 8000)
+└── /data/*     → static JSON (1h cache)
+
+FastAPI backend (single worker)
+├── app.main:app         → REST API
+├── APScheduler          → Fri 23:00 COT + daily 00:00 prices
+└── SQLite (data/app.db) → 265K+ COT records
+```
 
 ### License
 
-This project is for educational and research purposes. COT data is public domain (U.S. government).
+MIT. COT data is public domain (U.S. government). Price data provided by Yahoo Finance.
 
 ---
 
-<a id="українська"></a>
+<a id="-українська"></a>
 
 ## 🇺🇦 Українська
 
@@ -212,70 +268,76 @@ CFTC публікує дані COT щоп'ятниці о 15:30 ET. Платфо
 
 ### Можливості
 
-- **3 типи звітів** — Legacy, Disaggregated та Traders in Financial Futures (TFF)
-- **2 підтипи** — Futures Only (FO) та Futures + Options Combined (CO)
-- **500+ ринків** — товари, фінанси, валюти, енергоносії, метали, с/г продукція
-- **Розрахункові індикатори** — COT Index (3м / 1р / 3р), WCI, нетто-позиції, % від OI, Crowded Level
-- **8 COT-сигналів** — Extreme, Crossover, Momentum, Divergence, Flip, WCI, Crowding, Contrarian
-- **Інтерактивні графіки** — TradingView Lightweight Charts з накладенням цін (Yahoo Finance)
-- **Мульти-ринковий скринер** — теплокарта з сортуванням та фільтрами сигналів
-- **Бульбашковий графік** — візуалізація crowding по всіх ринках
-- **Live REST API** — FastAPI зі Swagger документацією, TTL кеш, типізовані ендпоінти
-- **Вбудовані авто-оновлення** — APScheduler запускає пайплайн щоп'ятниці о 23:00 за Києвом
-- **Двомовна документація** — вбудована документація англійською та українською
+| Категорія | Деталі |
+|-----------|--------|
+| **Типи звітів** | Legacy, Disaggregated, Traders in Financial Futures (TFF) |
+| **Підтипи** | Futures Only (FO), Futures + Options Combined (CO) |
+| **Ринки** | 500+ — товари, фінанси, валюти, енергоносії, метали, с/г, крипто |
+| **Індикатори** | COT Index (3м / 1р / 3р), WCI (26т), нетто-позиції, % від OI, Crowded Level |
+| **COT-сигнали** | 8 сигналів — Strong Bullish, Accumulation, Floor Building, Strong Bearish, Distribution, Topping Out, Profit Taking, Liquidation |
+| **Графіки** | TradingView Lightweight Charts з накладенням цін, Net Positions, Delta Histogram, COT Index + Price overlay |
+| **Скринер** | Мульти-ринкова теплокарта з сортуванням, фільтрами сигналів та категорій |
+| **Бульбашковий графік** | Візуалізація crowding по всіх ринках |
+| **API** | FastAPI зі Swagger/ReDoc документацією, TTL кеш, типізовані ендпоінти |
+| **Авто-оновлення** | APScheduler: COT пайплайн щоп'ятниці 23:00 Київ, ціни щоденно о 00:00 |
+| **Документація** | Вбудована двомовна документація (англійська та українська) |
 
 ### Архітектура
 
 ```
-┌────────────────────────────────────────────────────┐
-│                   Бекенд (Python)                   │
-│                                                    │
-│  app/core/         → конфіг, БД, кеш, логування,  │
-│                      шедулер, обробка помилок      │
-│                                                    │
-│  app/modules/cot/  → downloader → parser →         │
-│                      storage (SQLite) →             │
-│                      calculator → exporter → JSON   │
-│                                                    │
-│  app/modules/prices/ → інтеграція з Yahoo Finance  │
-│                                                    │
-│  app/main.py       → FastAPI додаток + APScheduler │
-│  scripts/          → CLI: сервер, пайплайн, хелс  │
-├────────────────────────────────────────────────────┤
-│        REST API: /api/v1/cot/* (FastAPI)           │
-├────────────────────┬───────────────────────────────┘
-                     │
-┌────────────────────▼───────────────────────────────┐
-│               Фронтенд (React)                      │
-│                                                     │
-│  CotReportTable — таблиця тижневих даних            │
-│  ScreenerTable  — мульти-ринкова теплокарта         │
-│  ChartModal     — графіки TradingView + ціни        │
-│  BubbleChartModal — бульбашкова візуалізація         │
-│  DocumentationModal — двомовна документація          │
-│                                                     │
-│  Vite + Tailwind CSS → dist/                        │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                    Бекенд (Python)                        │
+│                                                          │
+│  app/core/          → конфіг, БД (SQLite WAL),          │
+│                       кеш (TTL), виключення,             │
+│                       логування, шедулер (APScheduler)   │
+│                                                          │
+│  app/modules/cot/   → downloader → parser →              │
+│                       storage (SQLite) →                  │
+│                       calculator → exporter → JSON        │
+│                                                          │
+│  app/modules/prices/ → Yahoo Finance (100+ тікерів)      │
+│                                                          │
+│  app/main.py        → FastAPI додаток + APScheduler      │
+│  scripts/           → CLI: сервер, пайплайн, хелс       │
+├──────────────────────────────────────────────────────────┤
+│        REST API: /api/v1/cot/* (FastAPI + Swagger)       │
+├─────────────────────┬────────────────────────────────────┘
+                      │  JSON
+┌─────────────────────▼────────────────────────────────────┐
+│                   Фронтенд (React)                        │
+│                                                          │
+│  CotApp           → перемикач report/screener            │
+│  CotReportTable   → таблиця тижневих даних з теплокартою │
+│  ScreenerTable    → мульти-ринковий скринер + фільтри    │
+│  ChartModal       → TradingView + Net/Delta/Indicator    │
+│  BubbleChartModal → бульбашкова візуалізація crowding    │
+│  DocumentationModal → двомовна документація (UA/EN)      │
+│                                                          │
+│  Zustand + TanStack Query → стан та отримання даних      │
+│  Vite + Tailwind CSS → dist/                             │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ### Технології
 
 | Рівень | Технологія |
 |--------|-----------|
-| Бекенд | Python 3.10+, FastAPI, APScheduler, SQLite, requests, yfinance, pytz |
-| Фронтенд | React 18, Vite, Tailwind CSS, Recharts, TradingView Lightweight Charts |
-| Деплой | nginx, systemd, uvicorn |
+| **Бекенд** | Python 3.10+, FastAPI, APScheduler 3.x, SQLite (WAL), requests, yfinance, pytz |
+| **Фронтенд** | React 18, Vite 5, TypeScript, Tailwind CSS 3, Recharts 2, TradingView Lightweight Charts, Zustand 5, TanStack Query 5, React Router 7 |
+| **Деплой** | nginx, systemd, uvicorn |
+| **Дизайн** | Темна тема, шрифти Inter + Cinzel, бронзовий акцент (#c4a87c) |
 
 ### Швидкий старт (локальна розробка)
 
-**Передумови**: Python 3.10+, Node.js 18+
+**Передумови:** Python 3.10+, Node.js 18+
 
 ```bash
 # 1. Клонувати
 git clone https://github.com/Danylo-D87/equilibrium-cot-analyzer.git
 cd equilibrium-cot-analyzer
 
-# 2. Бекенд — встановити залежності та завантажити дані
+# 2. Бекенд — встановити та завантажити дані
 cd backend
 python -m venv venv
 venv\Scripts\activate          # Windows
@@ -283,10 +345,10 @@ venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 python scripts/run_pipeline.py --verbose
 
-# 3. Запустити API сервер (в окремому терміналі)
+# 3. Запустити API сервер (окремий термінал)
 python scripts/run_server.py
 
-# 4. Фронтенд — встановити та запустити dev-сервер
+# 4. Фронтенд — встановити та dev-сервер
 cd ../frontend
 npm install
 npm run dev
@@ -294,29 +356,43 @@ npm run dev
 
 Відкрити `http://localhost:5173` — Vite проксує `/api/*` на бекенд `:8000`.
 
-### API ендпоінти
+### Огляд API
 
 | Метод | Шлях | Опис |
 |-------|------|------|
 | `GET` | `/api/v1/cot/markets/{type}/{subtype}` | Список всіх ринків |
-| `GET` | `/api/v1/cot/markets/{type}/{subtype}/{code}` | Деталі ринку + таймсерія |
-| `GET` | `/api/v1/cot/screener/{type}/{subtype}` | Скринер (остання аналітика) |
-| `GET` | `/api/v1/cot/groups/{type}` | Визначення груп |
-| `GET` | `/api/v1/cot/status` | Стан даних та шедулера |
+| `GET` | `/api/v1/cot/markets/{type}/{subtype}/{code}` | Деталі ринку + таймсерія + ціни |
+| `GET` | `/api/v1/cot/screener/{type}/{subtype}` | Скринер (остання аналітика по ринках) |
+| `GET` | `/api/v1/cot/groups/{type}` | Визначення груп трейдерів |
+| `GET` | `/api/v1/cot/status` | Стан даних, БД та шедулера |
 
-Swagger документація: `http://localhost:8000/api/docs`
+📝 **Swagger:** `http://localhost:8000/api/docs` · **ReDoc:** `http://localhost:8000/api/redoc`
 
-### Деплой на продакшн
-
-Дивіться [deploy/DEPLOY.md](deploy/DEPLOY.md) — повна інструкція деплою на VM з nginx, systemd та авто-оновленнями.
+> Детальна документація API → [backend/BACKEND_README.md](backend/BACKEND_README.md)
 
 ### Джерела даних
 
 | Дані | Джерело | Розклад |
 |------|---------|---------|
 | Звіти COT | [CFTC.gov](https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm) | Щотижня (п'ятниця 15:30 ET) |
-| Цінові дані | [Yahoo Finance](https://finance.yahoo.com/) через `yfinance` | При запуску пайплайну |
+| Цінові дані | [Yahoo Finance](https://finance.yahoo.com/) через `yfinance` | Щоденно о 00:00 за Києвом |
+
+### Деплой на продакшн
+
+Дивіться [deploy/DEPLOY.md](deploy/DEPLOY.md) — повна інструкція деплою на VM з nginx, systemd та авто-оновленнями.
+
+```
+nginx (порт 80/443)
+├── /           → frontend/dist (SPA)
+├── /api/*      → проксі → FastAPI (порт 8000)
+└── /data/*     → статичний JSON (кеш 1 год)
+
+FastAPI бекенд (один воркер)
+├── app.main:app         → REST API
+├── APScheduler          → Пт 23:00 COT + щоденно 00:00 ціни
+└── SQLite (data/app.db) → 265K+ записів COT
+```
 
 ### Ліцензія
 
-Цей проект призначений для навчальних та дослідницьких цілей. Дані COT є суспільним надбанням (уряд США).
+MIT. Дані COT є суспільним надбанням (уряд США). Цінові дані надаються Yahoo Finance.

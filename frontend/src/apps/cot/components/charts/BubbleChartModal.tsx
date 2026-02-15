@@ -5,7 +5,7 @@ import type { MarketData } from '../../types';
 
 import {
     COLORS, COT_SIGNALS, COT_INDEX_PERIODS, INDICATOR_TYPES,
-    buildGroupsMeta, buildGroupColors, fmtCompact, fmtTick,
+    buildGroupsMeta, buildGroupColors, fmtCompact,
 } from './chartConstants';
 
 import NetPositionsChart from './NetPositionsChart';
