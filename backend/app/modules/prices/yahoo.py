@@ -59,14 +59,14 @@ class YahooDownloader:
 
                 bars: list[dict] = [
                     {
-                        "date": idx,
-                        "open": float(row["Open"]),
-                        "high": float(row["High"]),
-                        "low": float(row["Low"]),
-                        "close": float(row["Close"]),
-                        "volume": int(row["Volume"]),
+                        "date": row.Index,
+                        "open": float(row.Open),
+                        "high": float(row.High),
+                        "low": float(row.Low),
+                        "close": float(row.Close),
+                        "volume": int(row.Volume),
                     }
-                    for idx, row in zip(df.index, df.itertuples())
+                    for row in df.itertuples()
                 ]
 
                 logger.info("%s: %d daily bars", ticker_symbol, len(bars))
