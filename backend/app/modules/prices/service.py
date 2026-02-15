@@ -19,7 +19,7 @@ from app.modules.prices.yahoo import YahooDownloader
 
 logger = logging.getLogger(__name__)
 
-MAX_PRICE_DOWNLOAD_WORKERS = 8
+MAX_PRICE_DOWNLOAD_WORKERS = 4
 
 # Cache entry: (bars, timestamp)
 _CacheEntry = tuple[list[dict], float]

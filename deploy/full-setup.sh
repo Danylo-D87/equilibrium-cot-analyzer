@@ -144,6 +144,9 @@ sudo -u "$APP_USER" bash -c "
 " 2>&1 | tee -a "$LOG_FILE"
 PIPE_EXIT=${PIPESTATUS[0]}
 
+# Fix ownership after pipeline (root may have created files)
+chown -R "$APP_USER:$APP_USER" "$APP_DIR/backend/data" "$APP_DIR/backend/logs" 2>/dev/null || true
+
 if [ "$PIPE_EXIT" -eq 0 ]; then
     ok "Data pipeline completed successfully"
 else
