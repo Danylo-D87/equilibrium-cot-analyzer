@@ -3,7 +3,7 @@
 // =====================================================
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchMarkets, fetchMarketData, fetchScreener, fetchGroups } from '../lib/api';
+import { fetchMarkets, fetchMarketData, fetchScreener, fetchGroups } from '@/lib/api';
 
 /**
  * Fetch market list for a given report type + subtype.

@@ -1,4 +1,3 @@
 export type { Market, Group, Week, CrowdedLevel, StatRow, PricePoint, MarketData } from './market';
 export type { ScreenerRow, EnrichedScreenerRow } from './screener';
-// Shared types — re-exported from COT app for backward compat
-export type { ReportType, Subtype } from '../apps/cot/types/signals';
+export type { SignalType, Signal, ReportType, Subtype } from './signals';

@@ -16,6 +16,7 @@
     /* === Borders === */
     --color-border: #262626;
     --color-border-hover: #404040;
+    --color-border-subtle: #1a1a1a;
 
     /* === Primary (monochrome accent — off-white) === */
     --color-primary: #e5e5e5;

@@ -8,7 +8,7 @@ import TopNav from './TopNav';
  */
 export default function AppShell() {
     return (
-        <div className="h-screen bg-[#050505] flex flex-col overflow-hidden">
+        <div className="h-screen bg-background flex flex-col overflow-hidden">
             <TopNav />
             <Outlet />
         </div>

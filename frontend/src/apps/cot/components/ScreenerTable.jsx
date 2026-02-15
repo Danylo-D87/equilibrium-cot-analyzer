@@ -3,7 +3,7 @@ import { formatNumber, formatDate, formatPctSigned } from '../utils/formatters';
 import { changeBg, CAT_COLORS } from '../utils/colors';
 import { CATEGORY_ORDER } from '../utils/constants';
 import { useScreenerData } from '../hooks/useMarketQueries';
-import Spinner from './ui/Spinner';
+import Spinner from '@/components/ui/Spinner';
 
 // =====================================================
 // Build screener columns dynamically from groups

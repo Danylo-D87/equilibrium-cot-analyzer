@@ -10,13 +10,13 @@ export default function TopNav() {
     const location = useLocation();
 
     return (
-        <header className="flex-shrink-0 h-11 border-b border-[#262626] flex items-center px-5 bg-[#0a0a0a]">
+        <header className="flex-shrink-0 h-11 border-b border-border flex items-center px-5 bg-surface">
             {/* Brand — always links home */}
             <Link
                 to="/"
                 className="flex items-baseline gap-1.5 flex-shrink-0 select-none mr-6 group"
             >
-                <span className="text-[13px] font-semibold tracking-[0.08em] text-[#e5e5e5] uppercase group-hover:text-white transition-colors duration-200">
+                <span className="text-[13px] font-semibold tracking-[0.08em] text-primary uppercase group-hover:text-primary-hover transition-colors duration-200">
                     Equilibrium
                 </span>
             </Link>
@@ -31,8 +31,8 @@ export default function TopNav() {
                             to={item.to}
                             className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 rounded-sm ${
                                 isActive
-                                    ? 'text-[#e5e5e5] bg-[#1a1a1a]'
-                                    : 'text-[#404040] hover:text-[#737373]'
+                                    ? 'text-primary bg-surface-highlight'
+                                    : 'text-muted hover:text-text-secondary'
                             }`}
                         >
                             {item.label}

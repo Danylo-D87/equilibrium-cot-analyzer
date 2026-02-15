@@ -23,16 +23,16 @@ function AppCard({ app }) {
         <div
             className={`group relative rounded-lg border p-6 transition-all duration-300 ${
                 app.ready
-                    ? 'border-[#262626] bg-[#0a0a0a] hover:border-[#404040] hover:bg-[#0f0f0f] cursor-pointer'
-                    : 'border-[#1a1a1a] bg-[#080808] opacity-50 cursor-default'
+                    ? 'border-border bg-surface hover:border-border-hover hover:bg-surface-hover cursor-pointer'
+                    : 'border-border-subtle bg-surface opacity-50 cursor-default'
             }`}
         >
             {/* Icon area */}
             <div
                 className={`w-10 h-10 rounded-md flex items-center justify-center mb-4 ${
                     app.ready
-                        ? 'bg-[#1a1a1a] text-[#a3a3a3] group-hover:text-[#e5e5e5] transition-colors duration-300'
-                        : 'bg-[#111] text-[#333]'
+                        ? 'bg-surface-highlight text-text-secondary group-hover:text-primary transition-colors duration-300'
+                        : 'bg-surface-hover text-muted'
                 }`}
             >
                 {app.key === 'cot' ? (
@@ -48,15 +48,15 @@ function AppCard({ app }) {
                 )}
             </div>
 
-            <h3 className="text-sm font-semibold text-[#e5e5e5] mb-1 tracking-wide">
+            <h3 className="text-sm font-semibold text-primary mb-1 tracking-wide">
                 {app.name}
             </h3>
-            <p className="text-xs text-[#525252] leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
                 {app.description}
             </p>
 
             {app.ready && (
-                <div className="mt-4 flex items-center text-[10px] font-medium tracking-[0.08em] uppercase text-[#404040] group-hover:text-[#a3a3a3] transition-colors duration-300">
+                <div className="mt-4 flex items-center text-[10px] font-medium tracking-[0.08em] uppercase text-muted group-hover:text-text-secondary transition-colors duration-300">
                     Open
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="ml-1">
                         <path d="M5 12h14M12 5l7 7-7 7" />
@@ -65,7 +65,7 @@ function AppCard({ app }) {
             )}
 
             {!app.ready && (
-                <div className="mt-4 text-[10px] font-medium tracking-[0.12em] uppercase text-[#333]">
+                <div className="mt-4 text-[10px] font-medium tracking-[0.12em] uppercase text-muted">
                     Coming soon
                 </div>
             )}
@@ -78,13 +78,13 @@ function AppCard({ app }) {
 
 export default function Landing() {
     return (
-        <div className="h-screen bg-[#050505] flex flex-col items-center justify-center px-6">
+        <div className="h-screen bg-background flex flex-col items-center justify-center px-6">
             {/* Brand */}
             <div className="mb-12 text-center">
-                <h1 className="text-2xl font-semibold tracking-[0.12em] text-[#e5e5e5] uppercase mb-2">
+                <h1 className="text-2xl font-semibold tracking-[0.12em] text-primary uppercase mb-2">
                     Equilibrium
                 </h1>
-                <p className="text-xs text-[#525252] tracking-[0.08em] uppercase">
+                <p className="text-xs text-muted tracking-[0.08em] uppercase">
                     Market analysis toolkit
                 </p>
             </div>
@@ -97,7 +97,7 @@ export default function Landing() {
             </div>
 
             {/* Footer hint */}
-            <p className="mt-16 text-[10px] text-[#333] tracking-[0.1em] uppercase">
+            <p className="mt-16 text-[10px] text-muted tracking-[0.1em] uppercase">
                 Select an application to begin
             </p>
         </div>

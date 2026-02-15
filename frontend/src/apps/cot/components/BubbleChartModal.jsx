@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import { formatNumber, formatCompact, formatSigned, formatDateShort, formatDateTick } from '../utils/formatters';
 import { TIMEFRAMES, CHART_COLORS, GROUP_COLOR_PALETTE } from '../utils/constants';
-import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 // =====================================================
 // Constants

@@ -1,17 +1,17 @@
 import React, { useEffect, useCallback, Suspense, lazy } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAppStore } from '../../store/useAppStore';
-import { useMarkets, useMarketData } from '../../hooks/useMarketQueries';
-import { REPORT_TYPES, SUBTYPES, DEFAULT_MARKET_CODES } from '../../utils/constants';
-import MarketSelector from '../../components/MarketSelector';
-import CotReportTable from '../../components/CotReportTable';
-import ScreenerTable from '../../components/ScreenerTable';
-import ErrorBoundary from '../../components/ui/ErrorBoundary';
-import Spinner from '../../components/ui/Spinner';
+import { useCotStore } from './store/useCotStore';
+import { useMarkets, useMarketData } from './hooks/useMarketQueries';
+import { REPORT_TYPES, SUBTYPES, DEFAULT_MARKET_CODES } from './utils/constants';
+import MarketSelector from './components/MarketSelector';
+import CotReportTable from './components/CotReportTable';
+import ScreenerTable from './components/ScreenerTable';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
+import Spinner from '@/components/ui/Spinner';
 
 // Lazy-load heavy modals — they're rarely opened
-const DocumentationModal = lazy(() => import('../../components/DocumentationModal'));
-const BubbleChartModal = lazy(() => import('../../components/BubbleChartModal'));
+const DocumentationModal = lazy(() => import('./components/DocumentationModal'));
+const BubbleChartModal = lazy(() => import('./components/BubbleChartModal'));
 
 // =====================================================
 // COT Analyzer app — mounted at /cot
@@ -25,7 +25,7 @@ export default function CotApp() {
         fitMode, toggleFitMode,
         docsOpen, setDocsOpen,
         chartOpen, setChartOpen,
-    } = useAppStore();
+    } = useCotStore();
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -62,7 +62,7 @@ export default function CotApp() {
             <div className="flex-1 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <Spinner />
-                    <span className="text-[#525252] text-xs tracking-[0.2em] uppercase font-medium">Loading data…</span>
+                    <span className="text-muted text-xs tracking-[0.2em] uppercase font-medium">Loading data…</span>
                 </div>
             </div>
         );
@@ -72,16 +72,16 @@ export default function CotApp() {
         return (
             <div className="flex-1 flex items-center justify-center">
                 <div className="text-center space-y-4 max-w-md">
-                    <div className="w-12 h-12 mx-auto rounded-sm bg-[#450a0a]/20 flex items-center justify-center border border-[#450a0a]/30">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#f87171]">
+                    <div className="w-12 h-12 mx-auto rounded-sm bg-destructive/20 flex items-center justify-center border border-destructive/30">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-destructive-fg">
                             <circle cx="12" cy="12" r="10" />
                             <path d="M12 8v4M12 16h.01" />
                         </svg>
                     </div>
-                    <p className="text-[#f87171] text-sm font-medium">{marketsError.message}</p>
+                    <p className="text-destructive-fg text-sm font-medium">{marketsError.message}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="text-xs text-[#a3a3a3] hover:text-white transition-all duration-300 tracking-widest uppercase px-6 py-2.5 rounded-sm border border-[#262626] hover:border-[#a3a3a3] hover:bg-[#121212]"
+                        className="text-xs text-text-secondary hover:text-white transition-all duration-300 tracking-widest uppercase px-6 py-2.5 rounded-sm border border-border hover:border-text-secondary hover:bg-surface-hover"
                     >
                         Reload
                     </button>
@@ -93,26 +93,26 @@ export default function CotApp() {
     return (
         <>
             {/* COT sub-header — report/screener tabs + controls */}
-            <div className="flex-shrink-0 h-10 border-b border-[#1a1a1a] flex items-center px-5 gap-0 bg-[#080808]">
+            <div className="flex-shrink-0 h-10 border-b border-border-subtle flex items-center px-5 gap-0 bg-surface">
                 {/* View tabs */}
                 <nav className="flex items-center gap-0 flex-shrink-0 mr-4">
                     <button
                         onClick={() => setActiveTab('report')}
                         className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 ${
                             activeTab === 'report'
-                                ? 'text-[#e5e5e5]'
-                                : 'text-[#404040] hover:text-[#737373]'
+                                ? 'text-primary'
+                                : 'text-muted hover:text-text-secondary'
                         }`}
                     >
                         Report
                     </button>
-                    <span className="text-[#262626] text-[10px] select-none">·</span>
+                    <span className="text-border text-[10px] select-none">·</span>
                     <button
                         onClick={() => setActiveTab('screener')}
                         className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 ${
                             activeTab === 'screener'
-                                ? 'text-[#e5e5e5]'
-                                : 'text-[#404040] hover:text-[#737373]'
+                                ? 'text-primary'
+                                : 'text-muted hover:text-text-secondary'
                         }`}
                     >
                         Screener
@@ -120,19 +120,19 @@ export default function CotApp() {
                 </nav>
 
                 {/* Thin divider */}
-                <div className="w-px h-4 bg-[#1a1a1a] flex-shrink-0 mr-4" />
+                <div className="w-px h-4 bg-border-subtle flex-shrink-0 mr-4" />
 
                 {/* Report Type */}
                 <div className="flex items-center gap-0 flex-shrink-0 mr-3">
                     {REPORT_TYPES.map((rt, i) => (
                         <React.Fragment key={rt.key}>
-                            {i > 0 && <span className="text-[#1a1a1a] text-[8px] mx-0.5 select-none">/</span>}
+                            {i > 0 && <span className="text-border-subtle text-[8px] mx-0.5 select-none">/</span>}
                             <button
                                 onClick={() => setReportType(rt.key)}
                                 className={`px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase transition-colors duration-200 rounded-sm ${
                                     reportType === rt.key
-                                        ? 'text-[#e5e5e5] bg-[#1a1a1a]'
-                                        : 'text-[#404040] hover:text-[#737373]'
+                                        ? 'text-primary bg-surface-highlight'
+                                        : 'text-muted hover:text-text-secondary'
                                 }`}
                             >
                                 {rt.shortLabel}
@@ -145,13 +145,13 @@ export default function CotApp() {
                 <div className="flex items-center gap-0 flex-shrink-0">
                     {SUBTYPES.map((st, i) => (
                         <React.Fragment key={st.key}>
-                            {i > 0 && <span className="text-[#1a1a1a] text-[8px] mx-0.5 select-none">/</span>}
+                            {i > 0 && <span className="text-border-subtle text-[8px] mx-0.5 select-none">/</span>}
                             <button
                                 onClick={() => setSubtype(st.key)}
                                 className={`px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase transition-colors duration-200 rounded-sm ${
                                     subtype === st.key
-                                        ? 'text-[#e5e5e5] bg-[#1a1a1a]'
-                                        : 'text-[#404040] hover:text-[#737373]'
+                                        ? 'text-primary bg-surface-highlight'
+                                        : 'text-muted hover:text-text-secondary'
                                 }`}
                             >
                                 {st.shortLabel}
@@ -174,7 +174,7 @@ export default function CotApp() {
                             />
                             <button
                                 onClick={() => setChartOpen(true)}
-                                className="h-7 w-7 flex items-center justify-center rounded-sm text-[#404040] hover:text-[#e5e5e5] hover:bg-[#141414] transition-colors duration-200"
+                                className="h-7 w-7 flex items-center justify-center rounded-sm text-muted hover:text-primary hover:bg-surface-hover transition-colors duration-200"
                                 title="Charts"
                             >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -186,7 +186,7 @@ export default function CotApp() {
                     )}
                     <button
                         onClick={() => setDocsOpen(true)}
-                        className="h-7 w-7 flex items-center justify-center rounded-sm text-[#404040] hover:text-[#e5e5e5] hover:bg-[#141414] transition-colors duration-200"
+                        className="h-7 w-7 flex items-center justify-center rounded-sm text-muted hover:text-primary hover:bg-surface-hover transition-colors duration-200"
                         title="Documentation"
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -227,8 +227,8 @@ export default function CotApp() {
                                     onClick={toggleFitMode}
                                     className={`fixed bottom-5 right-5 z-40 w-10 h-10 flex items-center justify-center rounded-sm border transition-all duration-300 shadow-lg shadow-black/40 ${
                                         fitMode
-                                            ? 'bg-[#e5e5e5]/10 border-[#e5e5e5]/30 text-[#e5e5e5]'
-                                            : 'bg-[#0a0a0a]/90 border-[#262626] text-[#525252] hover:text-[#e5e5e5] hover:border-[#404040] hover:bg-[#121212]'
+                                            ? 'bg-primary/10 border-primary/30 text-primary'
+                                            : 'bg-surface/90 border-border text-muted hover:text-primary hover:border-border-hover hover:bg-surface-hover'
                                     } backdrop-blur-sm`}
                                     title={fitMode ? 'Normal size' : 'Fit to screen'}
                                 >
