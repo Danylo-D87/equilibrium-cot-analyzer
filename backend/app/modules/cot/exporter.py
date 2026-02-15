@@ -77,32 +77,35 @@ class CotExporter:
             name = mkt["name"] or code
             exchange_code = mkt.get("exchange_code", "")
 
-            raw_rows = all_market_data.get(code, [])
-            if not raw_rows:
-                continue
+            try:
+                raw_rows = all_market_data.get(code, [])
+                if not raw_rows:
+                    continue
 
-            prices = price_data.get(code, [])
-            payload = self._builder.build_market_detail(
-                code, name, exchange_code, report_type, subtype,
-                raw_rows, prices or None,
-            )
-            if payload is None:
-                continue
+                prices = price_data.get(code, [])
+                payload = self._builder.build_market_detail(
+                    code, name, exchange_code, report_type, subtype,
+                    raw_rows, prices or None,
+                )
+                if payload is None:
+                    continue
 
-            market_meta = build_market_meta(
-                code, name, exchange_code, report_type, subtype,
-                categories=categories,
-                report_display_names=report_dn,
-                subtype_display_names=subtype_dn,
-            )
-            market_list.append(market_meta)
-            self._write_json(f"market_{code}_{report_type}_{subtype}.json", payload)
+                market_meta = build_market_meta(
+                    code, name, exchange_code, report_type, subtype,
+                    categories=categories,
+                    report_display_names=report_dn,
+                    subtype_display_names=subtype_dn,
+                )
+                market_list.append(market_meta)
+                self._write_json(f"market_{code}_{report_type}_{subtype}.json", payload)
 
-            screener_entry = self._builder.build_screener_entry(
-                code, name, exchange_code, report_type, raw_rows,
-            )
-            if screener_entry:
-                screener_rows.append(screener_entry)
+                screener_entry = self._builder.build_screener_entry(
+                    code, name, exchange_code, report_type, raw_rows,
+                )
+                if screener_entry:
+                    screener_rows.append(screener_entry)
+            except (OSError, ValueError, KeyError, TypeError) as e:
+                logger.error("Export failed for market %s (%s): %s", code, name, e)
 
             if i % PROGRESS_LOG_INTERVAL == 0:
                 logger.info("  %d/%d done...", i, len(markets))

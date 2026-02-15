@@ -64,10 +64,10 @@ class CotService:
         name = first.get("market_and_exchange") or code
         exchange_code = first.get("exchange_code", "")
 
-        # Prices
+        # Prices — cache-first, downloads only if stale/missing
         prices = None
         if self.price_service and self.price_service.has_ticker(code):
-            prices = self.price_service.download_prices(code)
+            prices = self.price_service.get_prices(code)
             if not prices:
                 prices = None
 
@@ -99,6 +99,36 @@ class CotService:
                 screener_rows.append(entry)
 
         return screener_rows
+
+    def get_screener_page(
+        self, report_type: str, subtype: str, limit: int, offset: int,
+    ) -> tuple[list[dict], int]:
+        """SQL-paginated screener: only process markets for the requested page.
+
+        Returns (rows, total_market_count).
+        """
+        total = self.store.get_market_count(report_type, subtype)
+        if total == 0:
+            return [], 0
+
+        codes = self.store.get_market_codes_page(report_type, subtype, limit, offset)
+        if not codes:
+            return [], total
+
+        bulk = self.store.get_bulk_for_codes(codes, report_type, subtype)
+        rows: list[dict] = []
+        for code in codes:
+            raw_rows = bulk.get(code, [])
+            if not raw_rows:
+                continue
+            name = raw_rows[0].get("market_and_exchange") or code
+            exchange_code = raw_rows[0].get("exchange_code", "")
+            entry = self._builder.build_screener_entry(
+                code, name, exchange_code, report_type, raw_rows,
+            )
+            if entry:
+                rows.append(entry)
+        return rows, total
 
     # ------------------------------------------------------------------
     # Groups metadata

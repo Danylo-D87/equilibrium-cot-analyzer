@@ -1,27 +1,6 @@
-"""
-Prices module — ticker mappings.
-==================================
-Maps CFTC contract codes to Yahoo Finance ticker symbols.
+{
+    "_comment": "Maps CFTC contract codes to Yahoo Finance ticker symbols. Edit here to add/change tickers without touching code.",
 
-The canonical ticker map lives in ``data/ticker_map.json``
-(editable without touching code).  A built-in fallback dict
-is kept so the app still starts even if the JSON is missing.
-"""
-
-import json
-import logging
-import os
-from dataclasses import dataclass, field
-from functools import cached_property
-from pathlib import Path
-
-from app.core.config import env_int, settings
-
-logger = logging.getLogger(__name__)
-
-# Built-in fallback — used only when the JSON file is unavailable
-_BUILTIN_TICKER_MAP: dict[str, str] = {
-    # --- Crypto (CME + FREX / Coinbase Derivatives) ---
     "133741": "BTC-USD", "133742": "BTC-USD",
     "133LM1": "BTC-USD", "133LM4": "BTC-USD",
     "133LM5": "BCH-USD",
@@ -40,33 +19,35 @@ _BUILTIN_TICKER_MAP: dict[str, str] = {
     "177741": "SOL-USD", "177742": "SOL-USD",
     "177LM1": "SOL-USD", "177LM3": "SOL-USD",
     "180LM1": "HBAR-USD",
-    # --- Currencies ---
+
     "099741": "6E=F", "096742": "6B=F", "097741": "6J=F",
     "090741": "6C=F", "232741": "6A=F", "112741": "6N=F",
     "092741": "6S=F", "098662": "DX=F", "095741": "6M=F", "102741": "6L=F",
-    "082744": "CNH=X", "089741": "6R=F", "122741": "6Z=F",
+    "082744": "CNH=X",
+    "089741": "6R=F",
+    "122741": "6Z=F",
     "299741": "EURGBP=X", "399741": "EURJPY=X",
-    # --- Energy ---
+
     "067411": "CL=F", "067651": "CL=F", "067657": "CL=F",
     "023651": "NG=F", "023655": "NG=F",
     "022651": "HO=F",
     "111416": "RB=F", "111415": "RB=F", "111659": "RB=F",
     "06765T": "BZ=F",
     "025651": "ZK=F",
-    # --- Grains ---
+
     "001602": "ZW=F", "001612": "KE=F", "001626": "MWE=F",
     "002602": "ZC=F",
     "005602": "ZS=F", "005603": "ZS=F", "005606": "ZS=F",
     "026603": "ZM=F",
     "007601": "ZL=F", "004603": "ZO=F", "039601": "ZR=F",
     "135731": "RS=F",
-    # --- Metals ---
+
     "088691": "GC=F", "088695": "GC=F", "088LM1": "GC=F",
     "084691": "SI=F", "084694": "SI=F",
     "085692": "HG=F", "085699": "HG=F",
     "076651": "PL=F", "075651": "PA=F",
     "191691": "ALI=F",
-    # --- Indices ---
+
     "13874A": "ES=F", "13874+": "ES=F", "13874U": "ES=F",
     "209742": "NQ=F", "20974+": "NQ=F", "209747": "NQ=F",
     "239742": "RTY=F", "239747": "RTY=F",
@@ -75,50 +56,18 @@ _BUILTIN_TICKER_MAP: dict[str, str] = {
     "240741": "NKD=F", "240743": "NIY=F",
     "33874A": "EMD=F",
     "1170E1": "^VIX",
-    # --- Livestock ---
+
     "057642": "LE=F", "061641": "GF=F", "054642": "HE=F",
-    # --- Softs ---
+
     "073732": "CC=F", "083731": "KC=F", "033661": "CT=F",
     "080732": "SB=F", "040701": "OJ=F",
     "058644": "LBS=F", "058643": "LBS=F",
-    # --- Dairy ---
-    "050642": "CB=F", "052641": "DC=F",
-    # --- Rates ---
+
+    "050642": "CB=F",
+    "052641": "DC=F",
+
     "043602": "ZN=F", "042601": "ZT=F", "044601": "ZF=F",
     "020601": "ZB=F", "043607": "TN=F", "020604": "UB=F",
     "045601": "ZQ=F",
-    "134741": "SR3=F", "134742": "SR1=F",
+    "134741": "SR3=F", "134742": "SR1=F"
 }
-
-
-def _load_ticker_map() -> dict[str, str]:
-    """Load ticker map from JSON, falling back to built-in dict."""
-    custom = os.environ.get("TICKER_MAP_PATH")
-    path = Path(custom) if custom else settings.base_dir / "data" / "ticker_map.json"
-
-    if path.is_file():
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-            # Strip the metadata comment key if present
-            data.pop("_comment", None)
-            logger.info("Loaded ticker map from %s (%d entries)", path, len(data))
-            return data
-        except (json.JSONDecodeError, OSError) as exc:
-            logger.warning("Failed to read ticker map %s: %s — using built-in fallback", path, exc)
-
-    return dict(_BUILTIN_TICKER_MAP)
-
-
-@dataclass(frozen=True)
-class PriceSettings:
-    """Price download configuration."""
-
-    price_years: int = field(default_factory=lambda: env_int("PRICE_YEARS", 3))
-
-    @cached_property
-    def ticker_map(self) -> dict[str, str]:
-        """CFTC contract code → Yahoo Finance ticker symbol."""
-        return _load_ticker_map()
-
-
-price_settings = PriceSettings()

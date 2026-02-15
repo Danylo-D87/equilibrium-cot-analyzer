@@ -296,7 +296,7 @@ export default function ReportDocContent({ lang }: { lang: string }) {
                 </p>
 
                 <article id="col-change-long" className="doc-article">
-                    <h3>Ch (Long) — {L(lang, 'Зміна довгих позицій', 'Change in Long Positions')}</h3>
+                    <h3>Long Change — {L(lang, 'Зміна довгих позицій', 'Change in Long Positions')}</h3>
                     <div className="doc-meta">
                         <Tag color="gray">{L(lang, 'Колонка', 'Column')}</Tag>
                         <Tag color="blue">{L(lang, 'Дані CFTC', 'CFTC Data')}</Tag>
@@ -314,7 +314,7 @@ export default function ReportDocContent({ lang }: { lang: string }) {
                 </article>
 
                 <article id="col-change-short" className="doc-article">
-                    <h3>Ch (Short) — {L(lang, 'Зміна коротких позицій', 'Change in Short Positions')}</h3>
+                    <h3>Short Change — {L(lang, 'Зміна коротких позицій', 'Change in Short Positions')}</h3>
                     <div className="doc-meta">
                         <Tag color="gray">{L(lang, 'Колонка', 'Column')}</Tag>
                         <Tag color="blue">{L(lang, 'Дані CFTC', 'CFTC Data')}</Tag>
@@ -332,7 +332,7 @@ export default function ReportDocContent({ lang }: { lang: string }) {
                 </article>
 
                 <article id="col-pct-net-oi" className="doc-article">
-                    <h3>% net/OI — {L(lang, 'Нетто як % від Open Interest', 'Net as % of Open Interest')}</h3>
+                    <h3>Net / OI % — {L(lang, 'Нетто як % від Open Interest', 'Net as % of Open Interest')}</h3>
                     <div className="doc-meta">
                         <Tag color="gray">{L(lang, 'Колонка', 'Column')}</Tag>
                         <Tag color="emerald">{L(lang, 'Розрахункова', 'Calculated')}</Tag>
@@ -351,7 +351,7 @@ export default function ReportDocContent({ lang }: { lang: string }) {
                 </article>
 
                 <article id="col-change" className="doc-article">
-                    <h3>Change — {L(lang, 'Зміна чистої позиції', 'Net Position Change')}</h3>
+                    <h3>Net Change — {L(lang, 'Зміна чистої позиції', 'Net Position Change')}</h3>
                     <div className="doc-meta">
                         <Tag color="gray">{L(lang, 'Колонка', 'Column')}</Tag>
                         <Tag color="emerald">{L(lang, 'Розрахункова', 'Calculated')}</Tag>
@@ -361,7 +361,7 @@ export default function ReportDocContent({ lang }: { lang: string }) {
                         'Тижнева зміна Net Position групи. Показує напрямок та швидкість зміни позиціонування.',
                         'Weekly change in the group\'s Net Position. Shows the direction and speed of positioning change.'
                     )}</p>
-                    <Formula>Change = Ch (Long) − Ch (Short)</Formula>
+                    <Formula>Net Change = Long Change − Short Change</Formula>
                     <h4>{L(lang, 'Візуалізація', 'Visualization')}</h4>
                     <p>{L(lang,
                         'Двокольорова заливка: позитивне значення — зелена, від\'ємне — червона. Яскравість пропорційна абсолютній величині.',
@@ -398,7 +398,7 @@ export default function ReportDocContent({ lang }: { lang: string }) {
                 )}</p>
 
                 <article id="oi-pct" className="doc-article">
-                    <h3>% OI — {L(lang, 'Тижнева зміна OI у відсотках', 'Weekly OI Change in Percent')}</h3>
+                    <h3>OI % — {L(lang, 'Тижнева зміна OI у відсотках', 'Weekly OI Change in Percent')}</h3>
                     <div className="doc-meta"><Tag color="gray">{L(lang, 'Колонка', 'Column')}</Tag> <Tag color="emerald">{L(lang, 'Розрахункова', 'Calculated')}</Tag></div>
                     <Formula>% OI = (OI Change / OI) × 100</Formula>
                     <p>{L(lang,
@@ -408,7 +408,7 @@ export default function ReportDocContent({ lang }: { lang: string }) {
                 </article>
 
                 <article id="oi-change" className="doc-article">
-                    <h3>Change — {L(lang, 'Абсолютна зміна OI', 'Absolute OI Change')}</h3>
+                    <h3>OI Change — {L(lang, 'Абсолютна зміна OI', 'Absolute OI Change')}</h3>
                     <div className="doc-meta"><Tag color="gray">{L(lang, 'Колонка', 'Column')}</Tag> <Tag color="blue">{L(lang, 'Дані CFTC', 'CFTC Data')}</Tag></div>
                     <p>{L(lang, 'Абсолютна тижнева зміна Open Interest у контрактах.', 'Absolute weekly change in Open Interest in contracts.')}</p>
                     <div className="my-3 text-[11.5px] space-y-1">
@@ -420,7 +420,7 @@ export default function ReportDocContent({ lang }: { lang: string }) {
                 </article>
 
                 <article id="oi-value" className="doc-article">
-                    <h3>OI — {L(lang, 'Абсолютне значення', 'Absolute Value')}</h3>
+                    <h3>Open Interest — {L(lang, 'Абсолютне значення', 'Absolute Value')}</h3>
                     <div className="doc-meta"><Tag color="gray">{L(lang, 'Колонка', 'Column')}</Tag> <Tag color="blue">{L(lang, 'Дані CFTC', 'CFTC Data')}</Tag></div>
                     <p>{L(lang,
                         'Загальна кількість відкритих ф\'ючерсних контрактів. Чим вищий OI, тим ліквідніший ринок і тим надійніші аналітичні сигнали.',
@@ -537,7 +537,7 @@ ${L(lang, 'Результат', 'Result')}: 0% — 100%`}</Formula>
                         ['Min.', L(lang, 'Абсолютний мінімум за весь доступний період', 'Absolute minimum over entire available period')],
                         ['Max. 5y', L(lang, 'Максимум за останні 5 років (260 тижнів)', 'Maximum over last 5 years (260 weeks)')],
                         ['Min. 5y', L(lang, 'Мінімум за останні 5 років (260 тижнів)', 'Minimum over last 5 years (260 weeks)')],
-                        ['13 week avg', L(lang, 'Середнє арифметичне за останні 13 тижнів (≈ квартал)', 'Arithmetic average over last 13 weeks (≈ quarter)')],
+                        ['Avg 13w', L(lang, 'Середнє арифметичне за останні 13 тижнів (≈ квартал)', 'Arithmetic average over last 13 weeks (≈ quarter)')],
                     ] as [string, string][]).map(([label, desc], i) => (
                         <div key={i} className="flex gap-3">
                             <span className="text-text-secondary font-semibold min-w-[100px]">{label}</span>
@@ -555,7 +555,7 @@ ${L(lang, 'Результат', 'Result')}: 0% — 100%`}</Formula>
                     'Each table cell has a gradient color fill for quick visual identification of direction and intensity of values.'
                 )}</p>
 
-                <h3 className="mt-5">Net Position, Change, % net/OI</h3>
+                <h3 className="mt-5">Net Position, Net Change, Net / OI %</h3>
                 <div className="my-3 text-[11.5px] space-y-1">
                     <div className="flex items-center gap-3">
                         <span className="inline-block w-5 h-3 rounded" style={{ backgroundColor: 'rgba(0,176,80,0.7)' }} />
@@ -567,15 +567,15 @@ ${L(lang, 'Результат', 'Result')}: 0% — 100%`}</Formula>
                     </div>
                 </div>
 
-                <h3 className="mt-5">Ch (Long) / Ch (Short)</h3>
+                <h3 className="mt-5">Long Change / Short Change</h3>
                 <div className="my-3 text-[11.5px] space-y-1">
                     <div className="flex items-center gap-3">
                         <span className="inline-block w-5 h-3 rounded" style={{ backgroundColor: 'rgba(0,176,80,0.7)' }} />
-                        <span className="text-text-secondary">Ch (Long) — {L(lang, 'завжди зелений', 'always green')}</span>
+                        <span className="text-text-secondary">Long Change — {L(lang, 'завжди зелений', 'always green')}</span>
                     </div>
                     <div className="flex items-center gap-3">
                         <span className="inline-block w-5 h-3 rounded" style={{ backgroundColor: 'rgba(220,53,69,0.7)' }} />
-                        <span className="text-text-secondary">Ch (Short) — {L(lang, 'завжди червоний', 'always red')}</span>
+                        <span className="text-text-secondary">Short Change — {L(lang, 'завжди червоний', 'always red')}</span>
                     </div>
                 </div>
 

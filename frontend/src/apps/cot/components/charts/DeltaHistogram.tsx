@@ -46,9 +46,9 @@ export default function DeltaHistogram({ weeksData, timeframe, activeGroups, gro
 
     const renderBar = (props: { x?: number; y?: number; width?: number; height?: number; payload?: Record<string, unknown> }, group: string) => {
         const { x, y, width, height, payload } = props;
-        if (!payload) return null;
+        if (!payload) return <g />;
         const netDelta = payload[`${group}_delta_original`] as number | undefined;
-        if (netDelta == null || netDelta === 0) return null;
+        if (netDelta == null || netDelta === 0) return <g />;
         const color = netDelta > 0 ? '#22c55e' : '#ef4444';
         return (
             <rect x={x} y={y} width={width} height={Math.abs(height ?? 0)} fill={color} opacity={0.75} />
@@ -106,7 +106,7 @@ export default function DeltaHistogram({ weeksData, timeframe, activeGroups, gro
                 />
                 <ReferenceLine y={0} stroke={COLORS.zero} strokeDasharray="4 4" />
                 {activeGroups.map(g => (
-                    <Bar key={g} dataKey={`${g}_delta`} shape={((props: any) => renderBar(props, g)) as any} isAnimationActive={false} />
+                    <Bar key={g} dataKey={`${g}_delta`} shape={(props: any) => renderBar(props, g)} isAnimationActive={false} />
                 ))}
             </ComposedChart>
         </ResponsiveContainer>

@@ -42,34 +42,40 @@ def add_cron_job(
     func,
     job_id: str,
     name: str,
-    day_of_week: str = "fri",
-    hour: int = 23,
+    day_of_week: str | None = None,
+    hour: int = 0,
     minute: int = 0,
     tz: str = "Europe/Kyiv",
     **kwargs,
 ) -> None:
     """
-    Register a weekly cron job.
+    Register a cron job (daily or weekly).
 
     Args:
         func: Callable to execute.
         job_id: Unique identifier.
         name: Human-readable job name.
-        day_of_week: Cron day (default Friday).
+        day_of_week: Cron day expression (e.g. ``"fri"``).
+                     ``None`` means **every day**.
         hour / minute: Execution time in the given timezone.
         tz: pytz timezone name (default Europe/Kyiv).
         **kwargs: Extra keyword arguments passed to the job.
     """
     job_tz = pytz.timezone(tz)
+    trigger_kwargs: dict = {"hour": hour, "minute": minute, "timezone": job_tz}
+    if day_of_week is not None:
+        trigger_kwargs["day_of_week"] = day_of_week
+
     _scheduler.add_job(
         func,
-        trigger=CronTrigger(day_of_week=day_of_week, hour=hour, minute=minute, timezone=job_tz),
+        trigger=CronTrigger(**trigger_kwargs),
         id=job_id,
         name=name,
         replace_existing=True,
         kwargs=kwargs,
     )
-    logger.info("Registered cron job '%s' (%s %02d:%02d %s)", name, day_of_week, hour, minute, tz)
+    schedule_desc = f"{day_of_week} {hour:02d}:{minute:02d}" if day_of_week else f"daily {hour:02d}:{minute:02d}"
+    logger.info("Registered cron job '%s' (%s %s)", name, schedule_desc, tz)
 
 
 def run_in_background(func, name: str = "background-task", **kwargs) -> tuple[bool, str]:

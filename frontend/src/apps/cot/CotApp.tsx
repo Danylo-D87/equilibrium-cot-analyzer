@@ -1,5 +1,5 @@
-import React, { useEffect, useCallback, Suspense, lazy } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useCallback, Suspense, lazy } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useCotStore } from './store/useCotStore';
 import { useMarkets, useMarketData } from './hooks/useMarketQueries';
 import { REPORT_TYPES, SUBTYPES, DEFAULT_MARKET_CODES } from './utils/constants';
@@ -62,7 +62,7 @@ export default function CotApp() {
             <div className="flex-1 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <Spinner />
-                    <span className="text-muted text-xs tracking-[0.2em] uppercase font-medium">Loading data…</span>
+                    <span className="text-muted text-xs tracking-[0.14em] uppercase font-medium">Loading data…</span>
                 </div>
             </div>
         );
@@ -81,7 +81,7 @@ export default function CotApp() {
                     <p className="text-destructive-fg text-sm font-medium">{marketsError.message}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="text-xs text-text-secondary hover:text-white transition-all duration-300 tracking-widest uppercase px-6 py-2.5 rounded-sm border border-border hover:border-text-secondary hover:bg-surface-hover"
+                        className="text-xs text-text-secondary hover:text-bronze transition-all duration-300 tracking-[0.14em] uppercase px-6 py-2.5 rounded-sm border border-border hover:border-bronze/20 hover:bg-bronze-glow"
                     >
                         Reload
                     </button>
@@ -92,67 +92,76 @@ export default function CotApp() {
 
     return (
         <>
-            {/* COT sub-header — report/screener tabs + controls */}
-            <div className="flex-shrink-0 h-10 border-b border-border-subtle flex items-center px-5 gap-0 bg-surface">
-                {/* View tabs */}
+            {/* Single unified header — brand + tabs + controls */}
+            <header className="flex-shrink-0 h-11 flex items-center px-5 gap-0 app-topnav relative z-30">
+                {/* Brand */}
+                <Link
+                    to="/"
+                    className="flex items-center gap-2 flex-shrink-0 select-none group mr-5"
+                >
+                    <span className="font-serif text-[13px] font-medium tracking-[0.18em] text-white/50 uppercase group-hover:text-white/75 transition-colors duration-500">
+                        Equilibrium
+                    </span>
+                </Link>
+
+                {/* Separator */}
+                <div className="w-px h-4 bg-white/[0.06] flex-shrink-0 mr-4" />
+
+                {/* View tabs: Report / Screener */}
                 <nav className="flex items-center gap-0 flex-shrink-0 mr-4">
                     <button
                         onClick={() => setActiveTab('report')}
-                        className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 ${activeTab === 'report'
-                            ? 'text-primary'
-                            : 'text-muted hover:text-text-secondary'
+                        className={`px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] uppercase transition-all duration-300 rounded-sm ${activeTab === 'report'
+                            ? 'text-white/90'
+                            : 'text-white/25 hover:text-white/50'
                             }`}
                     >
                         Report
                     </button>
-                    <span className="text-border text-[10px] select-none">·</span>
+                    <span className="text-white/[0.08] text-[8px] select-none mx-0.5">·</span>
                     <button
                         onClick={() => setActiveTab('screener')}
-                        className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 ${activeTab === 'screener'
-                            ? 'text-primary'
-                            : 'text-muted hover:text-text-secondary'
+                        className={`px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] uppercase transition-all duration-300 rounded-sm ${activeTab === 'screener'
+                            ? 'text-white/90'
+                            : 'text-white/25 hover:text-white/50'
                             }`}
                     >
                         Screener
                     </button>
                 </nav>
 
-                {/* Thin divider */}
-                <div className="w-px h-4 bg-border-subtle flex-shrink-0 mr-4" />
+                {/* Separator */}
+                <div className="w-px h-4 bg-white/[0.06] flex-shrink-0 mr-3" />
 
-                {/* Report Type */}
-                <div className="flex items-center gap-0 flex-shrink-0 mr-3">
-                    {REPORT_TYPES.map((rt, i) => (
-                        <React.Fragment key={rt.key}>
-                            {i > 0 && <span className="text-border-subtle text-[8px] mx-0.5 select-none">/</span>}
-                            <button
-                                onClick={() => setReportType(rt.key)}
-                                className={`px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase transition-colors duration-200 rounded-sm ${reportType === rt.key
-                                    ? 'text-primary bg-surface-highlight'
-                                    : 'text-muted hover:text-text-secondary'
-                                    }`}
-                            >
-                                {rt.shortLabel}
-                            </button>
-                        </React.Fragment>
+                {/* Report Type pill group */}
+                <div className="flex items-center gap-0.5 flex-shrink-0 mr-2 bg-white/[0.02] border border-white/[0.04] rounded-sm p-0.5">
+                    {REPORT_TYPES.map((rt) => (
+                        <button
+                            key={rt.key}
+                            onClick={() => setReportType(rt.key)}
+                            className={`px-2 py-0.5 text-[10px] font-semibold tracking-[0.1em] uppercase transition-all duration-300 rounded-sm ${reportType === rt.key
+                                ? 'text-white/80 bg-white/[0.06]'
+                                : 'text-white/25 hover:text-white/45'
+                                }`}
+                        >
+                            {rt.shortLabel}
+                        </button>
                     ))}
                 </div>
 
-                {/* Subtype */}
-                <div className="flex items-center gap-0 flex-shrink-0">
-                    {SUBTYPES.map((st, i) => (
-                        <React.Fragment key={st.key}>
-                            {i > 0 && <span className="text-border-subtle text-[8px] mx-0.5 select-none">/</span>}
-                            <button
-                                onClick={() => setSubtype(st.key)}
-                                className={`px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase transition-colors duration-200 rounded-sm ${subtype === st.key
-                                    ? 'text-primary bg-surface-highlight'
-                                    : 'text-muted hover:text-text-secondary'
-                                    }`}
-                            >
-                                {st.shortLabel}
-                            </button>
-                        </React.Fragment>
+                {/* Subtype pill group */}
+                <div className="flex items-center gap-0.5 flex-shrink-0 bg-white/[0.02] border border-white/[0.04] rounded-sm p-0.5">
+                    {SUBTYPES.map((st) => (
+                        <button
+                            key={st.key}
+                            onClick={() => setSubtype(st.key)}
+                            className={`px-2 py-0.5 text-[10px] font-semibold tracking-[0.1em] uppercase transition-all duration-300 rounded-sm ${subtype === st.key
+                                ? 'text-white/80 bg-white/[0.06]'
+                                : 'text-white/25 hover:text-white/45'
+                                }`}
+                        >
+                            {st.shortLabel}
+                        </button>
                     ))}
                 </div>
 
@@ -170,7 +179,7 @@ export default function CotApp() {
                             />
                             <button
                                 onClick={() => setChartOpen(true)}
-                                className="h-7 w-7 flex items-center justify-center rounded-sm text-muted hover:text-primary hover:bg-surface-hover transition-colors duration-200"
+                                className="h-7 w-7 flex items-center justify-center rounded-sm text-white/25 hover:text-white/60 hover:bg-white/[0.04] transition-all duration-300"
                                 title="Charts"
                             >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -182,7 +191,7 @@ export default function CotApp() {
                     )}
                     <button
                         onClick={() => setDocsOpen(true)}
-                        className="h-7 w-7 flex items-center justify-center rounded-sm text-muted hover:text-primary hover:bg-surface-hover transition-colors duration-200"
+                        className="h-7 w-7 flex items-center justify-center rounded-sm text-white/25 hover:text-white/60 hover:bg-white/[0.04] transition-all duration-300"
                         title="Documentation"
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -194,7 +203,7 @@ export default function CotApp() {
                         </svg>
                     </button>
                 </div>
-            </div>
+            </header>
 
             {/* Lazy-loaded modals */}
             <Suspense fallback={null}>
@@ -221,10 +230,29 @@ export default function CotApp() {
                             {marketData && (
                                 <button
                                     onClick={toggleFitMode}
-                                    className={`fixed bottom-5 right-5 z-40 w-10 h-10 flex items-center justify-center rounded-sm border transition-all duration-300 shadow-lg shadow-black/40 ${fitMode
-                                        ? 'bg-primary/10 border-primary/30 text-primary'
-                                        : 'bg-surface/90 border-border text-muted hover:text-primary hover:border-border-hover hover:bg-surface-hover'
-                                        } backdrop-blur-sm`}
+                                    className="fixed bottom-5 right-5 z-40 w-10 h-10 flex items-center justify-center rounded-sm transition-all duration-300"
+                                    style={{
+                                        background: fitMode ? '#1a1611' : '#0e0e0e',
+                                        border: fitMode
+                                            ? '1px solid rgba(196,168,124,0.25)'
+                                            : '1px solid #222',
+                                        color: fitMode ? '#c4a87c' : '#555',
+                                        boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
+                                    }}
+                                    onMouseEnter={e => {
+                                        if (!fitMode) {
+                                            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(196,168,124,0.20)';
+                                            (e.currentTarget as HTMLElement).style.color = '#c4a87c';
+                                            (e.currentTarget as HTMLElement).style.background = '#151210';
+                                        }
+                                    }}
+                                    onMouseLeave={e => {
+                                        if (!fitMode) {
+                                            (e.currentTarget as HTMLElement).style.borderColor = '#222';
+                                            (e.currentTarget as HTMLElement).style.color = '#555';
+                                            (e.currentTarget as HTMLElement).style.background = '#0e0e0e';
+                                        }
+                                    }}
                                     title={fitMode ? 'Normal size' : 'Fit to screen'}
                                 >
                                     {fitMode ? (

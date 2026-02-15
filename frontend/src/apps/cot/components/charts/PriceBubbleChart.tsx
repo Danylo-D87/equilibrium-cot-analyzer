@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
     ResponsiveContainer, ComposedChart, Line, XAxis, YAxis, Tooltip,
 } from 'recharts';
@@ -257,7 +257,7 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }: Price
 
     const renderBubble = useCallback((props: { cx?: number; cy?: number; payload?: Record<string, unknown>; index?: number }) => {
         const { cx, cy, payload, index } = props;
-        if (cx == null || cy == null || !payload?.bubbleColor) return null;
+        if (cx == null || cy == null || !payload?.bubbleColor) return <g />;
 
         const n = (payload.norm as number) || 0;
         const minR = 3, maxR = 22;
@@ -279,7 +279,7 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }: Price
 
     const renderBubbleActive = useCallback((props: { cx?: number; cy?: number; payload?: Record<string, unknown>; index?: number }) => {
         const { cx, cy, payload, index } = props;
-        if (cx == null || cy == null || !payload?.bubbleColor) return null;
+        if (cx == null || cy == null || !payload?.bubbleColor) return <g />;
 
         const n = (payload.norm as number) || 0;
         const minR = 5, maxR = 26;
@@ -301,7 +301,7 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }: Price
     if (!prices?.length) {
         return (
             <div className="w-full h-full flex items-center justify-center">
-                <p className="text-muted text-xs uppercase tracking-wider">Цінові дані недоступні</p>
+                <p className="text-muted text-xs uppercase tracking-wider">Price data unavailable</p>
             </div>
         );
     }
@@ -316,7 +316,7 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }: Price
                         <span className="text-[8px] text-muted">#{s.num}</span>
                     </div>
                 ))}
-                <span className="text-[8px] text-muted ml-0.5">Розмір баблу = |ΔNet|</span>
+                <span className="text-[8px] text-muted ml-0.5">Bubble size = |ΔNet|</span>
             </div>
 
             <ResponsiveContainer width="100%" height="100%">
@@ -378,8 +378,8 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }: Price
                         dataKey="bubbleY"
                         stroke="transparent"
                         strokeWidth={0}
-                        dot={renderBubble as any}
-                        activeDot={renderBubbleActive as any}
+                        dot={renderBubble as (props: any) => React.ReactElement}
+                        activeDot={renderBubbleActive as (props: any) => React.ReactElement}
                         isAnimationActive={false}
                         connectNulls={false}
                         legendType="none"

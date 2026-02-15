@@ -178,6 +178,7 @@ class StatusResponse(BaseModel):
 
     data: DataStatus
     scheduler: SchedulerStatus
+    price_update: UpdateState | None = None
 
 
 # ------------------------------------------------------------------

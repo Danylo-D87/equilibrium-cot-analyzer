@@ -42,14 +42,14 @@ export default function ScreenerDocContent({ lang }: { lang: string }) {
                     )}</p>
                     <div className="my-4 space-y-3 text-[11.5px]">
                         {[
-                            ['Pos', L(lang, 'Загальна кількість позицій групи (Long + Short). Показує масштаб присутності групи на ринку.', 'Total positions of the group (Long + Short). Shows the scale of group presence in the market.')],
-                            ['L/S', L(lang, 'Візуальна шкала пропорції Long (зелений) та Short (червоний). При наведенні — tooltip з точною кількістю Long/Short позицій, їх відсотками та тижневими змінами.', 'Visual bar showing Long (green) and Short (red) proportion. On hover — tooltip with exact Long/Short counts, percentages, and weekly changes.')],
-                            ['Δ', L(lang, 'Тижнева зміна загальної кількості позицій (Δ Long + Δ Short). Зелений — зростання, червоний — скорочення.', 'Weekly change in total positions (Δ Long + Δ Short). Green — increase, red — decrease.')],
-                            ['% OI', L(lang, 'Загальна кількість позицій групи як відсоток від Open Interest. Показує частку ринку, яку займає ця група.', 'Total group positions as percentage of Open Interest. Shows the market share occupied by this group.')],
-                            ['Δ%', L(lang, 'Тижнева зміна частки % OI. Показує чи група нарощує або скорочує свою присутність на ринку.', 'Weekly change in % OI share. Shows whether the group is increasing or decreasing its market presence.')],
+                            ['Position', L(lang, 'Загальна кількість позицій групи (Long + Short). Показує масштаб присутності групи на ринку.', 'Total positions of the group (Long + Short). Shows the scale of group presence in the market.')],
+                            ['Long / Short', L(lang, 'Візуальна шкала пропорції Long (зелений) та Short (червоний). При наведенні — tooltip з точною кількістю Long/Short позицій, їх відсотками та тижневими змінами.', 'Visual bar showing Long (green) and Short (red) proportion. On hover — tooltip with exact Long/Short counts, percentages, and weekly changes.')],
+                            ['Change', L(lang, 'Тижнева зміна загальної кількості позицій (Δ Long + Δ Short). Зелений — зростання, червоний — скорочення.', 'Weekly change in total positions (Δ Long + Δ Short). Green — increase, red — decrease.')],
+                            ['% of OI', L(lang, 'Загальна кількість позицій групи як відсоток від Open Interest. Показує частку ринку, яку займає ця група.', 'Total group positions as percentage of Open Interest. Shows the market share occupied by this group.')],
+                            ['% Change', L(lang, 'Тижнева зміна частки % OI. Показує чи група нарощує або скорочує свою присутність на ринку.', 'Weekly change in % OI share. Shows whether the group is increasing or decreasing its market presence.')],
                         ].map(([col, desc], i) => (
                             <div key={i} className="flex gap-3">
-                                <span className="text-primary font-semibold min-w-[50px] flex-shrink-0">{col}</span>
+                                <span className="text-primary font-semibold min-w-[80px] flex-shrink-0">{col}</span>
                                 <span className="text-text-secondary">{desc}</span>
                             </div>
                         ))}
@@ -68,11 +68,11 @@ export default function ScreenerDocContent({ lang }: { lang: string }) {
                     )}</p>
                     <div className="my-4 space-y-3 text-[11.5px]">
                         {[
-                            ['OI', L(lang, 'Загальна кількість відкритих контрактів на ринку.', 'Total number of open contracts in the market.')],
-                            ['Δ OI', L(lang, 'Тижнева зміна Open Interest. Зростання = нові позиції відкриваються, зменшення = позиції закриваються.', 'Weekly Open Interest change. Increase = new positions opening, decrease = positions closing.')],
+                            ['Open Interest', L(lang, 'Загальна кількість відкритих контрактів на ринку.', 'Total number of open contracts in the market.')],
+                            ['OI Change', L(lang, 'Тижнева зміна Open Interest. Зростання = нові позиції відкриваються, зменшення = позиції закриваються.', 'Weekly Open Interest change. Increase = new positions opening, decrease = positions closing.')],
                         ].map(([col, desc], i) => (
                             <div key={i} className="flex gap-3">
-                                <span className="text-primary font-semibold min-w-[50px] flex-shrink-0">{col}</span>
+                                <span className="text-primary font-semibold min-w-[110px] flex-shrink-0">{col}</span>
                                 <span className="text-text-secondary">{desc}</span>
                             </div>
                         ))}
@@ -80,7 +80,7 @@ export default function ScreenerDocContent({ lang }: { lang: string }) {
                 </article>
 
                 <article id="scr-col-total" className="doc-article">
-                    <h3>Total L/S</h3>
+                    <h3>Total Long / Short</h3>
                     <p>{L(lang,
                         'Окрема секція з загальним баром Long/Short по всьому ринку — сумує позиції всіх груп учасників. Показує загальний баланс бичачого та ведмежого позиціонування на ринку.',
                         'Separate section with an overall Long/Short bar across all groups. Shows the total balance of bullish and bearish positioning in the market.'
@@ -101,13 +101,13 @@ export default function ScreenerDocContent({ lang }: { lang: string }) {
                     </div>
                     <div className="flex gap-3">
                         <span className="text-primary font-semibold min-w-[120px]">{L(lang, 'Сортування', 'Sorting')}</span>
-                        <span className="text-text-secondary">{L(lang, 'Натисніть на заголовок будь-якої колонки для сортування (▲ asc / ▼ desc). Колонка L/S сортує по частці Short позицій.', 'Click any column header to sort (▲ asc / ▼ desc). L/S column sorts by Short position ratio.')}</span>
+                        <span className="text-text-secondary">{L(lang, 'Натисніть на заголовок будь-якої колонки для сортування (▲ asc / ▼ desc). Колонка Long / Short сортує по частці Short позицій.', 'Click any column header to sort (▲ asc / ▼ desc). Long / Short column sorts by Short position ratio.')}</span>
                     </div>
                 </div>
                 <Note>
                     {L(lang,
-                        'За замовчуванням таблиця сортується по Open Interest (найбільші ринки зверху). Натискання на L/S будь-якої групи дозволяє знайти ринки з найбільш шортовим або лонговим позиціонуванням.',
-                        'By default the table is sorted by Open Interest (largest markets first). Clicking L/S of any group helps find markets with the most short or long positioning.'
+                        'За замовчуванням таблиця сортується по Open Interest (найбільші ринки зверху). Натискання на Long / Short будь-якої групи дозволяє знайти ринки з найбільш шортовим або лонговим позиціонуванням.',
+                        'By default the table is sorted by Open Interest (largest markets first). Clicking Long / Short of any group helps find markets with the most short or long positioning.'
                     )}
                 </Note>
             </section>

@@ -8,19 +8,23 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
     hasError: boolean;
     error: Error | null;
+    resetKey: number;
 }
 
 /**
  * React Error Boundary — catches render errors in children and shows
  * a fallback UI instead of a blank white screen.
+ *
+ * Uses a resetKey to force remount children on retry, ensuring
+ * persistent errors don't immediately re-trigger.
  */
 export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
     constructor(props: ErrorBoundaryProps) {
         super(props);
-        this.state = { hasError: false, error: null };
+        this.state = { hasError: false, error: null, resetKey: 0 };
     }
 
-    static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
         return { hasError: true, error };
     }
 
@@ -40,7 +44,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
                         {this.state.error?.message || 'An unexpected error occurred.'}
                     </div>
                     <button
-                        onClick={() => this.setState({ hasError: false, error: null })}
+                        onClick={() => this.setState(prev => ({ hasError: false, error: null, resetKey: prev.resetKey + 1 }))}
                         className="mt-2 px-4 py-1.5 text-xs bg-border-subtle border border-border rounded hover:bg-surface-hover text-text-secondary transition-colors"
                     >
                         Try again
@@ -49,6 +53,6 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
             );
         }
 
-        return this.props.children;
+        return <React.Fragment key={this.state.resetKey}>{this.props.children}</React.Fragment>;
     }
 }

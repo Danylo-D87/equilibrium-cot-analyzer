@@ -89,7 +89,7 @@ class CotParser:
 
                 parsed.append(result)
 
-            except Exception as e:
+            except (ValueError, KeyError, TypeError, AttributeError) as e:
                 errors += 1
                 if errors <= MAX_LOGGED_ERRORS:
                     logger.warning("Row error (%s/%s): %s", report_type, subtype, e)

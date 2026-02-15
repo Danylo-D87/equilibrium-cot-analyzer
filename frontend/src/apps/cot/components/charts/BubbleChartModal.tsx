@@ -1,8 +1,4 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import {
-    ResponsiveContainer, ComposedChart, Line, XAxis, YAxis,
-    Tooltip, CartesianGrid, ReferenceLine,
-} from 'recharts';
 import { TIMEFRAMES } from '../../utils/constants';
 import Modal from '@/components/ui/Modal';
 import type { MarketData } from '../../types';
@@ -11,14 +7,12 @@ import {
     COLORS, COT_SIGNALS, COT_INDEX_PERIODS, INDICATOR_TYPES,
     buildGroupsMeta, buildGroupColors, fmtCompact, fmtTick,
 } from './chartConstants';
-import { LinesTooltip } from './BubbleFallbackChart';
 
 import NetPositionsChart from './NetPositionsChart';
 import IndicatorChart from './IndicatorChart';
 import IndicatorPriceChart from './IndicatorPriceChart';
 import PriceBubbleChart from './PriceBubbleChart';
 import DeltaHistogram from './DeltaHistogram';
-import BubbleFallbackChart from './BubbleFallbackChart';
 
 // =====================================================
 // Main BubbleChartModal — orchestrator
@@ -231,7 +225,7 @@ export default function BubbleChartModal({ isOpen, onClose, data }: BubbleChartM
                     <button
                         onClick={onClose}
                         className="w-8 h-8 flex items-center justify-center rounded-sm text-muted hover:text-white hover:bg-surface-hover border border-transparent hover:border-border transition-all duration-300"
-                        title="Закрити (Esc)"
+                        title="Close (Esc)"
                     >
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
                             <path d="M1 1l12 12M13 1L1 13" />
@@ -288,34 +282,13 @@ export default function BubbleChartModal({ isOpen, onClose, data }: BubbleChartM
                         </div>
                     </div>
                 ) : (
-                    /* No-price fallback */
-                    <>
-                        <div className="flex-shrink-0 flex items-center gap-2 px-4 py-1">
-                            <div className="h-px flex-1 bg-border" />
-                            <span className="text-[9px] text-muted uppercase tracking-widest">Bubble Chart · OI & Long / Short</span>
-                            <div className="h-px flex-1 bg-border" />
+                    /* No price data */
+                    <div className="flex-1 min-h-0 flex items-center justify-center">
+                        <div className="text-center">
+                            <p className="text-muted text-xs font-medium uppercase tracking-[0.14em]">Price data not available</p>
+                            <p className="text-[10px] mt-1.5" style={{ color: 'rgba(255,255,255,0.15)' }}>No price history for this market</p>
                         </div>
-                        <div className="flex-1 min-h-0 flex flex-col gap-1 px-4 pb-3">
-                            <div style={{ flex: '50 1 0%' }} className="min-h-0">
-                                <BubbleFallbackChart weeksData={weeksData} activeGroups={activeGroups} groupsMeta={groupsMeta} />
-                            </div>
-                            <div style={{ flex: '50 1 0%' }} className="min-h-0">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <ComposedChart data={weeksData} margin={{ top: 4, right: 12, bottom: 0, left: 0 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} />
-                                        <XAxis dataKey="date" tickFormatter={fmtTick} tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={{ stroke: COLORS.grid }} tickLine={false} interval="preserveStartEnd" minTickGap={60} />
-                                        <YAxis yAxisId="oi" tickFormatter={fmtCompact} tick={{ fontSize: 10, fill: '#f59e0b80' }} axisLine={false} tickLine={false} width={55} />
-                                        <YAxis yAxisId="net" orientation="right" tickFormatter={fmtCompact} tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={false} tickLine={false} width={55} />
-                                        <Tooltip content={<LinesTooltip />} cursor={{ stroke: '#262626', strokeDasharray: '3 3' }} />
-                                        <ReferenceLine yAxisId="net" y={0} stroke={COLORS.zero} strokeDasharray="4 4" />
-                                        <Line yAxisId="oi" type="monotone" dataKey="agg_oi" name="OI" stroke="#f59e0b" strokeWidth={1} strokeDasharray="5 3" dot={false} />
-                                        <Line yAxisId="net" type="monotone" dataKey="agg_long" name="Long" stroke="#22c55e" strokeWidth={1.5} dot={false} />
-                                        <Line yAxisId="net" type="monotone" dataKey="agg_short" name="Short" stroke="#ef4444" strokeWidth={1.5} dot={false} />
-                                    </ComposedChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                    </>
+                    </div>
                 )}
             </div>
 
@@ -330,7 +303,7 @@ export default function BubbleChartModal({ isOpen, onClose, data }: BubbleChartM
                             </div>
                         ))}
                         <span className="text-[9px] text-border">│</span>
-                        <span className="text-[9px] text-muted">Колір лінії = COT сигнал періоду</span>
+                        <span className="text-[9px] text-muted">Line color = COT signal of period</span>
                     </>
                 ) : viewMode === 'net' ? (
                     <>
@@ -354,7 +327,7 @@ export default function BubbleChartModal({ isOpen, onClose, data }: BubbleChartM
                             </div>
                         ))}
                         <span className="text-[10px] text-border">│</span>
-                        <span className="text-[10px] text-muted">80% — перекуплено · 20% — перепродано</span>
+                        <span className="text-[10px] text-muted">80% — overbought · 20% — oversold</span>
                     </>
                 ) : (
                     <>
@@ -362,22 +335,22 @@ export default function BubbleChartModal({ isOpen, onClose, data }: BubbleChartM
                             <svg width="10" height="10" viewBox="0 0 10 10">
                                 <polygon points="5,1 9,9 1,9" fill={COLORS.buy} />
                             </svg>
-                            <span className="text-[10px] text-muted">Купівля (Net ↑)</span>
+                            <span className="text-[10px] text-muted">Buy (Net ↑)</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <svg width="10" height="10" viewBox="0 0 10 10">
                                 <polygon points="5,9 9,1 1,1" fill={COLORS.sell} />
                             </svg>
-                            <span className="text-[10px] text-muted">Продаж (Net ↓)</span>
+                            <span className="text-[10px] text-muted">Sell (Net ↓)</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <svg width="10" height="10" viewBox="0 0 10 10">
                                 <circle cx="5" cy="5" r="4" fill={COLORS.mixed} />
                             </svg>
-                            <span className="text-[10px] text-muted">Змішаний сигнал</span>
+                            <span className="text-[10px] text-muted">Mixed signal</span>
                         </div>
                         <span className="text-[10px] text-border">│</span>
-                        <span className="text-[10px] text-muted">Розмір маркера = величина зміни</span>
+                        <span className="text-[10px] text-muted">Marker size = change magnitude</span>
                     </>
                 )}
             </div>

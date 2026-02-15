@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 class CotCalculator:
     """Computes all derived COT analytics for any report type."""
 
+    INDEX_MIDPOINT_DEFAULT = 50.0  # Default COT Index / WCI when min == max
+
     def compute(self, rows: list[dict], report_type: str) -> dict:
         """
         Takes sorted rows (newest first) and computes everything.
@@ -109,7 +111,7 @@ class CotCalculator:
                     window = [v for v in nets[i : i + lookback] if v is not None]
                     if len(window) >= 2:
                         mn, mx = min(window), max(window)
-                        idx = ((nets[i] - mn) / (mx - mn)) * 100 if mx != mn else 50.0
+                        idx = ((nets[i] - mn) / (mx - mn)) * 100 if mx != mn else self.INDEX_MIDPOINT_DEFAULT
                         weeks[i][f"cot_index_{gk}_{suffix}"] = round(idx, 1)
                     else:
                         weeks[i][f"cot_index_{gk}_{suffix}"] = None
@@ -118,7 +120,7 @@ class CotCalculator:
                 wci_window = [v for v in nets[i : i + cfg.wci_lookback] if v is not None]
                 if len(wci_window) >= 2:
                     mn, mx = min(wci_window), max(wci_window)
-                    wci = ((nets[i] - mn) / (mx - mn)) * 100 if mx != mn else 50.0
+                    wci = ((nets[i] - mn) / (mx - mn)) * 100 if mx != mn else self.INDEX_MIDPOINT_DEFAULT
                     weeks[i][f"wci_{gk}"] = round(wci, 1)
                 else:
                     weeks[i][f"wci_{gk}"] = None

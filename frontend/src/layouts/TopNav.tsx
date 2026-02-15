@@ -10,28 +10,32 @@ export default function TopNav() {
     const location = useLocation();
 
     return (
-        <header className="flex-shrink-0 h-11 border-b border-border flex items-center px-5 bg-surface">
-            {/* Brand — always links home */}
+        <header className="flex-shrink-0 h-11 flex items-center px-6 app-topnav">
+            {/* Brand — serif logo, links home */}
             <Link
                 to="/"
-                className="flex items-baseline gap-1.5 flex-shrink-0 select-none mr-6 group"
+                className="flex items-center gap-2.5 flex-shrink-0 select-none mr-8 group"
             >
-                <span className="text-[13px] font-semibold tracking-[0.08em] text-primary uppercase group-hover:text-primary-hover transition-colors duration-200">
+                <div className="w-1.5 h-1.5 rounded-full bg-bronze/60 group-hover:bg-bronze transition-colors duration-500" />
+                <span className="font-serif text-[15px] font-normal tracking-[0.18em] text-bronze uppercase group-hover:text-bronze-hover transition-colors duration-300">
                     Equilibrium
                 </span>
             </Link>
 
+            {/* Thin separator */}
+            <div className="w-px h-4 bg-bronze/10 flex-shrink-0 mr-5" />
+
             {/* App navigation */}
-            <nav className="flex items-center gap-1">
+            <nav className="flex items-center gap-0.5">
                 {NAV_ITEMS.map((item) => {
                     const isActive = location.pathname.startsWith(item.to);
                     return (
                         <Link
                             key={item.to}
                             to={item.to}
-                            className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 rounded-sm ${isActive
-                                    ? 'text-primary bg-surface-highlight'
-                                    : 'text-muted hover:text-text-secondary'
+                            className={`px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase transition-all duration-300 rounded-sm border ${isActive
+                                ? 'text-bronze bg-bronze/[0.07] border-bronze/15'
+                                : 'text-muted hover:text-bronze/70 border-transparent'
                                 }`}
                         >
                             {item.label}

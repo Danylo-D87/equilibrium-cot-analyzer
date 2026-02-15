@@ -51,16 +51,31 @@ class PipelineLock:
     def release(self) -> None:
         try:
             self.lock_file.unlink(missing_ok=True)
-        except Exception:
+        except OSError:
             pass
 
     @staticmethod
     def _pid_alive(pid: int) -> bool:
-        try:
-            os.kill(pid, 0)
-            return True
-        except (OSError, ProcessLookupError):
-            return False
+        if os.name == "nt":
+            # Windows: try opening the process handle (PROCESS_QUERY_LIMITED_INFORMATION)
+            try:
+                import ctypes
+                kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
+                PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+                handle = kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+                if handle:
+                    kernel32.CloseHandle(handle)
+                    return True
+                return False
+            except (OSError, AttributeError):
+                return False
+        else:
+            # POSIX: signal 0 checks existence without sending a real signal
+            try:
+                os.kill(pid, 0)
+                return True
+            except (OSError, ProcessLookupError):
+                return False
 
 
 # =====================================================================
@@ -98,25 +113,43 @@ class CotPipeline:
             for st in subs:
                 try:
                     self._process_variant(rt, st, force_reload)
-                except Exception as e:
+                except (OSError, ValueError, KeyError, RuntimeError) as e:
                     logger.error("Failed %s/%s: %s", rt, st, e, exc_info=True)
 
         # Step 2: Download prices (once, shared across variants)
         price_data: dict = {}
-        if not skip_prices:
-            try:
-                price_svc = PriceService()
-                all_codes: set[str] = set()
-                for rt in types:
-                    for st in subs:
-                        for m in self.store.get_all_markets(rt, st):
-                            all_codes.add(m["code"])
+        all_codes: set[str] = set()
+        for rt in types:
+            for st in subs:
+                for m in self.store.get_all_markets(rt, st):
+                    all_codes.add(m["code"])
 
-                if all_codes:
-                    price_data = price_svc.download_all(list(all_codes))
+        if all_codes:
+            price_svc = PriceService()
+
+            if not skip_prices:
+                # Full download (used on first run or manual trigger)
+                try:
+                    price_data = price_svc.refresh_all(list(all_codes))
                     logger.info("Downloaded prices for %d markets", len(price_data))
-            except Exception as e:
-                logger.warning("Price download failed: %s", e)
+                except (OSError, ValueError, RuntimeError) as e:
+                    logger.warning("Price download failed: %s", e)
+            else:
+                # Use cached prices from the daily 00:00 job
+                price_data = price_svc.get_all_cached(list(all_codes))
+                logger.info(
+                    "Using %d cached price entries (skip_prices=True)",
+                    len(price_data),
+                )
+                # Fallback: if cache is empty (e.g. first run after restart),
+                # download anyway so the export isn't price-less.
+                if not price_data:
+                    logger.info("Cache empty — downloading prices as fallback")
+                    try:
+                        price_data = price_svc.refresh_all(list(all_codes))
+                        logger.info("Fallback downloaded prices for %d markets", len(price_data))
+                    except (OSError, ValueError, RuntimeError) as e:
+                        logger.warning("Fallback price download failed: %s", e)
 
         # Step 3: Export
         exporter = CotExporter(self.store, price_service=None)
@@ -124,7 +157,7 @@ class CotPipeline:
             for st in subs:
                 try:
                     exporter.export_all(rt, st, price_data=price_data)
-                except Exception as e:
+                except (OSError, ValueError, KeyError) as e:
                     logger.error("Export failed %s/%s: %s", rt, st, e, exc_info=True)
 
         logger.info("Pipeline complete in %.1fs", time.time() - t0)

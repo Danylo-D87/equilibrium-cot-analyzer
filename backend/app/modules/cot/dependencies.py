@@ -8,7 +8,7 @@ from functools import lru_cache
 
 from fastapi import Depends
 
-from app.core.database import managed_connection
+from app.core.database import get_connection
 from app.modules.cot.storage import CotStorage
 from app.modules.cot.calculator import CotCalculator
 from app.modules.cot.service import CotService
@@ -17,8 +17,11 @@ from app.modules.prices.service import PriceService
 
 def get_db_connection():
     """Yield a single SQLite connection for the entire request lifecycle."""
-    with managed_connection() as conn:
+    conn = get_connection()
+    try:
         yield conn
+    finally:
+        conn.close()
 
 
 @lru_cache()

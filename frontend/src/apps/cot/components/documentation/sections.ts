@@ -44,18 +44,18 @@ export const SECTIONS: Record<string, (lang: string) => Section[]> = {
         },
         {
             id: 'columns', title: lang === 'ua' ? 'Колонки таблиці' : 'Table Columns', icon: '≡', children: [
-                { id: 'col-change-long', title: 'Ch (Long)' },
-                { id: 'col-change-short', title: 'Ch (Short)' },
-                { id: 'col-pct-net-oi', title: '% net/OI' },
-                { id: 'col-change', title: 'Change' },
+                { id: 'col-change-long', title: 'Long Change' },
+                { id: 'col-change-short', title: 'Short Change' },
+                { id: 'col-pct-net-oi', title: 'Net / OI %' },
+                { id: 'col-change', title: 'Net Change' },
                 { id: 'col-net', title: 'Net Position' },
             ]
         },
         {
             id: 'open-interest', title: 'Open Interest', icon: '◇', children: [
-                { id: 'oi-pct', title: '% OI' },
-                { id: 'oi-change', title: 'Change' },
-                { id: 'oi-value', title: 'OI' },
+                { id: 'oi-pct', title: 'OI %' },
+                { id: 'oi-change', title: 'OI Change' },
+                { id: 'oi-value', title: 'Open Interest' },
             ]
         },
         {
@@ -77,7 +77,7 @@ export const SECTIONS: Record<string, (lang: string) => Section[]> = {
                 { id: 'scr-col-fixed', title: lang === 'ua' ? 'Загальні' : 'Fixed' },
                 { id: 'scr-col-group', title: lang === 'ua' ? 'По групах' : 'Per Group' },
                 { id: 'scr-col-oi', title: 'Open Interest' },
-                { id: 'scr-col-total', title: 'Total L/S' },
+                { id: 'scr-col-total', title: 'Total Long / Short' },
             ]
         },
         { id: 'scr-filters', title: lang === 'ua' ? 'Фільтри та сортування' : 'Filters & Sorting', icon: '⚙' },

@@ -21,6 +21,7 @@ from app.core import scheduler as core_scheduler
 # --- Module routers ---
 from app.modules.cot.router import router as cot_router
 from app.modules.cot.scheduler import register_scheduled_job
+from app.modules.prices.scheduler import register_daily_price_job
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,8 @@ async def lifespan(app: FastAPI):
     logger.info("Starting %s v%s", settings.app_name, settings.app_version)
 
     # Register module jobs and start scheduler
-    register_scheduled_job()
+    register_scheduled_job()       # COT pipeline — every Friday 23:00 Kyiv
+    register_daily_price_job()     # Price update — every day 00:00 Kyiv
     core_scheduler.start()
 
     yield

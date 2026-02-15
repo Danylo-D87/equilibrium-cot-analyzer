@@ -122,7 +122,7 @@ class CotSettings:
                     "USD INDEX", "EURO FX", "BRITISH POUND", "JAPANESE YEN",
                     "SWISS FRANC", "CANADIAN DOLLAR", "AUSTRALIAN DOLLAR",
                     "NEW ZEALAND DOLLAR", "MEXICAN PESO", "BRAZILIAN REAL",
-                    "RUSSIAN RUBLE", "S. AFRICAN RAND",
+                    "RUSSIAN RUBLE", "S. AFRICAN RAND", "RENMINBI",
                 ],
                 "display": "Currencies",
             },
@@ -130,6 +130,9 @@ class CotSettings:
                 "keywords": [
                     "BITCOIN", "MICRO BITCOIN", "ETHER", "NANO BITCOIN", "NANO ETHER",
                     "SHIB", "SOLANA", "XRP", "DOGECOIN",
+                    "LITECOIN", "POLKADOT", "CHAINLINK", "AVALANCHE",
+                    "CARDONA", "STELLAR", "HEDERA", "SUI",
+                    "BITCOIN CASH",
                 ],
                 "display": "Crypto",
             },
@@ -140,13 +143,14 @@ class CotSettings:
             "energy": {
                 "keywords": [
                     "CRUDE OIL", "NATURAL GAS", "HEATING OIL", "RBOB GASOLINE", "BRENT CRUDE",
+                    "ETHANOL",
                 ],
                 "display": "Energy",
             },
             "grains": {
                 "keywords": [
                     "WHEAT", "CORN", "SOYBEANS", "SOYBEAN OIL", "SOYBEAN MEAL",
-                    "OATS", "ROUGH RICE",
+                    "OATS", "ROUGH RICE", "CANOLA",
                 ],
                 "display": "Grains",
             },
@@ -161,7 +165,7 @@ class CotSettings:
             "indices": {
                 "keywords": [
                     "S&P 500", "E-MINI S&P", "NASDAQ", "DOW JONES", "RUSSELL",
-                    "VIX", "NIKKEI",
+                    "VIX", "NIKKEI", "MIDCAP",
                 ],
                 "display": "Indices",
             },
@@ -169,6 +173,7 @@ class CotSettings:
                 "keywords": [
                     "2-YEAR", "5-YEAR", "10-YEAR", "30-YEAR", "EURODOLLAR",
                     "FED FUNDS", "TREASURY", "T-NOTE", "T-BOND", "ULTRA",
+                    "SOFR",
                 ],
                 "display": "Rates",
             },

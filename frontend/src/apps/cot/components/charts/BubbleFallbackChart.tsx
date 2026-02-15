@@ -98,9 +98,9 @@ export default function BubbleFallbackChart({ weeksData, activeGroups, groupsMet
 
     const renderBubble = (props: { cx?: number; cy?: number; payload?: Record<string, unknown>; index?: number }, isActive = false) => {
         const { cx, cy, payload, index } = props;
-        if (cx == null || cy == null) return null;
+        if (cx == null || cy == null) return <g />;
         const val = payload?.bubbleValue as number | undefined;
-        if (!val) return null;
+        if (!val) return <g />;
 
         const abs = Math.abs(val);
         const minR = 3, maxR = 16;
@@ -126,7 +126,7 @@ export default function BubbleFallbackChart({ weeksData, activeGroups, groupsMet
                 <YAxis tickFormatter={fmtCompact} tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={false} tickLine={false} width={55} />
                 <Tooltip content={<BubbleFallbackTooltip activeGroups={activeGroups} groupsMeta={groupsMeta} />} cursor={{ stroke: '#262626', strokeDasharray: '3 3' }} />
                 <ReferenceLine y={0} stroke={COLORS.zero} strokeDasharray="4 4" />
-                <Line type="monotone" dataKey="bubbleValue" stroke="rgba(255,255,255,0.05)" strokeWidth={1} dot={renderBubble as any} activeDot={((props: any) => renderBubble(props, true)) as any} isAnimationActive={false} name="Net Change" legendType="none" />
+                <Line type="monotone" dataKey="bubbleValue" stroke="rgba(255,255,255,0.05)" strokeWidth={1} dot={(props: any) => renderBubble(props)} activeDot={(props: any) => renderBubble(props, true)} isAnimationActive={false} name="Net Change" legendType="none" />
             </ComposedChart>
         </ResponsiveContainer>
     );

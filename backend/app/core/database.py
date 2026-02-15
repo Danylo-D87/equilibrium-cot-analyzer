@@ -30,7 +30,7 @@ def get_connection(db_path: Path | str | None = None) -> sqlite3.Connection:
         An open sqlite3.Connection.
     """
     path = str(db_path or settings.db_path)
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(path, check_same_thread=False)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
     return conn

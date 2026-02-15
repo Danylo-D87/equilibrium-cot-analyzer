@@ -27,7 +27,7 @@ export default function Badge({ variant = 'default', className, children }: Badg
     return (
         <span
             className={cn(
-                'inline-block text-[10px] font-semibold px-2 py-0.5 rounded-sm border uppercase tracking-wider',
+                'inline-block text-[10px] font-semibold px-2 py-0.5 rounded-sm border uppercase tracking-[0.12em]',
                 VARIANT[variant],
                 className,
             )}

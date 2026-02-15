@@ -52,36 +52,36 @@ function buildColumnDefs(groups: Group[]): ColumnDef[] {
         const gk = g.key;
         const gName = g.name;
         cols.push(
-            { key: `${gk}_change_long`, label: 'Ch (Long)', group: gName, type: 'change_long', width: 85 },
-            { key: `${gk}_change_short`, label: 'Ch (Short)', group: gName, type: 'change_short', width: 85 },
-            { key: `${gk}_pct_net_oi`, label: '% net/OI', group: gName, type: 'pct', width: 65 },
-            { key: `${gk}_change`, label: 'Change', group: gName, type: 'change', width: 75 },
+            { key: `${gk}_change_long`, label: 'Long Change', group: gName, type: 'change_long', width: 98 },
+            { key: `${gk}_change_short`, label: 'Short Change', group: gName, type: 'change_short', width: 100 },
+            { key: `${gk}_pct_net_oi`, label: 'Net / OI %', group: gName, type: 'pct', width: 78 },
+            { key: `${gk}_change`, label: 'Net Change', group: gName, type: 'change', width: 88 },
             { key: `${gk}_net`, label: 'Net Position', group: gName, type: 'net', width: 95 },
         );
     }
 
     // OI
     cols.push(
-        { key: 'oi_pct', label: '% OI', group: 'Open Interest', type: 'pct_plain', width: 55 },
-        { key: 'oi_change', label: 'Change', group: 'Open Interest', type: 'change', width: 80 },
-        { key: 'open_interest', label: 'OI', group: 'Open Interest', type: 'plain', width: 90 },
+        { key: 'oi_pct', label: 'OI %', group: 'Open Interest', type: 'pct_plain', width: 58 },
+        { key: 'oi_change', label: 'OI Change', group: 'Open Interest', type: 'change', width: 85 },
+        { key: 'open_interest', label: 'Open Interest', group: 'Open Interest', type: 'plain', width: 105 },
     );
 
     // WCI per group
     for (const g of groups) {
-        cols.push({ key: `wci_${g.key}`, label: g.short, group: 'WCI (26w)', type: 'centered', width: 55 });
+        cols.push({ key: `wci_${g.key}`, label: g.short, group: 'WCI (26w)', type: 'centered', width: 60 });
     }
 
     // COT Index per period per group
     for (const suffix of ['3m', '1y', '3y']) {
         for (const g of groups) {
-            cols.push({ key: `cot_index_${g.key}_${suffix}`, label: g.short, group: `COT Index (${suffix})`, type: 'centered', width: 55 });
+            cols.push({ key: `cot_index_${g.key}_${suffix}`, label: g.short, group: `COT Index (${suffix})`, type: 'centered', width: 58 });
         }
     }
 
     // Crowded Level per group
     for (const g of groups) {
-        cols.push({ key: `crowded_${g.key}`, label: g.short, group: 'Crowded Level (%)', type: 'crowded', width: 60 });
+        cols.push({ key: `crowded_${g.key}`, label: g.short, group: 'Crowded Level (%)', type: 'crowded', width: 65 });
     }
 
     return cols;
@@ -159,11 +159,7 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
         return hdrGroups;
     }, [COLUMN_DEFS]);
 
-    if (!weeks.length) {
-        return <div className="text-muted text-center py-12 text-xs uppercase tracking-widest font-medium">No data available</div>;
-    }
-
-    // Virtualizer for data rows
+    // Virtualizer for data rows (must be called unconditionally — Rules of Hooks)
     const rowVirtualizer = useVirtualizer({
         count: weeks.length,
         getScrollElement: () => containerRef.current,
@@ -171,13 +167,17 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
         overscan: 25,
     });
 
+    if (!weeks.length) {
+        return <div className="text-muted text-center py-12 text-xs uppercase tracking-[0.14em] font-medium">No data available</div>;
+    }
+
     // Stat rows order
     const statRows = [
         { key: 'max', label: 'Max.' },
         { key: 'min', label: 'Min.' },
         { key: 'max_5y', label: 'Max. 5y' },
         { key: 'min_5y', label: 'Min. 5y' },
-        { key: 'avg_13w', label: '13 week avg' },
+        { key: 'avg_13w', label: 'Avg 13w' },
     ];
 
     return (
@@ -192,15 +192,15 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
             >
                 {/* Header Level 1 — Group names */}
                 <thead className="sticky top-0 z-20">
-                    <tr className="bg-surface">
+                    <tr style={{ background: '#0c0b09' }}>
                         {groupHeaders.map(g => {
                             const isMarketName = g.name === 'date';
                             return (
                                 <th
                                     key={g.key}
                                     colSpan={g.span}
-                                    className={`px-1 py-2 text-[10px] font-bold text-muted border-b border-r border-border/50 text-center uppercase tracking-widest bg-surface ${isMarketName ? 'overflow-hidden text-ellipsis' : 'whitespace-nowrap'}`}
-                                    style={isMarketName ? { maxWidth: 80, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : undefined}
+                                    className={`px-1 py-2 text-[10px] font-medium text-muted border-b border-r border-border-subtle text-center uppercase tracking-[0.14em] ${isMarketName ? 'overflow-hidden text-ellipsis' : 'whitespace-nowrap'}`}
+                                    style={isMarketName ? { maxWidth: 80, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', background: '#0c0b09' } : { background: '#0c0b09' }}
                                     title={isMarketName ? (market?.name ? market.name.split(' - ')[0] : '') : undefined}
                                 >
                                     {isMarketName ? (market?.name ? market.name.split(' - ')[0] : '') : g.name}
@@ -210,13 +210,14 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
                     </tr>
 
                     {/* Header Level 2 — Column names */}
-                    <tr className="bg-surface">
+                    <tr style={{ background: '#0a0907' }}>
                         {COLUMN_DEFS.map(col => (
                             <th
                                 key={col.key}
-                                className={`px-1 py-1.5 text-[10px] font-bold text-muted border-b border-r border-border/50 text-center whitespace-nowrap uppercase tracking-wider bg-surface ${col.sticky ? 'sticky left-0 z-30 bg-surface' : ''
+                                className={`px-1 py-1.5 text-[10px] font-medium text-muted border-b border-r border-border-subtle text-center uppercase tracking-[0.10em] ${col.sticky ? 'sticky left-0 z-30' : ''
                                     }`}
-                                style={{ width: col.width, minWidth: col.width, maxWidth: col.sticky ? col.width : undefined }}
+                                style={{ width: col.width, minWidth: col.width, maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis', background: '#0a0907' }}
+                                title={col.label}
                             >
                                 {col.label}
                             </th>
@@ -231,11 +232,11 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
                         const rowData = statsRecord?.[sr.key];
                         if (!rowData) return null;
                         return (
-                            <tr key={sr.key} className="bg-surface border-b border-border/40">
+                            <tr key={sr.key} className="bg-background border-b border-border-subtle">
                                 {COLUMN_DEFS.map(col => (
                                     <td
                                         key={col.key}
-                                        className={`px-1 py-1 text-right text-muted font-medium border-r border-border/30 whitespace-nowrap ${col.sticky ? 'sticky left-0 z-10 bg-surface text-left font-bold text-text-secondary uppercase tracking-wider' : ''
+                                        className={`px-1 py-1 text-right text-muted font-medium border-r border-border-subtle whitespace-nowrap ${col.sticky ? 'sticky left-0 z-10 bg-background text-left font-medium text-text-secondary uppercase tracking-[0.12em]' : ''
                                             }`}
                                         style={{ width: col.width, minWidth: col.width, maxWidth: col.sticky ? col.width : undefined }}
                                     >
@@ -253,7 +254,7 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
 
                     {/* Separator */}
                     <tr>
-                        <td colSpan={COLUMN_DEFS.length} className="h-px bg-primary/20" />
+                        <td colSpan={COLUMN_DEFS.length} className="h-px bg-bronze/15" />
                     </tr>
 
                     {/* Data rows (virtualized, newest first) */}
@@ -263,33 +264,33 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
                     {rowVirtualizer.getVirtualItems().map(virtualRow => {
                         const week = weeks[virtualRow.index];
                         return (
-                        <tr
-                            key={week.date || virtualRow.index}
-                            data-index={virtualRow.index}
-                            ref={rowVirtualizer.measureElement}
-                            className="border-b border-border/30 hover:bg-surface-hover/50 transition-colors duration-200"
-                        >
-                            {COLUMN_DEFS.map(col => {
-                                const raw = week[col.key];
-                                const bg = getCellBg(raw, col.type, maxAbs[col.key]);
+                            <tr
+                                key={week.date || virtualRow.index}
+                                data-index={virtualRow.index}
+                                ref={rowVirtualizer.measureElement}
+                                className="border-b border-border-subtle hover:bg-surface-hover/30 transition-colors duration-200"
+                            >
+                                {COLUMN_DEFS.map(col => {
+                                    const raw = week[col.key];
+                                    const bg = getCellBg(raw, col.type, maxAbs[col.key]);
 
-                                return (
-                                    <td
-                                        key={col.key}
-                                        className={`px-1 py-0.5 text-right whitespace-nowrap border-r border-border/30 ${col.sticky ? 'sticky left-0 z-10 bg-background text-left text-text-secondary' : ''
-                                            }`}
-                                        style={{
-                                            width: col.width,
-                                            minWidth: col.width,
-                                            maxWidth: col.sticky ? col.width : undefined,
-                                            backgroundColor: col.sticky ? undefined : bg,
-                                        }}
-                                    >
-                                        {renderCellContent(raw, col, week)}
-                                    </td>
-                                );
-                            })}
-                        </tr>
+                                    return (
+                                        <td
+                                            key={col.key}
+                                            className={`px-1 py-0.5 text-right whitespace-nowrap border-r border-border-subtle ${col.sticky ? 'sticky left-0 z-10 bg-background text-left text-text-secondary' : ''
+                                                }`}
+                                            style={{
+                                                width: col.width,
+                                                minWidth: col.width,
+                                                maxWidth: col.sticky ? col.width : undefined,
+                                                backgroundColor: col.sticky ? undefined : bg,
+                                            }}
+                                        >
+                                            {renderCellContent(raw, col, week)}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
                         );
                     })}
                     {(() => {

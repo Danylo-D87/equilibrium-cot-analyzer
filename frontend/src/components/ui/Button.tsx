@@ -19,13 +19,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
  */
 
 const VARIANT: Record<ButtonVariant, string> = {
-    ghost: 'text-muted hover:text-primary hover:bg-surface-hover transition-colors duration-200',
-    outline: 'text-text-secondary border border-border hover:border-border-hover hover:text-primary hover:bg-surface-hover transition-all duration-200',
-    solid: 'bg-primary text-primary-foreground hover:bg-primary-hover transition-colors duration-200',
+    ghost: 'text-muted hover:text-bronze hover:bg-bronze-glow transition-all duration-300',
+    outline: 'text-text-secondary border border-border-subtle hover:border-bronze/20 hover:text-bronze hover:bg-bronze-glow transition-all duration-300',
+    solid: 'bg-bronze text-black font-medium hover:bg-bronze-hover transition-all duration-300',
 };
 
 const SIZE: Record<ButtonSize, string> = {
-    sm: 'h-7 px-2 text-[10px] font-medium tracking-wider uppercase rounded-sm',
+    sm: 'h-7 px-2 text-[10px] font-medium tracking-[0.12em] uppercase rounded-sm',
     md: 'h-8 px-3 text-xs font-medium rounded-sm',
     icon: 'h-7 w-7 flex items-center justify-center rounded-sm',
 };

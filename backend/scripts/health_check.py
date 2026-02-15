@@ -8,6 +8,7 @@ Usage:
 """
 
 import json
+import sqlite3
 import sys
 from datetime import datetime, date
 from pathlib import Path
@@ -86,7 +87,7 @@ class DataHealthChecker:
 
         try:
             stats = self.store.get_db_stats(report_type, subtype)
-        except Exception as e:
+        except sqlite3.Error as e:
             v["issues"].append(f"Cannot read database: {e}")
             v["needs_update"] = True
             v["status"] = "error"

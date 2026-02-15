@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { cn } from '@/lib/cn';
@@ -24,13 +24,11 @@ interface ModalHeaderProps {
 /**
  * Shared modal shell — backdrop + centered container + optional close button.
  *
- * Props:
- *  - isOpen: boolean — controls visibility
- *  - onClose: () => void — called on Escape key and backdrop click
- *  - size: 'sm' | 'md' | 'lg' | 'xl' | 'full' — predefined sizes
- *  - className: string — extra classes for the container
- *  - children: ReactNode
- *  - backdropBlur: 'sm' | 'md' — backdrop blur intensity (default: 'sm')
+ * Accessibility:
+ *  - role="dialog" + aria-modal="true"
+ *  - Body scroll lock while open
+ *  - Focus trap (Tab cycles within modal)
+ *  - Escape key closes
  */
 
 const SIZE_MAP: Record<ModalSize, string> = {
@@ -46,6 +44,8 @@ const BLUR_MAP: Record<BackdropBlur, string> = {
     md: 'backdrop-blur-md',
 };
 
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+
 export default function Modal({
     isOpen,
     onClose,
@@ -54,7 +54,46 @@ export default function Modal({
     children,
     backdropBlur = 'sm',
 }: ModalProps) {
+    const containerRef = useRef<HTMLDivElement>(null);
+
     useEscapeKey(onClose, isOpen);
+
+    // Body scroll lock
+    useEffect(() => {
+        if (!isOpen) return;
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = prev; };
+    }, [isOpen]);
+
+    // Focus trap
+    useEffect(() => {
+        if (!isOpen) return;
+        const el = containerRef.current;
+        if (!el) return;
+
+        const handleTab = (e: KeyboardEvent) => {
+            if (e.key !== 'Tab') return;
+            const focusable = el.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        };
+
+        el.addEventListener('keydown', handleTab);
+        // Auto-focus first focusable element
+        const first = el.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+        first?.focus();
+
+        return () => el.removeEventListener('keydown', handleTab);
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -64,11 +103,15 @@ export default function Modal({
             <div
                 className={cn('absolute inset-0 bg-black/65', BLUR_MAP[backdropBlur])}
                 onClick={onClose}
+                aria-hidden="true"
                 style={{ animation: 'modalFadeIn 0.2s ease-out' }}
             />
 
             {/* Container */}
             <div
+                ref={containerRef}
+                role="dialog"
+                aria-modal="true"
                 className={cn(
                     'relative bg-surface border border-border rounded-sm shadow-2xl flex flex-col overflow-hidden',
                     SIZE_MAP[size],

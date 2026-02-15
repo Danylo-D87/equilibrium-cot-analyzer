@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { CATEGORY_KEYS, CATEGORY_LABELS } from '../utils/constants';
+import { useClickOutside } from '@/hooks/useClickOutside';
 import type { Market } from '../types';
 
 interface MarketSelectorProps {
@@ -19,18 +20,13 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
     const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
     // Close on click outside
-    useEffect(() => {
-        const handler = (e: MouseEvent) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-                setOpen(false);
-                setQuery('');
-                setActiveIdx(-1);
-                setActiveCategory(null);
-            }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
+    const closeDropdown = useCallback(() => {
+        setOpen(false);
+        setQuery('');
+        setActiveIdx(-1);
+        setActiveCategory(null);
     }, []);
+    useClickOutside(wrapperRef, closeDropdown, open);
 
     // Filter and group markets
     const { flat, grouped } = useMemo(() => {
@@ -197,18 +193,13 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                     onClick={handleInputClick}
                     onChange={(e) => { setQuery(e.target.value); setOpen(true); setActiveIdx(0); setActiveCategory(null); }}
                     onKeyDown={handleKeyDown}
-                    className="
-                        h-9 pl-10 pr-3
-                        bg-surface border rounded-sm
-                        text-[12px] text-primary placeholder-muted
-                        focus:outline-none
-                        transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
-                    "
+                    className="h-9 pl-10 pr-3 rounded-sm text-[12px] text-primary placeholder-muted focus:outline-none transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
                     style={{
                         width: open ? '380px' : '200px',
-                        borderColor: open ? '#404040' : '#262626',
-                        backgroundColor: open ? '#121212' : '#0a0a0a',
-                        boxShadow: open ? '0 10px 40px rgba(0,0,0,0.4)' : 'none',
+                        borderColor: open ? 'rgba(196,168,124,0.30)' : 'rgba(255,255,255,0.06)',
+                        border: open ? '1px solid rgba(196,168,124,0.30)' : '1px solid rgba(255,255,255,0.06)',
+                        backgroundColor: open ? '#0e0d0a' : 'rgba(255,255,255,0.03)',
+                        boxShadow: open ? '0 0 0 1px rgba(196,168,124,0.08), 0 10px 40px rgba(0,0,0,0.5)' : 'none',
                     }}
                 />
                 {/* Selected market exchange badge */}
@@ -224,35 +215,46 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
             {/* Dropdown popover */}
             {open && (
                 <div
-                    className="
-                        absolute top-full left-0 mt-2
-                        bg-surface border border-border rounded-sm
-                        shadow-2xl shadow-black/70
-                        max-h-[420px] overflow-hidden
-                        z-50
-                    "
                     style={{
-                        width: '380px',
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        marginTop: 6,
+                        width: 380,
+                        maxHeight: 420,
+                        overflow: 'hidden',
+                        zIndex: 50,
+                        borderRadius: 3,
+                        background: '#0a0a08',
+                        border: '1px solid rgba(196,168,124,0.12)',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(0,0,0,0.5), inset 0 1px 0 rgba(196,168,124,0.03)',
                         animation: 'popoverIn 0.18s ease-out',
                     }}
                 >
                     {/* Category pills navigation */}
                     {!query && grouped.length > 1 && (
-                        <div className="flex-shrink-0 border-b border-border px-2.5 py-2 flex gap-1 flex-wrap bg-surface">
+                        <div
+                            className="flex-shrink-0 px-3 py-2 flex gap-1 flex-wrap"
+                            style={{ background: 'linear-gradient(180deg, rgba(196,168,124,0.04) 0%, rgba(196,168,124,0.01) 100%)', borderBottom: '1px solid rgba(196,168,124,0.06)' }}
+                        >
                             {grouped.map(g => {
                                 const isActive = activeCategory === g.category;
                                 return (
                                     <button
                                         key={g.category}
                                         onClick={() => scrollToCategory(g.category)}
-                                        className={`
-                                            px-2 py-0.5 rounded-sm text-[9px] font-semibold tracking-wider uppercase
-                                            transition-all duration-200
-                                            ${isActive
-                                                ? 'bg-primary text-black'
-                                                : 'text-muted hover:text-text-secondary hover:bg-surface-hover border border-border'
-                                            }
-                                        `}
+                                        style={{
+                                            padding: '2px 8px',
+                                            borderRadius: 2,
+                                            fontSize: 9,
+                                            fontWeight: 700,
+                                            letterSpacing: '0.12em',
+                                            textTransform: 'uppercase' as const,
+                                            background: isActive ? 'rgba(196,168,124,0.12)' : 'transparent',
+                                            color: isActive ? '#c4a87c' : 'rgba(255,255,255,0.30)',
+                                            border: isActive ? '1px solid rgba(196,168,124,0.18)' : '1px solid transparent',
+                                            transition: 'all 0.3s',
+                                        }}
                                     >
                                         {CATEGORY_LABELS[g.category] || g.display}
                                     </button>
@@ -265,12 +267,12 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                     <div
                         ref={listRef}
                         className="overflow-y-auto overflow-x-hidden"
-                        style={{ maxHeight: !query && grouped.length > 1 ? 'calc(420px - 40px)' : '420px' }}
+                        style={{ maxHeight: !query && grouped.length > 1 ? 'calc(420px - 40px)' : '420px', background: '#0a0a08' }}
                     >
                         {flat.length === 0 ? (
-                            <div className="px-4 py-10 text-center">
-                                <p className="text-muted text-xs font-medium uppercase tracking-wider">No markets found</p>
-                                <p className="text-border text-[10px] mt-1.5 uppercase tracking-wide">Try a different search</p>
+                            <div className="px-4 py-12 text-center">
+                                <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase' }}>No markets found</p>
+                                <p style={{ color: 'rgba(255,255,255,0.12)', fontSize: 10, marginTop: 6, letterSpacing: '0.10em', textTransform: 'uppercase' }}>Try a different search</p>
                             </div>
                         ) : (
                             grouped.map(group => (
@@ -278,12 +280,17 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                                     {/* Category header */}
                                     <div
                                         ref={el => { categoryRefs.current[group.category] = el; }}
-                                        className="sticky top-0 z-10 px-3.5 py-2 bg-surface/95 backdrop-blur-sm border-b border-border/50"
+                                        className="sticky top-0 z-10"
+                                        style={{
+                                            padding: '8px 14px',
+                                            background: '#0c0b09',
+                                            borderBottom: '1px solid rgba(196,168,124,0.05)',
+                                        }}
                                     >
-                                        <span className="text-[9px] font-bold tracking-[0.15em] text-muted uppercase">
+                                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.16em', color: 'rgba(196,168,124,0.50)', textTransform: 'uppercase' }}>
                                             {group.display}
                                         </span>
-                                        <span className="text-[9px] text-border ml-2 font-medium">{group.markets.length}</span>
+                                        <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.15)', marginLeft: 8, fontWeight: 500 }}>{group.markets.length}</span>
                                     </div>
 
                                     {/* Market items */}
@@ -298,32 +305,58 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                                                 key={m.code}
                                                 data-idx={idx}
                                                 onClick={() => handleSelect(m)}
-                                                className={`
-                                                    w-full text-left px-3.5 py-[7px] flex items-center gap-2.5
-                                                    transition-all duration-200 cursor-pointer
-                                                    ${isActive
-                                                        ? 'bg-surface-hover'
-                                                        : 'hover:bg-surface-hover/60'
-                                                    }
-                                                `}
+                                                className="w-full text-left flex items-center gap-2.5 cursor-pointer transition-all duration-200"
+                                                style={{
+                                                    padding: '7px 14px',
+                                                    background: isActive
+                                                        ? 'rgba(196,168,124,0.06)'
+                                                        : isSelected
+                                                            ? 'rgba(196,168,124,0.03)'
+                                                            : 'transparent',
+                                                    borderLeft: isSelected ? '2px solid rgba(196,168,124,0.40)' : '2px solid transparent',
+                                                }}
+                                                onMouseEnter={e => {
+                                                    if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(196,168,124,0.04)';
+                                                }}
+                                                onMouseLeave={e => {
+                                                    (e.currentTarget as HTMLElement).style.background = isActive
+                                                        ? 'rgba(196,168,124,0.06)'
+                                                        : isSelected ? 'rgba(196,168,124,0.03)' : 'transparent';
+                                                }}
                                             >
-                                                {/* Selected dot */}
-                                                <div className="w-1.5 flex-shrink-0">
+                                                {/* Selected indicator */}
+                                                <div style={{ width: 5, flexShrink: 0 }}>
                                                     {isSelected && (
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#c4a87c' }} />
                                                     )}
                                                 </div>
 
                                                 {/* Name */}
-                                                <span className={`
-                                                    text-[11.5px] truncate flex-1
-                                                    ${isSelected ? 'text-white font-medium' : 'text-text-secondary'}
-                                                `}>
+                                                <span style={{
+                                                    fontSize: 11.5,
+                                                    flex: 1,
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                    color: isSelected ? '#c4a87c' : 'rgba(255,255,255,0.55)',
+                                                    fontWeight: isSelected ? 500 : 400,
+                                                }}>
                                                     {m.name.split(' - ')[0]}
                                                 </span>
 
                                                 {/* Exchange tag */}
-                                                <span className="text-[9px] text-muted flex-shrink-0 font-bold tracking-[0.15em] uppercase px-1.5 py-0.5 rounded-[2px] bg-surface border border-border">
+                                                <span style={{
+                                                    fontSize: 8,
+                                                    flexShrink: 0,
+                                                    fontWeight: 700,
+                                                    letterSpacing: '0.16em',
+                                                    textTransform: 'uppercase',
+                                                    color: 'rgba(255,255,255,0.18)',
+                                                    padding: '2px 6px',
+                                                    borderRadius: 2,
+                                                    background: 'rgba(196,168,124,0.03)',
+                                                    border: '1px solid rgba(196,168,124,0.06)',
+                                                }}>
                                                     {m.exchange_code || m.exchange}
                                                 </span>
                                             </button>

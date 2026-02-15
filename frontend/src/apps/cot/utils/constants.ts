@@ -65,9 +65,9 @@ export const CHART_COLORS = {
     sell: '#ef4444',
     mixed: '#8b5cf6',
     oi: '#6366f1',
-    grid: '#262626',
-    axis: '#525252',
-    zero: '#262626',
+    grid: '#1a1a1a',
+    axis: '#4a4a4a',
+    zero: '#1e1e1e',
 } as const;
 
 export const GROUP_COLOR_PALETTE = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6'];

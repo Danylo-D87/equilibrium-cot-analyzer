@@ -40,9 +40,16 @@ export default {
                     fg: 'var(--color-destructive-fg)',
                 },
                 accent: 'var(--color-accent)',
+                bronze: {
+                    DEFAULT: 'var(--color-bronze)',
+                    hover: 'var(--color-bronze-hover)',
+                    glow: 'var(--color-bronze-glow)',
+                    muted: 'var(--color-bronze-muted)',
+                },
             },
             fontFamily: {
                 sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                serif: ['Cinzel', 'Georgia', 'serif'],
                 mono: ['JetBrains Mono', 'monospace'],
             },
         },

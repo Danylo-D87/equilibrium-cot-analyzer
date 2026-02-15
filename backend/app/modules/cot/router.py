@@ -4,6 +4,7 @@ COT module — API routes.
 All /api/v1/cot/ endpoints.
 """
 
+import asyncio
 import logging
 from typing import Literal
 
@@ -12,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.modules.cot.dependencies import get_cot_service
 from app.modules.cot.service import CotService
 from app.modules.cot.scheduler import get_update_status, cot_update_manager
+from app.modules.prices.scheduler import price_update_manager, get_price_update_status
 from app.modules.cot.schemas import (
     MarketMeta, MarketDetailResponse, ScreenerRow,
     GroupDef, StatusResponse, PaginatedResponse,
@@ -26,9 +28,13 @@ router = APIRouter(prefix="/cot", tags=["COT"])
 # Module-level caches
 # ------------------------------------------------------------------
 
-_market_cache = TTLCache(name="cot.market", default_ttl=600)
-_screener_cache = TTLCache(name="cot.screener", default_ttl=300)
-_markets_list_cache = TTLCache(name="cot.markets_list", default_ttl=600)
+MARKET_CACHE_TTL = 600       # 10 min — individual market detail
+SCREENER_CACHE_TTL = 300     # 5 min — screener table
+MARKETS_LIST_CACHE_TTL = 600 # 10 min — markets list
+
+_market_cache = TTLCache(name="cot.market", default_ttl=MARKET_CACHE_TTL)
+_screener_cache = TTLCache(name="cot.screener", default_ttl=SCREENER_CACHE_TTL)
+_markets_list_cache = TTLCache(name="cot.markets_list", default_ttl=MARKETS_LIST_CACHE_TTL)
 
 
 def invalidate_cot_caches() -> None:
@@ -41,6 +47,7 @@ def invalidate_cot_caches() -> None:
 
 # Register so scheduler can trigger cache invalidation without importing router
 cot_update_manager.on_pipeline_complete(invalidate_cot_caches)
+price_update_manager.on_complete(invalidate_cot_caches)
 
 
 # ------------------------------------------------------------------
@@ -56,7 +63,7 @@ SubType = Literal["fo", "co"]
 # ==================================================================
 
 @router.get("/markets/{report_type}/{subtype}", response_model=list[MarketMeta])
-def list_markets(
+async def list_markets(
     report_type: ReportType,
     subtype: SubType,
     service: CotService = Depends(get_cot_service),
@@ -67,7 +74,7 @@ def list_markets(
     if cached is not None:
         return cached
 
-    markets = service.get_markets(report_type, subtype)
+    markets = await asyncio.to_thread(service.get_markets, report_type, subtype)
     if not markets:
         raise HTTPException(status_code=404, detail="No markets found for this combination")
 
@@ -76,7 +83,7 @@ def list_markets(
 
 
 @router.get("/markets/{report_type}/{subtype}/{code}", response_model=MarketDetailResponse)
-def get_market(
+async def get_market(
     report_type: ReportType,
     subtype: SubType,
     code: str,
@@ -88,7 +95,7 @@ def get_market(
     if cached is not None:
         return cached
 
-    data = service.get_market_detail(code, report_type, subtype)
+    data = await asyncio.to_thread(service.get_market_detail, code, report_type, subtype)
     if data is None:
         raise HTTPException(status_code=404, detail=f"Market '{code}' not found")
 
@@ -97,7 +104,7 @@ def get_market(
 
 
 @router.get("/screener/{report_type}/{subtype}", response_model=PaginatedResponse)
-def get_screener(
+async def get_screener(
     report_type: ReportType,
     subtype: SubType,
     limit: int = 0,
@@ -109,31 +116,41 @@ def get_screener(
     Args:
         limit: Max rows to return. 0 = all (backwards compatible).
         offset: Number of rows to skip.
+
+    When limit > 0, uses SQL-level pagination (only processes the
+    requested page of markets). When limit = 0, loads everything
+    into cache and returns all rows.
     """
+    # SQL-paginated path: only load the requested page of markets
+    if limit > 0:
+        rows, total = await asyncio.to_thread(
+            service.get_screener_page, report_type, subtype, limit, offset,
+        )
+        if not rows and total == 0:
+            raise HTTPException(status_code=404, detail="No screener data for this combination")
+        return PaginatedResponse(items=rows, total=total, limit=limit, offset=offset)
+
+    # Full-cache path (limit=0): load everything, cache it
     cache_key = f"screener:{report_type}:{subtype}"
     cached = _screener_cache.get(cache_key)
     if cached is not None:
         rows = cached
     else:
-        rows = service.get_screener(report_type, subtype)
+        rows = await asyncio.to_thread(service.get_screener, report_type, subtype)
         if not rows:
             raise HTTPException(status_code=404, detail="No screener data for this combination")
         _screener_cache.set(cache_key, rows)
 
-    total = len(rows)
-    if limit > 0:
-        rows = rows[offset:offset + limit]
-
-    return PaginatedResponse(items=rows, total=total, limit=limit, offset=offset)
+    return PaginatedResponse(items=rows, total=len(rows), limit=0, offset=0)
 
 
 @router.get("/groups/{report_type}", response_model=list[GroupDef])
-def get_groups(
+async def get_groups(
     report_type: ReportType,
     service: CotService = Depends(get_cot_service),
 ):
     """Get group definitions (metadata) for a report type."""
-    groups = service.get_groups(report_type)
+    groups = await asyncio.to_thread(service.get_groups, report_type)
     if not groups:
         raise HTTPException(status_code=404, detail=f"No groups for report type '{report_type}'")
     return groups
@@ -144,11 +161,12 @@ def get_groups(
 # ------------------------------------------------------------------
 
 @router.get("/status", response_model=StatusResponse)
-def get_status(service: CotService = Depends(get_cot_service)):
+async def get_status(service: CotService = Depends(get_cot_service)):
     """System status: DB stats, scheduler status, last update info."""
     return {
-        "data": service.get_status(),
+        "data": await asyncio.to_thread(service.get_status),
         "scheduler": get_update_status(),
+        "price_update": get_price_update_status(),
     }
 
 

@@ -1,15 +1,13 @@
 
 import { Outlet } from 'react-router-dom';
-import TopNav from './TopNav';
 
 /**
  * AppShell — shared layout for all app pages (except Landing).
- * Renders the top navigation bar and an <Outlet /> for child routes.
+ * Each app renders its own header bar with brand + controls.
  */
 export default function AppShell() {
     return (
         <div className="h-screen bg-background flex flex-col overflow-hidden">
-            <TopNav />
             <Outlet />
         </div>
     );

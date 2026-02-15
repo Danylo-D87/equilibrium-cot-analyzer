@@ -172,6 +172,54 @@ class CotStorage:
                 result.setdefault(code, []).append(d)
             return result
 
+    def get_market_count(self, report_type: str, subtype: str) -> int:
+        """Count distinct markets for a report variant (used for pagination metadata)."""
+        with self._conn() as conn:
+            cur = conn.execute(
+                "SELECT COUNT(DISTINCT cftc_contract_code) FROM cot_data WHERE report_type=? AND subtype=?",
+                (report_type, subtype),
+            )
+            row = cur.fetchone()
+            return row[0] if row else 0
+
+    def get_market_codes_page(
+        self, report_type: str, subtype: str, limit: int, offset: int,
+    ) -> list[str]:
+        """Return a page of distinct market codes (alphabetical), for paginated screener."""
+        with self._conn() as conn:
+            cur = conn.execute(
+                """SELECT DISTINCT cftc_contract_code
+                   FROM cot_data
+                   WHERE report_type = ? AND subtype = ?
+                   ORDER BY cftc_contract_code
+                   LIMIT ? OFFSET ?""",
+                (report_type, subtype, limit, offset),
+            )
+            return [row[0] for row in cur.fetchall()]
+
+    def get_bulk_for_codes(
+        self, codes: list[str], report_type: str, subtype: str,
+    ) -> dict[str, list[dict]]:
+        """Load rows for a specific set of market codes (paginated screener)."""
+        if not codes:
+            return {}
+        placeholders = ",".join(["?"] * len(codes))
+        with self._conn() as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.execute(
+                f"""SELECT {self._QUERY_COLS_SQL} FROM cot_data
+                   WHERE report_type = ? AND subtype = ?
+                     AND cftc_contract_code IN ({placeholders})
+                   ORDER BY cftc_contract_code, report_date DESC""",
+                [report_type, subtype, *codes],
+            )
+            result: dict[str, list[dict]] = {}
+            for row in cur:
+                d = dict(row)
+                code = d["cftc_contract_code"]
+                result.setdefault(code, []).append(d)
+            return result
+
     def get_all_markets(self, report_type: str, subtype: str) -> list[dict]:
         """Distinct markets for a report variant."""
         with self._conn() as conn:

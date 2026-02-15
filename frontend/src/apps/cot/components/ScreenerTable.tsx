@@ -41,20 +41,20 @@ function buildColumns(groups: Group[] | null): ScreenerColumn[] {
     ];
 
     const groupCols: ScreenerColumn[] = (groups || []).flatMap(g => [
-        { key: `${g.key}_total`, label: 'Pos', group: g.short, width: 80, align: 'right', sortable: true, type: 'number' },
-        { key: `${g.key}_bar`, label: 'L/S', group: g.short, width: 80, align: 'center', sortable: true, type: 'bar', groupKey: g.key, sortBy: `${g.key}_short_ratio` },
-        { key: `${g.key}_change_total`, label: 'О”', group: g.short, width: 68, align: 'right', sortable: true, type: 'change' },
-        { key: `${g.key}_pct_oi_total`, label: '% OI', group: g.short, width: 58, align: 'right', sortable: true, type: 'pct' },
-        { key: `${g.key}_pct_oi_total_change`, label: 'О”%', group: g.short, width: 52, align: 'right', sortable: true, type: 'pct_change' },
+        { key: `${g.key}_total`, label: 'Position', group: g.short, width: 85, align: 'right', sortable: true, type: 'number' },
+        { key: `${g.key}_bar`, label: 'Long / Short', group: g.short, width: 88, align: 'center', sortable: true, type: 'bar', groupKey: g.key, sortBy: `${g.key}_short_ratio` },
+        { key: `${g.key}_change_total`, label: 'Change', group: g.short, width: 72, align: 'right', sortable: true, type: 'change' },
+        { key: `${g.key}_pct_oi_total`, label: '% of OI', group: g.short, width: 62, align: 'right', sortable: true, type: 'pct' },
+        { key: `${g.key}_pct_oi_total_change`, label: '% Change', group: g.short, width: 72, align: 'right', sortable: true, type: 'pct_change' },
     ]);
 
     const oiCols: ScreenerColumn[] = [
-        { key: 'open_interest', label: 'OI', group: 'Open Interest', width: 90, align: 'right', sortable: true, type: 'number' },
-        { key: 'oi_change', label: 'О” OI', group: 'Open Interest', width: 75, align: 'right', sortable: true, type: 'change' },
+        { key: 'open_interest', label: 'Open Interest', group: 'Open Interest', width: 105, align: 'right', sortable: true, type: 'number' },
+        { key: 'oi_change', label: 'OI Change', group: 'Open Interest', width: 82, align: 'right', sortable: true, type: 'change' },
     ];
 
     const allCols: ScreenerColumn[] = [
-        { key: 'all_bar', label: 'L/S', group: 'Total', width: 80, align: 'center', sortable: true, type: 'bar', groupKey: 'all', sortBy: 'all_short_ratio' },
+        { key: 'all_bar', label: 'Long / Short', group: 'Total', width: 88, align: 'center', sortable: true, type: 'bar', groupKey: 'all', sortBy: 'all_short_ratio' },
     ];
 
     return [...left, ...groupCols, ...oiCols, ...allCols];
@@ -69,11 +69,14 @@ function PositionBar({ long, short, changeLong, changeShort }: { long: number | 
     const ref = useRef<HTMLDivElement>(null);
     const [tip, setTip] = useState({ x: 0, y: 0 });
 
-    if (!long || !short) {
+    if (long == null || short == null) {
         return <span className="text-muted text-[9px]">—</span>;
     }
 
     const total = Math.abs(long) + Math.abs(short);
+    if (total === 0) {
+        return <span className="text-muted text-[9px]">—</span>;
+    }
     const longPct = (Math.abs(long) / total) * 100;
     const shortPct = (Math.abs(short) / total) * 100;
 
@@ -144,14 +147,14 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
     const { screenerData, groups, isLoading: loading, error } = useScreenerData(reportType, subtype);
     const [search, _setSearch] = useState('');
     const [category, setCategory] = useState('all');
-    const [sortKey, setSortKey] = useState('open_interest');
-    const [sortDir, setSortDir] = useState('desc');
+    const [sortKey, setSortKey] = useState('name');
+    const [sortDir, setSortDir] = useState('asc');
     const tableScrollRef = useRef<HTMLDivElement>(null);
 
     // Enrich raw screener data with computed columns
     const data = useMemo(() => {
-        if (!screenerData) return null;
-        return enrichRows([...screenerData], groups);
+        if (!screenerData || !Array.isArray(screenerData)) return null;
+        return enrichRows(screenerData, groups);
     }, [screenerData, groups]);
 
     // Build columns dynamically from groups
@@ -161,15 +164,13 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
     // Sort handler
     const handleSort = useCallback((key: string, sortBy?: string) => {
         const realKey = sortBy || key;
-        setSortKey(prev => {
-            if (prev === realKey) {
-                setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-                return realKey;
-            }
+        if (sortKey === realKey) {
+            setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortKey(realKey);
             setSortDir('desc');
-            return realKey;
-        });
-    }, []);
+        }
+    }, [sortKey]);
 
     // Filter + sort
     const rows = useMemo(() => {
@@ -262,7 +263,7 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
                 <p className="text-destructive-fg text-sm font-medium">{error?.message || 'Unknown error'}</p>
                 <button
                     onClick={() => window.location.reload()}
-                    className="text-xs text-text-secondary hover:text-white transition-all duration-300 tracking-widest uppercase px-6 py-2.5 rounded-sm border border-border hover:border-text-secondary hover:bg-surface-hover"
+                    className="text-xs text-text-secondary hover:text-bronze transition-all duration-300 tracking-[0.14em] uppercase px-6 py-2.5 rounded-sm border border-border hover:border-bronze/20 hover:bg-bronze-glow"
                 >
                     Reload
                 </button>
@@ -272,7 +273,7 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
 
     if (!data || !data.length) {
         return (
-            <div className="text-muted text-center py-10 text-xs uppercase tracking-widest font-medium">
+            <div className="text-muted text-center py-10 text-xs uppercase tracking-[0.14em] font-medium">
                 No screener data available
             </div>
         );
@@ -281,15 +282,8 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
     return (
         <div className="h-full flex flex-col">
             {/* Toolbar */}
-            <div className="flex-shrink-0 border-b border-border bg-surface px-6 py-3 space-y-2.5">
-                {/* Row count */}
-                <div className="flex items-center">
-                    <div className="ml-auto text-[10px] text-muted tabular-nums font-bold uppercase tracking-wider">
-                        {rows.length} markets
-                    </div>
-                </div>
-
-                {/* Row 2: Category chips */}
+            <div className="flex-shrink-0 border-b border-border-subtle bg-background/50 px-6 py-2.5">
+                {/* Category chips + count in one row */}
                 <div className="flex items-center gap-1.5 flex-wrap">
                     {CATEGORY_ORDER.map(cat => {
                         const count = catCounts[cat.key] || 0;
@@ -299,48 +293,53 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
                             <button
                                 key={cat.key}
                                 onClick={() => setCategory(cat.key)}
-                                className={`px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${active
+                                className={`px-3 py-1.5 rounded-sm text-[10px] font-bold uppercase tracking-[0.12em] transition-all duration-300 ${active
                                     ? cat.key === 'all'
-                                        ? 'bg-primary text-black border border-transparent'
+                                        ? 'bg-white/[0.10] text-white/90 border border-white/[0.08]'
                                         : 'border'
-                                    : 'text-muted hover:text-text-secondary border border-transparent hover:border-border hover:bg-surface-hover'
+                                    : 'text-muted hover:text-text-secondary border border-transparent hover:border-border-subtle hover:bg-surface-hover'
                                     }`}
                                 style={active && colors ? { backgroundColor: colors.bg, color: colors.text, borderColor: colors.text + '30' } : undefined}
                             >
                                 {cat.label}
-                                {count > 0 && <span className="ml-1.5 text-[9px] opacity-50">{count}</span>}
+                                {count > 0 && <span className="ml-1.5 text-[9px] opacity-40">{count}</span>}
                             </button>
                         );
                     })}
+                    <div className="ml-auto text-[10px] text-muted tabular-nums font-medium uppercase tracking-[0.14em] flex-shrink-0">
+                        {rows.length} <span className="text-border-hover">markets</span>
+                    </div>
                 </div>
             </div>
 
             {/* Table */}
             <div className="flex-1 overflow-auto" ref={tableScrollRef}>
-                <table className="border-collapse text-[11px] leading-tight" style={{ minWidth: TOTAL_WIDTH }}>
+                <table className="text-[11px] leading-tight" style={{ minWidth: TOTAL_WIDTH, borderCollapse: 'separate', borderSpacing: 0 }}>
                     <thead className="sticky top-0 z-20">
                         {/* Group headers */}
-                        <tr className="bg-surface">
+                        <tr style={{ background: '#0c0b09' }}>
                             {groupHeaders.map((g, i) => (
                                 <th
                                     key={i}
                                     colSpan={g.span}
-                                    className="px-1 py-2 text-[10px] font-bold text-muted border-b border-r border-border/50 text-center whitespace-nowrap uppercase tracking-widest"
+                                    className="px-1 py-2 text-[10px] font-medium text-muted border-r border-border-subtle text-center whitespace-nowrap uppercase tracking-[0.14em]"
+                                    style={{ background: '#0c0b09', boxShadow: 'inset 0 -1px 0 var(--color-border-subtle)' }}
                                 >
                                     {g.name}
                                 </th>
                             ))}
                         </tr>
                         {/* Column headers */}
-                        <tr className="bg-surface">
+                        <tr style={{ background: '#0a0907' }}>
                             {COLUMNS.map(col => (
                                 <th
                                     key={col.key}
                                     onClick={() => col.sortable && handleSort(col.key, col.sortBy)}
-                                    className={`px-1.5 py-2 text-[10px] font-bold border-b border-r border-border/50 whitespace-nowrap select-none uppercase tracking-wider ${col.sortable ? 'cursor-pointer hover:text-primary' : ''
-                                        } ${sortKey === (col.sortBy || col.key) ? 'text-primary' : 'text-muted'} ${col.sticky ? 'sticky left-0 z-10 bg-surface' : ''
+                                    className={`px-1.5 py-2 text-[10px] font-medium border-b border-r border-border-subtle select-none uppercase tracking-[0.10em] ${col.sortable ? 'cursor-pointer hover:text-bronze' : ''
+                                        } ${sortKey === (col.sortBy || col.key) ? 'text-bronze' : 'text-muted'} ${col.sticky ? 'sticky left-0 z-10' : ''
                                         }`}
-                                    style={{ width: col.width, minWidth: col.width, textAlign: col.align }}
+                                    style={{ width: col.width, minWidth: col.width, maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis', textAlign: col.align, background: '#0a0907' }}
+                                    title={col.label}
                                 >
                                     {col.label}
                                     {sortKey === (col.sortBy || col.key) && (
@@ -359,29 +358,29 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
                         {rowVirtualizer.getVirtualItems().map(virtualRow => {
                             const row = rows[virtualRow.index];
                             return (
-                            <tr
-                                key={row.code}
-                                data-index={virtualRow.index}
-                                ref={rowVirtualizer.measureElement}
-                                onClick={() => onSelectMarket && onSelectMarket(row.code)}
-                                className="border-b border-border/30 hover:bg-surface-hover/50 cursor-pointer transition-colors duration-200 group"
-                            >
-                                {COLUMNS.map(col => (
-                                    <td
-                                        key={col.key}
-                                        className={`px-1.5 py-[6px] border-r border-border/30 whitespace-nowrap ${col.sticky ? 'sticky left-0 z-10 bg-background group-hover:bg-surface-hover transition-colors' : ''
-                                            }`}
-                                        style={{
-                                            width: col.width,
-                                            minWidth: col.width,
-                                            textAlign: col.align,
-                                            backgroundColor: col.sticky ? undefined : getCellBg(row, col),
-                                        }}
-                                    >
-                                        {renderCell(row, col)}
-                                    </td>
-                                ))}
-                            </tr>
+                                <tr
+                                    key={row.code}
+                                    data-index={virtualRow.index}
+                                    ref={rowVirtualizer.measureElement}
+                                    onClick={() => onSelectMarket && onSelectMarket(row.code)}
+                                    className="border-b border-border-subtle hover:bg-surface-hover/30 cursor-pointer transition-colors duration-300 group"
+                                >
+                                    {COLUMNS.map(col => (
+                                        <td
+                                            key={col.key}
+                                            className={`px-1.5 py-[6px] border-r border-border-subtle whitespace-nowrap ${col.sticky ? 'sticky left-0 z-10 bg-background group-hover:bg-surface-hover transition-colors' : ''
+                                                }`}
+                                            style={{
+                                                width: col.width,
+                                                minWidth: col.width,
+                                                textAlign: col.align,
+                                                backgroundColor: col.sticky ? undefined : getCellBg(row, col),
+                                            }}
+                                        >
+                                            {renderCell(row, col)}
+                                        </td>
+                                    ))}
+                                </tr>
                             );
                         })}
                         {(() => {
@@ -395,7 +394,7 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
             </div>
 
             {/* Bar legend */}
-            <div className="flex-shrink-0 h-8 border-t border-border flex items-center justify-center gap-6 px-4 bg-background">
+            <div className="flex-shrink-0 h-8 border-t border-border-subtle flex items-center justify-center gap-6 px-4 bg-background/50">
                 <div className="flex items-center gap-1.5">
                     <div className="w-3 h-2.5 rounded-[1px]" style={{ background: 'rgba(239,68,68,0.45)' }} />
                     <span className="text-[9px] text-muted uppercase tracking-wider">Short (Sell)</span>
@@ -437,7 +436,7 @@ function renderCell(row: EnrichedScreenerRow, col: ScreenerColumn): React.ReactN
             if (col.key === 'name') {
                 const assetName = v ? v.split(' - ')[0] : '';
                 return (
-                    <span className="text-primary group-hover:text-white font-medium transition-colors truncate block max-w-[180px]" title={v ?? undefined}>
+                    <span className="text-primary group-hover:text-bronze font-medium transition-colors truncate block max-w-[180px]" title={v ?? undefined}>
                         {assetName}
                     </span>
                 );

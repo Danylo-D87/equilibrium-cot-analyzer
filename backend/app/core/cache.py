@@ -12,11 +12,15 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_CACHE_TTL = 300       # 5 minutes
+DEFAULT_CACHE_MAX_SIZE = 10_000
+CACHE_CLEANUP_INTERVAL = 100  # Run cleanup every N set() calls
+
 
 class TTLCache:
     """Thread-safe in-memory cache with per-key TTL."""
 
-    def __init__(self, name: str = "default", default_ttl: int = 300, max_size: int = 10_000):
+    def __init__(self, name: str = "default", default_ttl: int = DEFAULT_CACHE_TTL, max_size: int = DEFAULT_CACHE_MAX_SIZE):
         """
         Args:
             name: Human-readable cache name (for logging).
@@ -29,7 +33,7 @@ class TTLCache:
         self._store: dict[str, tuple[Any, float]] = {}
         self._lock = threading.Lock()
         self._cleanup_counter = 0
-        self._cleanup_every = 100
+        self._cleanup_every = CACHE_CLEANUP_INTERVAL
 
     def get(self, key: str) -> Any | None:
         """Get value if it exists and has not expired."""
