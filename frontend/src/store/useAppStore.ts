@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { ReportType, Subtype, TabType } from '../types';
+import type { ReportType, Subtype } from '../types';
 
 interface AppState {
     // Persisted
@@ -9,7 +9,6 @@ interface AppState {
     selectedMarketCode: string | null;
 
     // Transient
-    activeTab: TabType;
     fitMode: boolean;
     docsOpen: boolean;
     chartOpen: boolean;
@@ -18,7 +17,6 @@ interface AppState {
     setReportType: (rt: ReportType) => void;
     setSubtype: (st: Subtype) => void;
     setSelectedMarketCode: (code: string | null) => void;
-    setActiveTab: (tab: TabType) => void;
     setFitMode: (fit: boolean) => void;
     toggleFitMode: () => void;
     setDocsOpen: (open: boolean) => void;
@@ -34,7 +32,6 @@ export const useAppStore = create<AppState>()(
             selectedMarketCode: null,
 
             // Transient defaults
-            activeTab: 'report',
             fitMode: false,
             docsOpen: false,
             chartOpen: false,
@@ -43,7 +40,6 @@ export const useAppStore = create<AppState>()(
             setReportType: (reportType) => set({ reportType }),
             setSubtype: (subtype) => set({ subtype }),
             setSelectedMarketCode: (code) => set({ selectedMarketCode: code }),
-            setActiveTab: (tab) => set({ activeTab: tab }),
             setFitMode: (fit) => set({ fitMode: fit }),
             toggleFitMode: () => set((s) => ({ fitMode: !s.fitMode })),
             setDocsOpen: (open) => set({ docsOpen: open }),

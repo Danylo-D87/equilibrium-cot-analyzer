@@ -12,4 +12,3 @@ export interface Signal {
 
 export type ReportType = 'legacy' | 'disagg' | 'tff';
 export type Subtype = 'fo' | 'co';
-export type TabType = 'report' | 'screener';
