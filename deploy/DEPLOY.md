@@ -9,10 +9,33 @@ nginx (port 80/443)
 └── /data/*     → frontend/public/data (cached JSON)
 
 FastAPI backend
-├── app.main:app         → API server
-├── APScheduler          → auto-update every Friday 23:00 Kyiv time
-└── SQLite (data/app.db) → 265K+ COT records
+├── app.main:app              → API server
+├── APScheduler (optional)    → COT: Friday 23:00 Kyiv, Prices: daily 00:00 Kyiv
+└── SQLite (data/app.db)      → 265K+ COT records
 ```
+
+## ⚙️ Auto-Updates Control
+
+By default, the backend runs **two scheduled jobs**:
+- **COT data**: every Friday 23:00 Kyiv time
+- **Price data**: every day 00:00 Kyiv time
+
+### To disable auto-updates:
+
+Edit `/etc/systemd/system/cot-api.service`, add:
+```ini
+Environment=DISABLE_SCHEDULER=1
+```
+
+Then reload:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart cot-api.service
+```
+
+To **re-enable**, remove that line and restart again.
+
+---
 
 ## Requirements
 

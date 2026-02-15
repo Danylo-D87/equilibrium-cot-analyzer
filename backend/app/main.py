@@ -38,10 +38,15 @@ async def lifespan(app: FastAPI):
 
     logger.info("Starting %s v%s", settings.app_name, settings.app_version)
 
-    # Register module jobs and start scheduler
-    register_scheduled_job()       # COT pipeline — every Friday 23:00 Kyiv
-    register_daily_price_job()     # Price update — every day 00:00 Kyiv
-    core_scheduler.start()
+    # Register module jobs and start scheduler (can be disabled via env var)
+    import os
+    if os.getenv("DISABLE_SCHEDULER", "").lower() not in ("1", "true", "yes"):
+        register_scheduled_job()       # COT pipeline — every Friday 23:00 Kyiv
+        register_daily_price_job()     # Price update — every day 00:00 Kyiv
+        core_scheduler.start()
+        logger.info("Background scheduler started")
+    else:
+        logger.warning("Background scheduler DISABLED (DISABLE_SCHEDULER is set)")
 
     yield
 

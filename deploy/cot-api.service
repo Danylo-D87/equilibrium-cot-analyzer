@@ -16,6 +16,8 @@ StandardError=journal
 # Environment
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONDONTWRITEBYTECODE=1
+# Uncomment to disable automatic COT/price updates:
+# Environment=DISABLE_SCHEDULER=1
 
 # Security hardening
 NoNewPrivileges=yes
