@@ -1,15 +1,22 @@
-import React from 'react';
 import {
     ResponsiveContainer, ComposedChart, Line, XAxis, YAxis,
     Tooltip, CartesianGrid, ReferenceLine,
 } from 'recharts';
 import { COLORS, fmtDate, fmtTick } from './chartConstants';
+import type { GroupMeta } from './chartConstants';
+import type { Week } from '../../types';
 
 // ---------------------------------------------------------------------------
 // Tooltip
 // ---------------------------------------------------------------------------
 
-function IndicatorTooltip({ active, payload, label, indicatorType }) {
+interface IndicatorTooltipEntry {
+    color: string;
+    name: string;
+    value: number | null;
+}
+
+function IndicatorTooltip({ active, payload, label, indicatorType }: { active?: boolean; payload?: IndicatorTooltipEntry[]; label?: string; indicatorType: string }) {
     if (!active || !payload?.length) return null;
     const title = indicatorType === 'wci' ? 'WCI' : 'COT Index';
     return (
@@ -19,7 +26,7 @@ function IndicatorTooltip({ active, payload, label, indicatorType }) {
                 <div key={i} className="flex items-center gap-2 text-[11px]">
                     <span className="inline-block w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
                     <span className="text-text-secondary min-w-[80px]">{entry.name}</span>
-                    <span className="text-white font-medium font-mono">{Math.round(entry.value)}%</span>
+                    <span className="text-white font-medium font-mono">{Math.round(entry.value!)}%</span>
                 </div>
             ))}
         </div>
@@ -30,8 +37,16 @@ function IndicatorTooltip({ active, payload, label, indicatorType }) {
 // Chart (COT Index / WCI — bottom panel)
 // ---------------------------------------------------------------------------
 
-export default function IndicatorChart({ chartData, indicatorType, period, groupsMeta, activeGroups }) {
-    const getDataKey = (gk) => {
+interface IndicatorChartProps {
+    chartData: Week[];
+    indicatorType: string;
+    period: string;
+    groupsMeta: GroupMeta[];
+    activeGroups: string[];
+}
+
+export default function IndicatorChart({ chartData, indicatorType, period, groupsMeta, activeGroups }: IndicatorChartProps) {
+    const getDataKey = (gk: string): string => {
         if (indicatorType === 'wci') return `wci_${gk}`;
         return `cot_index_${gk}_${period}`;
     };

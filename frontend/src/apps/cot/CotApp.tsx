@@ -33,7 +33,7 @@ export default function CotApp() {
     // Derive active view from URL: /cot/screener → screener, /cot → report
     const activeTab = location.pathname === '/cot/screener' ? 'screener' : 'report';
 
-    const setActiveTab = useCallback((tab) => {
+    const setActiveTab = useCallback((tab: 'report' | 'screener') => {
         navigate(tab === 'screener' ? '/cot/screener' : '/cot', { replace: true });
     }, [navigate]);
 
@@ -50,7 +50,7 @@ export default function CotApp() {
     }, [markets, reportType, selectedMarketCode, setSelectedMarketCode]);
 
     // --- Screener row click → switch to report tab ---
-    const handleScreenerSelect = useCallback((code) => {
+    const handleScreenerSelect = useCallback((code: string) => {
         setSelectedMarketCode(code);
         setActiveTab('report');
     }, [setSelectedMarketCode, setActiveTab]);
@@ -99,8 +99,8 @@ export default function CotApp() {
                     <button
                         onClick={() => setActiveTab('report')}
                         className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 ${activeTab === 'report'
-                                ? 'text-primary'
-                                : 'text-muted hover:text-text-secondary'
+                            ? 'text-primary'
+                            : 'text-muted hover:text-text-secondary'
                             }`}
                     >
                         Report
@@ -109,8 +109,8 @@ export default function CotApp() {
                     <button
                         onClick={() => setActiveTab('screener')}
                         className={`px-2.5 py-1 text-[10px] font-medium tracking-[0.08em] uppercase transition-colors duration-200 ${activeTab === 'screener'
-                                ? 'text-primary'
-                                : 'text-muted hover:text-text-secondary'
+                            ? 'text-primary'
+                            : 'text-muted hover:text-text-secondary'
                             }`}
                     >
                         Screener
@@ -128,8 +128,8 @@ export default function CotApp() {
                             <button
                                 onClick={() => setReportType(rt.key)}
                                 className={`px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase transition-colors duration-200 rounded-sm ${reportType === rt.key
-                                        ? 'text-primary bg-surface-highlight'
-                                        : 'text-muted hover:text-text-secondary'
+                                    ? 'text-primary bg-surface-highlight'
+                                    : 'text-muted hover:text-text-secondary'
                                     }`}
                             >
                                 {rt.shortLabel}
@@ -146,8 +146,8 @@ export default function CotApp() {
                             <button
                                 onClick={() => setSubtype(st.key)}
                                 className={`px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase transition-colors duration-200 rounded-sm ${subtype === st.key
-                                        ? 'text-primary bg-surface-highlight'
-                                        : 'text-muted hover:text-text-secondary'
+                                    ? 'text-primary bg-surface-highlight'
+                                    : 'text-muted hover:text-text-secondary'
                                     }`}
                             >
                                 {st.shortLabel}
@@ -222,8 +222,8 @@ export default function CotApp() {
                                 <button
                                     onClick={toggleFitMode}
                                     className={`fixed bottom-5 right-5 z-40 w-10 h-10 flex items-center justify-center rounded-sm border transition-all duration-300 shadow-lg shadow-black/40 ${fitMode
-                                            ? 'bg-primary/10 border-primary/30 text-primary'
-                                            : 'bg-surface/90 border-border text-muted hover:text-primary hover:border-border-hover hover:bg-surface-hover'
+                                        ? 'bg-primary/10 border-primary/30 text-primary'
+                                        : 'bg-surface/90 border-border text-muted hover:text-primary hover:border-border-hover hover:bg-surface-hover'
                                         } backdrop-blur-sm`}
                                     title={fitMode ? 'Normal size' : 'Fit to screen'}
                                 >

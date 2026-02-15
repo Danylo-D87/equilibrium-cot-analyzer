@@ -1,6 +1,21 @@
 ﻿import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { formatNumber, formatPct, formatDate } from '../utils/formatters';
 import { GREEN, RED, getColorBySign, getColorMono, getColorCentered, getColorCrowded } from '../utils/colors';
+import type { MarketData, Group, Week, CrowdedLevel } from '../types';
+
+interface CotReportTableProps {
+    data: MarketData | null;
+    fitMode?: boolean;
+}
+
+interface ColumnDef {
+    key: string;
+    label: string;
+    group: string;
+    type: string;
+    width: number;
+    sticky?: boolean;
+}
 
 /**
  * COT Report Table — dynamic columns based on group metadata.
@@ -12,7 +27,7 @@ import { GREEN, RED, getColorBySign, getColorMono, getColorCentered, getColorCro
 // Arrow component
 // =====================================================
 
-function Arrow({ value }) {
+function Arrow({ value }: { value: number | null | undefined }) {
     if (value == null || value === 0) return null;
     if (value > 0) return <span className="text-green-500 text-[10px] ml-0.5">▲</span>;
     return <span className="text-red-500 text-[10px] ml-0.5">▼</span>;
@@ -22,10 +37,10 @@ function Arrow({ value }) {
 // Build column definitions dynamically from groups
 // =====================================================
 
-function buildColumnDefs(groups) {
+function buildColumnDefs(groups: Group[]): ColumnDef[] {
     if (!groups || !groups.length) return [];
 
-    const cols = [
+    const cols: ColumnDef[] = [
         { key: 'date', label: 'Date', group: 'date', type: 'date', width: 80, sticky: true },
     ];
 
@@ -73,9 +88,9 @@ function buildColumnDefs(groups) {
 // Main component
 // =====================================================
 
-export default function CotReportTable({ data, fitMode = false }) {
-    const { weeks = [], stats = {}, market = {}, groups = [] } = data || {};
-    const containerRef = useRef(null);
+export default function CotReportTable({ data, fitMode = false }: CotReportTableProps) {
+    const { weeks = [], stats = {} as MarketData['stats'], market, groups = [] } = data || {} as Partial<MarketData>;
+    const containerRef = useRef<HTMLDivElement>(null);
     const [zoomLevel, setZoomLevel] = useState(1);
 
     // Build columns dynamically from groups
@@ -107,15 +122,16 @@ export default function CotReportTable({ data, fitMode = false }) {
 
     // Pre-compute max absolute values per column for normalization
     const maxAbs = useMemo(() => {
-        const result = {};
+        const result: Record<string, number> = {};
         for (const col of COLUMN_DEFS) {
             if (col.type === 'change' || col.type === 'change_long' || col.type === 'change_short' || col.type === 'net' || col.type === 'pct') {
                 let max = 0;
                 for (const w of weeks) {
-                    const v = col.type === 'crowded'
-                        ? w[col.key]?.value
-                        : w[col.key];
-                    if (v != null) max = Math.max(max, Math.abs(v));
+                    const raw = w[col.key];
+                    const v = typeof raw === 'object' && raw !== null && 'value' in raw
+                        ? (raw as CrowdedLevel).value
+                        : raw;
+                    if (typeof v === 'number') max = Math.max(max, Math.abs(v));
                 }
                 result[col.key] = max;
             }
@@ -125,8 +141,8 @@ export default function CotReportTable({ data, fitMode = false }) {
 
     // Build group headers (level 1)
     const groupHeaders = useMemo(() => {
-        const hdrGroups = [];
-        let currentGroup = null;
+        const hdrGroups: { name: string; span: number; key: string }[] = [];
+        let currentGroup: { name: string; span: number; key: string } | null = null;
 
         for (const col of COLUMN_DEFS) {
             const gName = col.group;
@@ -174,9 +190,9 @@ export default function CotReportTable({ data, fitMode = false }) {
                                     colSpan={g.span}
                                     className={`px-1 py-2 text-[10px] font-bold text-[#525252] border-b border-r border-[#262626]/50 text-center uppercase tracking-widest bg-[#0a0a0a] ${isMarketName ? 'overflow-hidden text-ellipsis' : 'whitespace-nowrap'}`}
                                     style={isMarketName ? { maxWidth: 80, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } : undefined}
-                                    title={isMarketName ? (market.name ? market.name.split(' - ')[0] : '') : undefined}
+                                    title={isMarketName ? (market?.name ? market.name.split(' - ')[0] : '') : undefined}
                                 >
-                                    {isMarketName ? (market.name ? market.name.split(' - ')[0] : '') : g.name}
+                                    {isMarketName ? (market?.name ? market.name.split(' - ')[0] : '') : g.name}
                                 </th>
                             );
                         })}
@@ -200,7 +216,8 @@ export default function CotReportTable({ data, fitMode = false }) {
                 <tbody>
                     {/* Stat rows */}
                     {statRows.map(sr => {
-                        const rowData = stats[sr.key];
+                        const statsRecord = stats as Record<string, Record<string, number | null>> | undefined;
+                        const rowData = statsRecord?.[sr.key];
                         if (!rowData) return null;
                         return (
                             <tr key={sr.key} className="bg-[#080808] border-b border-[#262626]/40">
@@ -266,70 +283,72 @@ export default function CotReportTable({ data, fitMode = false }) {
 // Cell rendering helpers
 // =====================================================
 
-function getCellBg(value, type, maxAbs) {
+function getCellBg(value: number | string | CrowdedLevel | null | undefined, type: string, maxAbs: number): string {
+    const numVal = typeof value === 'number' ? value : null;
     switch (type) {
         case 'change_long':
-            return getColorMono(value, maxAbs, GREEN);
+            return getColorMono(numVal, maxAbs, GREEN);
         case 'change_short':
-            return getColorMono(value, maxAbs, RED);
+            return getColorMono(numVal, maxAbs, RED);
         case 'change':
         case 'net':
         case 'pct':
-            return getColorBySign(value, maxAbs);
+            return getColorBySign(numVal, maxAbs);
         case 'centered':
-            return getColorCentered(value);
+            return getColorCentered(numVal);
         case 'crowded':
-            return getColorCrowded(value);
+            return getColorCrowded(typeof value === 'object' && value !== null ? value as CrowdedLevel : null);
         default:
             return '';
     }
 }
 
-function formatCellValue(value, type) {
+function formatCellValue(value: unknown, type: string): string {
     if (type === 'crowded') {
-        const v = value?.value ?? value;
-        return v != null ? formatPct(v) : '—';
+        const v = (typeof value === 'object' && value !== null && 'value' in value) ? (value as CrowdedLevel).value : value;
+        return typeof v === 'number' ? formatPct(v) : '—';
     }
-    if (type === 'centered') return value != null ? formatPct(value) : '—';
-    if (type === 'pct' || type === 'pct_plain') return value != null ? formatPct(value) : '—';
+    if (type === 'centered') return typeof value === 'number' ? formatPct(value) : '—';
+    if (type === 'pct' || type === 'pct_plain') return typeof value === 'number' ? formatPct(value) : '—';
     if (type === 'date') return '';
-    return formatNumber(value);
+    return formatNumber(typeof value === 'number' ? value : null);
 }
 
-function renderCellContent(raw, col, week) {
-    const { type, key } = col;
+function renderCellContent(raw: unknown, col: ColumnDef, _week: Week): React.ReactNode {
+    const { type, key: _key } = col;
 
     // Date column
     if (type === 'date') {
-        return <span className="text-[#a3a3a3] font-mono">{formatDate(raw)}</span>;
+        return <span className="text-[#a3a3a3] font-mono">{formatDate(raw as string | null | undefined)}</span>;
     }
 
     // Crowded level with BUY/SELL overlay
     if (type === 'crowded') {
-        if (!raw || raw.value == null) return <span className="text-[#525252]">—</span>;
+        const crowded = raw as CrowdedLevel | null | undefined;
+        if (!crowded || crowded.value == null) return <span className="text-[#525252]">—</span>;
 
-        const signal = raw.signal;
+        const signal = crowded.signal;
         if (signal === 'BUY') {
             return (
                 <span className="font-bold text-green-400 text-[10px]">
-                    BUY <span className="text-gray-500 font-normal">{Math.round(raw.value)}</span>
+                    BUY <span className="text-gray-500 font-normal">{Math.round(crowded.value)}</span>
                 </span>
             );
         }
         if (signal === 'SELL') {
             return (
                 <span className="font-bold text-red-400 text-[10px]">
-                    SELL <span className="text-gray-500 font-normal">{Math.round(raw.value)}</span>
+                    SELL <span className="text-gray-500 font-normal">{Math.round(crowded.value)}</span>
                 </span>
             );
         }
-        return <span>{formatPct(raw.value)}</span>;
+        return <span>{formatPct(crowded.value)}</span>;
     }
 
     // Centered (COT Index, WCI) — just percentage
     if (type === 'centered') {
         if (raw == null) return <span className="text-[#525252]">—</span>;
-        return <span>{formatPct(raw)}</span>;
+        return <span>{formatPct(raw as number)}</span>;
     }
 
     // Percentage columns
@@ -337,14 +356,14 @@ function renderCellContent(raw, col, week) {
         if (raw == null) return <span className="text-[#525252]">—</span>;
         return (
             <span>
-                {formatPct(raw)}
-                <Arrow value={raw} />
+                {formatPct(raw as number)}
+                <Arrow value={raw as number} />
             </span>
         );
     }
 
     if (type === 'pct_plain') {
-        return <span>{raw != null ? formatPct(raw) : '—'}</span>;
+        return <span>{raw != null ? formatPct(raw as number) : '—'}</span>;
     }
 
     // Change columns — with arrows
@@ -352,8 +371,8 @@ function renderCellContent(raw, col, week) {
         if (raw == null) return <span className="text-[#525252]">—</span>;
         return (
             <span>
-                {formatNumber(raw)}
-                <Arrow value={raw} />
+                {formatNumber(raw as number)}
+                <Arrow value={raw as number} />
             </span>
         );
     }
@@ -361,9 +380,9 @@ function renderCellContent(raw, col, week) {
     // Net position
     if (type === 'net') {
         if (raw == null) return <span className="text-[#525252]">—</span>;
-        return <span>{formatNumber(raw)}</span>;
+        return <span>{formatNumber(raw as number)}</span>;
     }
 
     // Plain numbers (OI)
-    return <span>{raw != null ? formatNumber(raw) : '—'}</span>;
+    return <span>{raw != null ? formatNumber(raw as number) : '—'}</span>;
 }

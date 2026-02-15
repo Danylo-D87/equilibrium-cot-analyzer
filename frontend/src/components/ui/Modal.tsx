@@ -3,6 +3,24 @@ import { createPortal } from 'react-dom';
 import { useEscapeKey } from '@/hooks/useEscapeKey';
 import { cn } from '@/lib/cn';
 
+type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+type BackdropBlur = 'sm' | 'md';
+
+interface ModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    size?: ModalSize;
+    className?: string;
+    children: React.ReactNode;
+    backdropBlur?: BackdropBlur;
+}
+
+interface ModalHeaderProps {
+    title: string;
+    onClose?: () => void;
+    children?: React.ReactNode;
+}
+
 /**
  * Shared modal shell — backdrop + centered container + optional close button.
  *
@@ -15,7 +33,7 @@ import { cn } from '@/lib/cn';
  *  - backdropBlur: 'sm' | 'md' — backdrop blur intensity (default: 'sm')
  */
 
-const SIZE_MAP = {
+const SIZE_MAP: Record<ModalSize, string> = {
     sm: 'w-[90vw] max-w-[480px] max-h-[60vh]',
     md: 'w-[90vw] max-w-[640px] max-h-[75vh]',
     lg: 'w-[90vw] max-w-[1100px] h-[85vh]',
@@ -23,7 +41,7 @@ const SIZE_MAP = {
     full: 'w-[98vw] h-[95vh]',
 };
 
-const BLUR_MAP = {
+const BLUR_MAP: Record<BackdropBlur, string> = {
     sm: 'backdrop-blur-sm',
     md: 'backdrop-blur-md',
 };
@@ -35,7 +53,7 @@ export default function Modal({
     className,
     children,
     backdropBlur = 'sm',
-}) {
+}: ModalProps) {
     useEscapeKey(onClose, isOpen);
 
     if (!isOpen) return null;
@@ -68,7 +86,7 @@ export default function Modal({
 /**
  * Standard modal header with title and close button.
  */
-export function ModalHeader({ title, onClose, children }) {
+export function ModalHeader({ title, onClose, children }: ModalHeaderProps) {
     return (
         <header className="flex-shrink-0 h-10 border-b border-border flex items-center justify-between px-4 bg-surface">
             <span className="text-xs font-medium tracking-wider uppercase text-text-secondary">

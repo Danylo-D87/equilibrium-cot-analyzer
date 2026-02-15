@@ -3,6 +3,14 @@
  */
 import { formatNumber, formatCompact, formatSigned, formatDateShort, formatDateTick } from '../../utils/formatters';
 import { CHART_COLORS, GROUP_COLOR_PALETTE } from '../../utils/constants';
+import type { Group } from '../../types';
+
+export interface GroupMeta {
+    key: string;
+    label: string;
+    full: string;
+    color: string;
+}
 
 // ---------------------------------------------------------------------------
 // Formatter aliases (brevity inside chart files)
@@ -24,13 +32,13 @@ export const COLORS = CHART_COLORS;
 // Group helpers
 // ---------------------------------------------------------------------------
 
-const GROUPS_FALLBACK = [
+const GROUPS_FALLBACK: GroupMeta[] = [
     { key: 'g1', label: 'G1', full: 'Group 1', color: '#10b981' },
     { key: 'g2', label: 'G2', full: 'Group 2', color: '#f59e0b' },
     { key: 'g3', label: 'G3', full: 'Group 3', color: '#ef4444' },
 ];
 
-export function buildGroupsMeta(dataGroups) {
+export function buildGroupsMeta(dataGroups: Group[] | null | undefined): GroupMeta[] {
     if (!dataGroups || !dataGroups.length) return GROUPS_FALLBACK;
     return dataGroups.map((g, i) => ({
         key: g.key,
@@ -40,8 +48,8 @@ export function buildGroupsMeta(dataGroups) {
     }));
 }
 
-export function buildGroupColors(groupsMeta) {
-    const colors = {};
+export function buildGroupColors(groupsMeta: GroupMeta[]): Record<string, string> {
+    const colors: Record<string, string> = {};
     for (const g of groupsMeta) colors[g.key] = g.color;
     return colors;
 }

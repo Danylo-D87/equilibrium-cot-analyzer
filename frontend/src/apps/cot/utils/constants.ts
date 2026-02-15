@@ -8,16 +8,16 @@ export const REPORT_TYPES = [
     { key: 'legacy', label: 'Legacy', shortLabel: 'Legacy' },
     { key: 'disagg', label: 'Disaggregated', shortLabel: 'Disagg' },
     { key: 'tff', label: 'TFF', shortLabel: 'TFF' },
-];
+] as const;
 
 export const SUBTYPES = [
     { key: 'fo', label: 'Futures Only', shortLabel: 'FO' },
     { key: 'co', label: 'Combined', shortLabel: 'CO' },
-];
+] as const;
 
 // --- Default market codes per report type ---
 
-export const DEFAULT_MARKET_CODES = {
+export const DEFAULT_MARKET_CODES: Record<string, string> = {
     legacy: '099741',
     disagg: '088691',
     tff: '133741',
@@ -45,7 +45,7 @@ export const CATEGORY_KEYS = CATEGORY_ORDER
     .map(c => c.key);
 
 /** Category key → short label map */
-export const CATEGORY_LABELS = Object.fromEntries(
+export const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
     CATEGORY_ORDER.map(c => [c.key, c.label])
 );
 
@@ -68,7 +68,7 @@ export const CHART_COLORS = {
     grid: '#262626',
     axis: '#525252',
     zero: '#262626',
-};
+} as const;
 
 export const GROUP_COLOR_PALETTE = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6'];
 

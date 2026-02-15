@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
     ResponsiveContainer, ComposedChart, Line, XAxis, YAxis,
     Tooltip, CartesianGrid, ReferenceLine,
 } from 'recharts';
 import { TIMEFRAMES } from '../../utils/constants';
 import Modal from '@/components/ui/Modal';
+import type { MarketData } from '../../types';
 
 import {
     COLORS, COT_SIGNALS, COT_INDEX_PERIODS, INDICATOR_TYPES,
@@ -23,7 +24,13 @@ import BubbleFallbackChart from './BubbleFallbackChart';
 // Main BubbleChartModal — orchestrator
 // =====================================================
 
-export default function BubbleChartModal({ isOpen, onClose, data }) {
+interface BubbleChartModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    data: MarketData | null;
+}
+
+export default function BubbleChartModal({ isOpen, onClose, data }: BubbleChartModalProps) {
     const [timeframe, setTimeframe] = useState('1y');
     const [viewMode, setViewMode] = useState('bubbles');
     const [cotPeriod, setCotPeriod] = useState('1y');
@@ -34,9 +41,9 @@ export default function BubbleChartModal({ isOpen, onClose, data }) {
     const groupColors = useMemo(() => buildGroupColors(groupsMeta), [groupsMeta]);
 
     // Default active groups to first group (for bubbles)
-    const [activeGroups, setActiveGroups] = useState([]);
+    const [activeGroups, setActiveGroups] = useState<string[]>([]);
     // Indicator groups — default all on
-    const [indicatorGroups, setIndicatorGroups] = useState([]);
+    const [indicatorGroups, setIndicatorGroups] = useState<string[]>([]);
 
     // Reset active groups when groupsMeta changes
     useEffect(() => {
@@ -46,7 +53,7 @@ export default function BubbleChartModal({ isOpen, onClose, data }) {
         }
     }, [groupsMeta]);
 
-    const toggleGroup = useCallback((key) => {
+    const toggleGroup = useCallback((key: string) => {
         setActiveGroups(prev =>
             prev.includes(key)
                 ? prev.length > 1 ? prev.filter(g => g !== key) : prev
@@ -54,7 +61,7 @@ export default function BubbleChartModal({ isOpen, onClose, data }) {
         );
     }, []);
 
-    const toggleIndicatorGroup = useCallback((key) => {
+    const toggleIndicatorGroup = useCallback((key: string) => {
         setIndicatorGroups(prev =>
             prev.includes(key)
                 ? prev.length > 1 ? prev.filter(g => g !== key) : prev
@@ -67,13 +74,14 @@ export default function BubbleChartModal({ isOpen, onClose, data }) {
         if (!data?.weeks) return [];
         const weeks = [...data.weeks].reverse();
         const tf = TIMEFRAMES.find(t => t.key === timeframe);
+        if (!tf) return weeks;
         const sliced = tf.weeks === Infinity ? weeks : weeks.slice(-tf.weeks);
         return sliced.map(w => {
-            const aggLong = activeGroups.reduce((s, g) => s + (w[`${g}_long`] || 0), 0);
-            const aggShort = activeGroups.reduce((s, g) => s + (w[`${g}_short`] || 0), 0);
-            const aggChange = activeGroups.reduce((s, g) => s + (w[`${g}_change`] || 0), 0);
-            const aggChangeLong = activeGroups.reduce((s, g) => s + (w[`${g}_change_long`] || 0), 0);
-            const aggChangeShort = activeGroups.reduce((s, g) => s + (w[`${g}_change_short`] || 0), 0);
+            const aggLong = activeGroups.reduce((s, g) => s + (Number(w[`${g}_long`]) || 0), 0);
+            const aggShort = activeGroups.reduce((s, g) => s + (Number(w[`${g}_short`]) || 0), 0);
+            const aggChange = activeGroups.reduce((s, g) => s + (Number(w[`${g}_change`]) || 0), 0);
+            const aggChangeLong = activeGroups.reduce((s, g) => s + (Number(w[`${g}_change_long`]) || 0), 0);
+            const aggChangeShort = activeGroups.reduce((s, g) => s + (Number(w[`${g}_change_short`]) || 0), 0);
             return {
                 ...w,
                 agg_long: aggLong, agg_short: aggShort, agg_oi: aggLong + aggShort,
@@ -87,11 +95,12 @@ export default function BubbleChartModal({ isOpen, onClose, data }) {
         if (!data?.weeks) return [];
         const weeks = [...data.weeks].reverse();
         const tf = TIMEFRAMES.find(t => t.key === timeframe);
+        if (!tf) return weeks;
         return tf.weeks === Infinity ? weeks : weeks.slice(-tf.weeks);
     }, [data, timeframe]);
 
     const marketName = data?.market?.name ? data.market.name.split(' - ')[0] : 'Market';
-    const hasPrices = data?.prices?.length > 0;
+    const hasPrices = (data?.prices?.length ?? 0) > 0;
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="xl" backdropBlur="sm">
@@ -158,7 +167,7 @@ export default function BubbleChartModal({ isOpen, onClose, data }) {
 
                     {weeksData.length > 0 && viewMode === 'bubbles' && (() => {
                         const latest = weeksData[weeksData.length - 1];
-                        const net = (latest.agg_long || 0) - (latest.agg_short || 0);
+                        const net = (Number(latest.agg_long) || 0) - (Number(latest.agg_short) || 0);
                         const isLong = net >= 0;
                         return (
                             <>

@@ -2,8 +2,12 @@
 // Shared color utilities for heatmap / cell backgrounds
 // =====================================================
 
-export const GREEN = [0, 176, 80];
-export const RED = [220, 53, 69];
+import type { CrowdedLevel } from '../types';
+
+type RGB = [number, number, number];
+
+export const GREEN: RGB = [0, 176, 80];
+export const RED: RGB = [220, 53, 69];
 
 const MAX_OPACITY = 0.85;
 const MIN_OPACITY = 0.05;
@@ -11,7 +15,7 @@ const MIN_OPACITY = 0.05;
 /**
  * Heatmap color based on sign (green for positive, red for negative).
  */
-export function getColorBySign(value, maxAbs) {
+export function getColorBySign(value: number | null | undefined, maxAbs: number): string {
     if (value == null || value === 0 || !maxAbs) return '';
     const color = value > 0 ? GREEN : RED;
     const raw = Math.min(Math.abs(value) / maxAbs, 1);
@@ -22,7 +26,7 @@ export function getColorBySign(value, maxAbs) {
 /**
  * Mono-color heatmap (e.g. green-only for long changes, red-only for short).
  */
-export function getColorMono(value, maxAbs, color) {
+export function getColorMono(value: number | null | undefined, maxAbs: number, color: RGB): string {
     if (value == null || !maxAbs) return '';
     const raw = Math.min(Math.abs(value) / maxAbs, 1);
     if (raw < 0.01) return '';
@@ -33,7 +37,7 @@ export function getColorMono(value, maxAbs, color) {
 /**
  * Centered heatmap (0–100 scale, 50 = neutral).
  */
-export function getColorCentered(value) {
+export function getColorCentered(value: number | null | undefined): string {
     if (value == null) return '';
     const v = Math.max(0, Math.min(100, value));
     const deviation = Math.abs(v - 50) / 50;
@@ -46,7 +50,7 @@ export function getColorCentered(value) {
 /**
  * Crowded level color (uses centered logic on .value).
  */
-export function getColorCrowded(crowdedObj) {
+export function getColorCrowded(crowdedObj: CrowdedLevel | null | undefined): string {
     if (!crowdedObj || crowdedObj.value == null) return '';
     return getColorCentered(crowdedObj.value);
 }
@@ -54,7 +58,7 @@ export function getColorCrowded(crowdedObj) {
 /**
  * Change background color for screener (subtle green/red).
  */
-export function changeBg(v) {
+export function changeBg(v: number | null | undefined): string {
     if (v == null || v === 0) return '';
     const c = v > 0 ? [0, 176, 80] : [220, 53, 69];
     return `rgba(${c[0]},${c[1]},${c[2]},0.08)`;
@@ -63,7 +67,7 @@ export function changeBg(v) {
 /**
  * Category color palette for screener tags.
  */
-export const CAT_COLORS = {
+export const CAT_COLORS: Record<string, { bg: string; text: string }> = {
     currencies: { bg: 'rgba(59,130,246,0.12)', text: '#60a5fa' },
     crypto: { bg: 'rgba(168,85,247,0.12)', text: '#c084fc' },
     energy: { bg: 'rgba(245,158,11,0.12)', text: '#fbbf24' },

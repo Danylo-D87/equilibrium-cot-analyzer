@@ -8,7 +8,7 @@
  * @param {number|null} val
  * @returns {string}
  */
-export function formatNumber(val) {
+export function formatNumber(val: number | null | undefined): string {
     if (val == null) return '—';
     const num = Math.round(val);
     const sign = num < 0 ? '−' : '';
@@ -21,7 +21,7 @@ export function formatNumber(val) {
  * @param {number|null} val
  * @returns {string}
  */
-export function formatCompact(val) {
+export function formatCompact(val: number | null | undefined): string {
     if (val == null) return '';
     const abs = Math.abs(val);
     if (abs >= 1e6) return `${(val / 1e6).toFixed(1)}M`;
@@ -34,7 +34,7 @@ export function formatCompact(val) {
  * @param {number|null} val
  * @returns {string}
  */
-export function formatSigned(val) {
+export function formatSigned(val: number | null | undefined): string {
     if (val == null) return '—';
     const n = Math.round(val);
     const sign = n > 0 ? '+' : n < 0 ? '−' : '';
@@ -46,7 +46,7 @@ export function formatSigned(val) {
  * @param {number|null} val
  * @returns {string}
  */
-export function formatPct(val) {
+export function formatPct(val: number | null | undefined): string {
     if (val == null) return '—';
     return `${Math.round(val)}%`;
 }
@@ -56,7 +56,7 @@ export function formatPct(val) {
  * @param {number|null} val
  * @returns {string}
  */
-export function formatPctSigned(val) {
+export function formatPctSigned(val: number | null | undefined): string {
     if (val == null) return '—';
     const s = val > 0 ? '+' : '';
     return s + val.toFixed(1) + '%';
@@ -67,7 +67,7 @@ export function formatPctSigned(val) {
  * @param {string} dateStr
  * @returns {string}
  */
-export function formatDate(dateStr) {
+export function formatDate(dateStr: string | null | undefined): string {
     if (!dateStr) return '—';
     const [y, m, d] = dateStr.split('-');
     return `${d}.${m}.${y}`;
@@ -78,7 +78,7 @@ export function formatDate(dateStr) {
  * @param {string} dateStr
  * @returns {string}
  */
-export function formatDateShort(dateStr) {
+export function formatDateShort(dateStr: string | null | undefined): string {
     if (!dateStr) return '';
     const [y, m, d] = dateStr.split('-');
     return `${d}.${m}.${y.slice(2)}`;
@@ -89,7 +89,7 @@ export function formatDateShort(dateStr) {
  * @param {string} dateStr
  * @returns {string}
  */
-export function formatDateTick(dateStr) {
+export function formatDateTick(dateStr: string | null | undefined): string {
     if (!dateStr) return '';
     const [y, m] = dateStr.split('-');
     const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

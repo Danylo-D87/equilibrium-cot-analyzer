@@ -1,19 +1,26 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import {
     ResponsiveContainer, ComposedChart, Line, XAxis, YAxis,
     Tooltip, CartesianGrid,
 } from 'recharts';
 import { TIMEFRAMES } from '../../utils/constants';
 import { COLORS, fmtCompact, fmtNum, fmtDate, fmtTick } from './chartConstants';
+import type { PricePoint } from '../../types';
 
 // ---------------------------------------------------------------------------
 // Price chart (top panel in Indicators view)
 // ---------------------------------------------------------------------------
 
-export default function IndicatorPriceChart({ prices, timeframe }) {
+interface IndicatorPriceChartProps {
+    prices: PricePoint[] | undefined;
+    timeframe: string;
+}
+
+export default function IndicatorPriceChart({ prices, timeframe }: IndicatorPriceChartProps) {
     const chartData = useMemo(() => {
         if (!prices?.length) return [];
         const tf = TIMEFRAMES.find(t => t.key === timeframe);
+        if (!tf) return prices;
         const daysBack = tf.weeks === Infinity ? Infinity : tf.weeks * 7;
 
         let bars = prices;

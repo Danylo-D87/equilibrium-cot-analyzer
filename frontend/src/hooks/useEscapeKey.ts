@@ -7,10 +7,10 @@ import { useEffect } from 'react';
  * @param {function} onEscape - callback to run on Escape
  * @param {boolean} enabled  - whether the hook is active
  */
-export function useEscapeKey(onEscape, enabled = true) {
+export function useEscapeKey(onEscape: () => void, enabled = true): void {
     useEffect(() => {
         if (!enabled) return;
-        const handler = (e) => {
+        const handler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onEscape();
         };
         document.addEventListener('keydown', handler);

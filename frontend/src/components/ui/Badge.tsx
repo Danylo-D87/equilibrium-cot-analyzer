@@ -1,11 +1,19 @@
 import React from 'react';
 import { cn } from '@/lib/cn';
 
+type BadgeVariant = 'default' | 'success' | 'destructive' | 'warning' | 'muted' | 'blue' | 'purple';
+
+interface BadgeProps {
+    variant?: BadgeVariant;
+    className?: string;
+    children: React.ReactNode;
+}
+
 /**
  * Badge component — small label with semantic variants.
  */
 
-const VARIANT = {
+const VARIANT: Record<BadgeVariant, string> = {
     default: 'bg-white/[0.05] text-primary border-border',
     success: 'bg-green-500/10 text-green-400 border-green-500/20',
     destructive: 'bg-red-500/10 text-red-400 border-red-500/20',
@@ -15,7 +23,7 @@ const VARIANT = {
     purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
 };
 
-export default function Badge({ variant = 'default', className, children }) {
+export default function Badge({ variant = 'default', className, children }: BadgeProps) {
     return (
         <span
             className={cn(

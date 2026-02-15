@@ -1,20 +1,27 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { CATEGORY_KEYS, CATEGORY_LABELS } from '../utils/constants';
+import type { Market } from '../types';
 
-export default function MarketSelector({ markets, selected, onChange }) {
+interface MarketSelectorProps {
+    markets: Market[];
+    selected: Market | null;
+    onChange: (market: Market) => void;
+}
+
+export default function MarketSelector({ markets, selected, onChange }: MarketSelectorProps) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
     const [activeIdx, setActiveIdx] = useState(-1);
-    const [activeCategory, setActiveCategory] = useState(null);
-    const wrapperRef = useRef(null);
-    const inputRef = useRef(null);
-    const listRef = useRef(null);
-    const categoryRefs = useRef({});
+    const [activeCategory, setActiveCategory] = useState<string | null>(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
+    const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
     // Close on click outside
     useEffect(() => {
-        const handler = (e) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        const handler = (e: MouseEvent) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
                 setOpen(false);
                 setQuery('');
                 setActiveIdx(-1);
@@ -38,7 +45,7 @@ export default function MarketSelector({ markets, selected, onChange }) {
             : markets;
 
         // Group by category
-        const groups = {};
+        const groups: Record<string, Market[]> = {};
         for (const m of list) {
             const cat = m.category || 'other';
             if (!groups[cat]) groups[cat] = [];
@@ -46,8 +53,8 @@ export default function MarketSelector({ markets, selected, onChange }) {
         }
 
         // Build ordered groups
-        const ordered = [];
-        const flatList = [];
+        const ordered: { category: string; display: string; markets: Market[] }[] = [];
+        const flatList: Market[] = [];
         for (const cat of CATEGORY_KEYS) {
             if (groups[cat]?.length) {
                 ordered.push({ category: cat, display: groups[cat][0].category_display || cat, markets: groups[cat] });
@@ -65,7 +72,7 @@ export default function MarketSelector({ markets, selected, onChange }) {
         return { flat: flatList, grouped: ordered };
     }, [markets, query]);
 
-    const handleSelect = useCallback((m) => {
+    const handleSelect = useCallback((m: Market) => {
         onChange(m);
         setOpen(false);
         setQuery('');
@@ -81,7 +88,7 @@ export default function MarketSelector({ markets, selected, onChange }) {
         setTimeout(() => inputRef.current?.select(), 0);
     };
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: React.KeyboardEvent) => {
         if (!open) {
             if (e.key === 'ArrowDown' || e.key === 'Enter') {
                 setOpen(true);
@@ -126,7 +133,7 @@ export default function MarketSelector({ markets, selected, onChange }) {
     }, [activeIdx]);
 
     // Scroll to category when pill is clicked
-    const scrollToCategory = useCallback((cat) => {
+    const scrollToCategory = useCallback((cat: string) => {
         setActiveCategory(cat);
         setQuery(''); // clear search to show all
         // Small delay to allow re-render after clearing query
@@ -148,7 +155,7 @@ export default function MarketSelector({ markets, selected, onChange }) {
         const container = listRef.current;
         const handleScroll = () => {
             const pillBarHeight = 36;
-            let closestCat = null;
+            let closestCat: string | null = null;
             let closestDist = Infinity;
             for (const [cat, el] of Object.entries(categoryRefs.current)) {
                 if (!el) continue;
@@ -270,7 +277,7 @@ export default function MarketSelector({ markets, selected, onChange }) {
                                 <div key={group.category}>
                                     {/* Category header */}
                                     <div
-                                        ref={el => categoryRefs.current[group.category] = el}
+                                        ref={el => { categoryRefs.current[group.category] = el; }}
                                         className="sticky top-0 z-10 px-3.5 py-2 bg-[#0a0a0a]/95 backdrop-blur-sm border-b border-[#262626]/50"
                                     >
                                         <span className="text-[9px] font-bold tracking-[0.15em] text-[#525252] uppercase">

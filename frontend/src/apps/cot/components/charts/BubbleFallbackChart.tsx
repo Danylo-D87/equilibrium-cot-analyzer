@@ -1,15 +1,23 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import {
     ResponsiveContainer, ComposedChart, Line, XAxis, YAxis,
     Tooltip, CartesianGrid, ReferenceLine,
 } from 'recharts';
 import { COLORS, fmtCompact, fmtNum, fmtSigned, fmtDate, fmtTick } from './chartConstants';
+import type { GroupMeta } from './chartConstants';
 
 // ---------------------------------------------------------------------------
 // LinesTooltip (shared between fallback and no-price views)
 // ---------------------------------------------------------------------------
 
-export function LinesTooltip({ active, payload, label }) {
+interface LinesTooltipEntry {
+    value: number | null;
+    color: string;
+    name: string;
+    strokeDasharray?: string;
+}
+
+export function LinesTooltip({ active, payload, label }: { active?: boolean; payload?: LinesTooltipEntry[]; label?: string }) {
     if (!active || !payload?.length) return null;
 
     return (
@@ -34,9 +42,9 @@ export function LinesTooltip({ active, payload, label }) {
 // BubbleFallbackTooltip
 // ---------------------------------------------------------------------------
 
-function BubbleFallbackTooltip({ active, payload, label, activeGroups, groupsMeta }) {
+function BubbleFallbackTooltip({ active, payload, label, activeGroups, groupsMeta }: { active?: boolean; payload?: Array<{ payload: Record<string, unknown> }>; label?: string; activeGroups: string[]; groupsMeta: GroupMeta[] }) {
     if (!active || !payload?.length) return null;
-    const d = payload[0]?.payload;
+    const d = payload[0]?.payload as Record<string, unknown> | undefined;
     if (!d) return null;
 
     return (
@@ -44,8 +52,8 @@ function BubbleFallbackTooltip({ active, payload, label, activeGroups, groupsMet
             <div className="text-[10px] text-muted mb-2">{fmtDate(label)}</div>
             {activeGroups.map(gk => {
                 const g = (groupsMeta || []).find(x => x.key === gk);
-                const ch = d[`${gk}_change`];
-                if (ch == null) return null;
+                const ch = d[`${gk}_change`] as number | undefined;
+                if (ch == null || !g) return null;
                 return (
                     <div key={gk} className="flex items-center justify-between gap-4 text-[11px] mb-0.5">
                         <div className="flex items-center gap-1.5">
@@ -64,10 +72,21 @@ function BubbleFallbackTooltip({ active, payload, label, activeGroups, groupsMet
 // Fallback bubble chart (when no price data available)
 // ---------------------------------------------------------------------------
 
-export default function BubbleFallbackChart({ weeksData, activeGroups, groupsMeta }) {
+interface WeekRow {
+    date: string;
+    [key: string]: unknown;
+}
+
+interface BubbleFallbackChartProps {
+    weeksData: WeekRow[];
+    activeGroups: string[];
+    groupsMeta: GroupMeta[];
+}
+
+export default function BubbleFallbackChart({ weeksData, activeGroups, groupsMeta }: BubbleFallbackChartProps) {
     const enriched = useMemo(() => {
         return weeksData.map(w => {
-            const combined = activeGroups.reduce((s, g) => s + (w[`${g}_change`] || 0), 0);
+            const combined = activeGroups.reduce((s, g) => s + (Number(w[`${g}_change`]) || 0), 0);
             return { ...w, bubbleValue: combined };
         });
     }, [weeksData, activeGroups]);
@@ -77,10 +96,10 @@ export default function BubbleFallbackChart({ weeksData, activeGroups, groupsMet
         [enriched],
     );
 
-    const renderBubble = (props, isActive = false) => {
+    const renderBubble = (props: { cx?: number; cy?: number; payload?: Record<string, unknown>; index?: number }, isActive = false) => {
         const { cx, cy, payload, index } = props;
         if (cx == null || cy == null) return null;
-        const val = payload?.bubbleValue;
+        const val = payload?.bubbleValue as number | undefined;
         if (!val) return null;
 
         const abs = Math.abs(val);
@@ -107,7 +126,7 @@ export default function BubbleFallbackChart({ weeksData, activeGroups, groupsMet
                 <YAxis tickFormatter={fmtCompact} tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={false} tickLine={false} width={55} />
                 <Tooltip content={<BubbleFallbackTooltip activeGroups={activeGroups} groupsMeta={groupsMeta} />} cursor={{ stroke: '#262626', strokeDasharray: '3 3' }} />
                 <ReferenceLine y={0} stroke={COLORS.zero} strokeDasharray="4 4" />
-                <Line type="monotone" dataKey="bubbleValue" stroke="rgba(255,255,255,0.05)" strokeWidth={1} dot={renderBubble} activeDot={(props) => renderBubble(props, true)} isAnimationActive={false} name="Net Change" legendType="none" />
+                <Line type="monotone" dataKey="bubbleValue" stroke="rgba(255,255,255,0.05)" strokeWidth={1} dot={renderBubble as any} activeDot={((props: any) => renderBubble(props, true)) as any} isAnimationActive={false} name="Net Change" legendType="none" />
             </ComposedChart>
         </ResponsiveContainer>
     );

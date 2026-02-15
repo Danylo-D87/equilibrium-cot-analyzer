@@ -1,9 +1,14 @@
-import React from 'react';
+
+
+interface SpinnerProps {
+    size?: number;
+    message?: string;
+}
 
 /**
  * A simple centered loading spinner with optional message.
  */
-export default function Spinner({ size = 6, message }) {
+export default function Spinner({ size = 6, message }: SpinnerProps) {
     return (
         <div className="flex items-center justify-center gap-3">
             <div

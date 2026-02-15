@@ -1,17 +1,24 @@
-import React, { useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import {
     ResponsiveContainer, ComposedChart, Line, XAxis, YAxis, Tooltip,
 } from 'recharts';
 import { TIMEFRAMES } from '../../utils/constants';
 import { COLORS, COT_SIGNALS, detectCotSignal, fmtCompact, fmtNum, fmtSigned, fmtDate, fmtTick } from './chartConstants';
+import type { PricePoint } from '../../types';
 
 // ---------------------------------------------------------------------------
 // Tooltip
 // ---------------------------------------------------------------------------
 
-function BubblePriceTooltip({ active, payload, label }) {
+interface BubblePriceTooltipProps {
+    active?: boolean;
+    payload?: Array<{ payload: Record<string, unknown> }>;
+    label?: string;
+}
+
+function BubblePriceTooltip({ active, payload, label }: BubblePriceTooltipProps) {
     if (!active || !payload?.length) return null;
-    const d = payload[0]?.payload;
+    const d = payload[0]?.payload as Record<string, unknown> | undefined;
     if (!d) return null;
 
     const sig = d.signalKey ? COT_SIGNALS.find(s => s.key === d.signalKey) : null;
@@ -23,7 +30,7 @@ function BubblePriceTooltip({ active, payload, label }) {
             {d.close != null && (
                 <div className="flex items-center justify-between gap-4 text-[11px] mb-0.5">
                     <span className="text-text-secondary uppercase tracking-wider text-[10px]">Price</span>
-                    <span className="text-white font-medium font-mono">{fmtNum(d.close)}</span>
+                    <span className="text-white font-medium font-mono">{fmtNum(d.close as number)}</span>
                 </div>
             )}
             {periodSig && !sig && (
@@ -44,24 +51,24 @@ function BubblePriceTooltip({ active, payload, label }) {
                     <div className="text-[10px] text-muted mb-1.5">{sig.desc}</div>
                     <div className="flex items-center justify-between gap-4 text-[11px] mb-0.5">
                         <span className="text-text-secondary uppercase tracking-wider text-[10px]">ΔNet</span>
-                        <span className={d.deltaNet >= 0 ? 'text-green-400 font-medium font-mono' : 'text-red-400 font-medium font-mono'}>{fmtSigned(d.deltaNet)}</span>
+                        <span className={(d.deltaNet as number) >= 0 ? 'text-green-400 font-medium font-mono' : 'text-red-400 font-medium font-mono'}>{fmtSigned(d.deltaNet as number)}</span>
                     </div>
                     {d.aggChangeLong != null && (
                         <div className="flex items-center justify-between gap-4 text-[11px] mb-0.5">
                             <span className="text-text-secondary uppercase tracking-wider text-[10px]">Δ Long</span>
-                            <span className={d.aggChangeLong >= 0 ? 'text-green-400 font-medium font-mono' : 'text-red-400 font-medium font-mono'}>{fmtSigned(d.aggChangeLong)}</span>
+                            <span className={(d.aggChangeLong as number) >= 0 ? 'text-green-400 font-medium font-mono' : 'text-red-400 font-medium font-mono'}>{fmtSigned(d.aggChangeLong as number)}</span>
                         </div>
                     )}
                     {d.aggChangeShort != null && (
                         <div className="flex items-center justify-between gap-4 text-[11px] mb-0.5">
                             <span className="text-text-secondary uppercase tracking-wider text-[10px]">Δ Short</span>
-                            <span className={d.aggChangeShort <= 0 ? 'text-green-400 font-medium font-mono' : 'text-red-400 font-medium font-mono'}>{fmtSigned(d.aggChangeShort)}</span>
+                            <span className={(d.aggChangeShort as number) <= 0 ? 'text-green-400 font-medium font-mono' : 'text-red-400 font-medium font-mono'}>{fmtSigned(d.aggChangeShort as number)}</span>
                         </div>
                     )}
                     {d.priceChange != null && (
                         <div className="flex items-center justify-between gap-4 text-[11px] mb-0.5">
                             <span className="text-text-secondary uppercase tracking-wider text-[10px]">Δ Price</span>
-                            <span className={d.priceChange >= 0 ? 'text-green-400 font-medium font-mono' : 'text-red-400 font-medium font-mono'}>{fmtSigned(d.priceChange)}</span>
+                            <span className={(d.priceChange as number) >= 0 ? 'text-green-400 font-medium font-mono' : 'text-red-400 font-medium font-mono'}>{fmtSigned(d.priceChange as number)}</span>
                         </div>
                     )}
                 </>
@@ -74,10 +81,25 @@ function BubblePriceTooltip({ active, payload, label }) {
 // Chart
 // ---------------------------------------------------------------------------
 
-export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
+interface WeekRow {
+    date: string;
+    agg_change?: number;
+    agg_change_long?: number;
+    agg_change_short?: number;
+    [key: string]: unknown;
+}
+
+interface PriceBubbleChartProps {
+    prices: PricePoint[] | undefined;
+    weeksData: WeekRow[];
+    timeframe: string;
+}
+
+export default function PriceBubbleChart({ prices, weeksData, timeframe }: PriceBubbleChartProps) {
     const chartData = useMemo(() => {
-        if (!prices?.length) return [];
+        if (!prices?.length) return [] as Record<string, unknown>[];
         const tf = TIMEFRAMES.find(t => t.key === timeframe);
+        if (!tf) return prices.map(b => ({ date: b.date, close: b.close } as Record<string, unknown>));
         const daysBack = tf.weeks === Infinity ? Infinity : tf.weeks * 7;
 
         let bars = prices;
@@ -89,13 +111,13 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
         }
 
         if (!weeksData?.length || !bars.length) {
-            return bars.map(b => ({ date: b.date, close: b.close }));
+            return bars.map(b => ({ date: b.date, close: b.close } as Record<string, unknown>));
         }
 
         // Price lookup map
         const priceMap = new Map(bars.map(p => [p.date, p.close]));
         const priceDateSet = new Set(bars.map(p => p.date));
-        const findNearest = (cotDate) => {
+        const findNearest = (cotDate: string): string | null => {
             for (let off = 0; off <= 5; off++) {
                 const d = new Date(cotDate);
                 d.setDate(d.getDate() - off);
@@ -119,8 +141,8 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
         const sortedWeeks = [...weeksData].sort((a, b) => a.date.localeCompare(b.date));
 
         // For each COT week, detect the signal from Price + Longs + Shorts
-        const cotSignalEntries = [];
-        const bubbleMap = new Map();
+        const cotSignalEntries: { date: string; signalKey: string; color: string }[] = [];
+        const bubbleMap = new Map<string, Record<string, unknown>>();
 
         for (let i = 0; i < sortedWeeks.length; i++) {
             const w = sortedWeeks[i];
@@ -134,7 +156,7 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
 
             // Price direction: compare close at this COT date vs previous COT date
             let priceUp = true;
-            let actualPriceChange = null;
+            let actualPriceChange: number | null = null;
             if (i > 0) {
                 const prevT = findNearest(sortedWeeks[i - 1].date);
                 if (prevT) {
@@ -174,7 +196,7 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
         // Build period map: for each price date, find which COT signal period it belongs to
         const signalPeriods = cotSignalEntries.sort((a, b) => a.date.localeCompare(b.date));
 
-        function getPeriodSignal(priceDate) {
+        function getPeriodSignal(priceDate: string) {
             for (let i = 0; i < signalPeriods.length; i++) {
                 if (signalPeriods[i].date >= priceDate) {
                     return signalPeriods[i];
@@ -189,7 +211,7 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
             const period = getPeriodSignal(b.date);
             const sigKey = period?.signalKey || null;
 
-            const row = {
+            const row: Record<string, unknown> = {
                 date: b.date,
                 close: b.close,
                 periodSignalKey: sigKey,
@@ -201,7 +223,7 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
             });
 
             // Bubble data on COT report dates
-            if (bub && bub.norm >= 0.05) {
+            if (bub && (bub.norm as number) >= 0.05) {
                 row.bubbleY = b.close;
                 row.norm = bub.norm;
                 row.signalKey = bub.signalKey;
@@ -217,8 +239,8 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
 
         // At signal transitions, duplicate the boundary point in both series
         for (let i = 1; i < result.length; i++) {
-            const prevSig = result[i - 1].periodSignalKey;
-            const currSig = result[i].periodSignalKey;
+            const prevSig = result[i - 1].periodSignalKey as string | null;
+            const currSig = result[i].periodSignalKey as string | null;
             if (prevSig && currSig && prevSig !== currSig) {
                 result[i][`close_${prevSig}`] = result[i].close;
             }
@@ -233,11 +255,11 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
         [chartData],
     );
 
-    const renderBubble = useCallback((props) => {
+    const renderBubble = useCallback((props: { cx?: number; cy?: number; payload?: Record<string, unknown>; index?: number }) => {
         const { cx, cy, payload, index } = props;
         if (cx == null || cy == null || !payload?.bubbleColor) return null;
 
-        const n = payload.norm || 0;
+        const n = (payload.norm as number) || 0;
         const minR = 3, maxR = 22;
         const r = minR + n * (maxR - minR);
         const opacity = 0.2 + n * 0.5;
@@ -246,20 +268,20 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
             <circle
                 key={`bub-${index}`}
                 cx={cx} cy={cy} r={r}
-                fill={payload.bubbleColor}
+                fill={payload.bubbleColor as string}
                 fillOpacity={opacity}
-                stroke={payload.bubbleColor}
+                stroke={payload.bubbleColor as string}
                 strokeWidth={1.5}
                 strokeOpacity={Math.min(opacity + 0.15, 0.85)}
             />
         );
     }, []);
 
-    const renderBubbleActive = useCallback((props) => {
+    const renderBubbleActive = useCallback((props: { cx?: number; cy?: number; payload?: Record<string, unknown>; index?: number }) => {
         const { cx, cy, payload, index } = props;
         if (cx == null || cy == null || !payload?.bubbleColor) return null;
 
-        const n = payload.norm || 0;
+        const n = (payload.norm as number) || 0;
         const minR = 5, maxR = 26;
         const r = minR + n * (maxR - minR);
 
@@ -267,9 +289,9 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
             <circle
                 key={`bub-a-${index}`}
                 cx={cx} cy={cy} r={r}
-                fill={payload.bubbleColor}
+                fill={payload.bubbleColor as string}
                 fillOpacity={0.55}
-                stroke={payload.bubbleColor}
+                stroke={payload.bubbleColor as string}
                 strokeWidth={2}
                 strokeOpacity={0.9}
             />
@@ -356,8 +378,8 @@ export default function PriceBubbleChart({ prices, weeksData, timeframe }) {
                         dataKey="bubbleY"
                         stroke="transparent"
                         strokeWidth={0}
-                        dot={renderBubble}
-                        activeDot={renderBubbleActive}
+                        dot={renderBubble as any}
+                        activeDot={renderBubbleActive as any}
                         isAnimationActive={false}
                         connectNulls={false}
                         legendType="none"

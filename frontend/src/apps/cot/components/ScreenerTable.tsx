@@ -5,19 +5,39 @@ import { CATEGORY_ORDER } from '../utils/constants';
 import { useScreenerData } from '../hooks/useMarketQueries';
 import { enrichRows } from '../utils/enrichment';
 import Spinner from '@/components/ui/Spinner';
+import type { Group, EnrichedScreenerRow } from '../types';
+
+interface ScreenerTableProps {
+    onSelectMarket: (code: string) => void;
+    reportType?: string;
+    subtype?: string;
+}
+
+interface ScreenerColumn {
+    key: string;
+    label: string;
+    group: string;
+    width: number;
+    align: 'left' | 'right' | 'center';
+    sortable: boolean;
+    type: string;
+    sticky?: boolean;
+    groupKey?: string;
+    sortBy?: string;
+}
 
 // =====================================================
 // Build screener columns dynamically from groups
 // =====================================================
 
-function buildColumns(groups) {
-    const left = [
+function buildColumns(groups: Group[] | null): ScreenerColumn[] {
+    const left: ScreenerColumn[] = [
         { key: 'name', label: 'Market', group: '', width: 180, align: 'left', sortable: true, type: 'text', sticky: true },
         { key: 'category_display', label: 'Category', group: '', width: 85, align: 'left', sortable: true, type: 'tag' },
         { key: 'date', label: 'Date', group: '', width: 82, align: 'center', sortable: true, type: 'date' },
     ];
 
-    const groupCols = (groups || []).flatMap(g => [
+    const groupCols: ScreenerColumn[] = (groups || []).flatMap(g => [
         { key: `${g.key}_total`, label: 'Pos', group: g.short, width: 80, align: 'right', sortable: true, type: 'number' },
         { key: `${g.key}_bar`, label: 'L/S', group: g.short, width: 80, align: 'center', sortable: true, type: 'bar', groupKey: g.key, sortBy: `${g.key}_short_ratio` },
         { key: `${g.key}_change_total`, label: 'О”', group: g.short, width: 68, align: 'right', sortable: true, type: 'change' },
@@ -25,12 +45,12 @@ function buildColumns(groups) {
         { key: `${g.key}_pct_oi_total_change`, label: 'О”%', group: g.short, width: 52, align: 'right', sortable: true, type: 'pct_change' },
     ]);
 
-    const oiCols = [
+    const oiCols: ScreenerColumn[] = [
         { key: 'open_interest', label: 'OI', group: 'Open Interest', width: 90, align: 'right', sortable: true, type: 'number' },
         { key: 'oi_change', label: 'О” OI', group: 'Open Interest', width: 75, align: 'right', sortable: true, type: 'change' },
     ];
 
-    const allCols = [
+    const allCols: ScreenerColumn[] = [
         { key: 'all_bar', label: 'L/S', group: 'Total', width: 80, align: 'center', sortable: true, type: 'bar', groupKey: 'all', sortBy: 'all_short_ratio' },
     ];
 
@@ -41,9 +61,9 @@ function buildColumns(groups) {
 // Long/Short Position Bar with tooltip
 // =====================================================
 
-function PositionBar({ long, short, changeLong, changeShort }) {
+function PositionBar({ long, short, changeLong, changeShort }: { long: number | null; short: number | null; changeLong?: number | null; changeShort?: number | null }) {
     const [hover, setHover] = useState(false);
-    const ref = useRef(null);
+    const ref = useRef<HTMLDivElement>(null);
     const [tip, setTip] = useState({ x: 0, y: 0 });
 
     if (!long || !short) {
@@ -117,9 +137,9 @@ function PositionBar({ long, short, changeLong, changeShort }) {
 // Main component
 // =====================================================
 
-export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', subtype = 'fo' }) {
+export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', subtype = 'fo' }: ScreenerTableProps) {
     const { screenerData, groups, isLoading: loading, error } = useScreenerData(reportType, subtype);
-    const [search, setSearch] = useState('');
+    const [search, _setSearch] = useState('');
     const [category, setCategory] = useState('all');
     const [sortKey, setSortKey] = useState('open_interest');
     const [sortDir, setSortDir] = useState('desc');
@@ -135,7 +155,7 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
     const TOTAL_WIDTH = useMemo(() => COLUMNS.reduce((s, c) => s + c.width, 0), [COLUMNS]);
 
     // Sort handler
-    const handleSort = useCallback((key, sortBy) => {
+    const handleSort = useCallback((key: string, sortBy?: string) => {
         const realKey = sortBy || key;
         setSortKey(prev => {
             if (prev === realKey) {
@@ -176,7 +196,7 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
 
             // Strings
             if (typeof va === 'string' || typeof vb === 'string') {
-                return (va || '').localeCompare(vb || '') * dir;
+                return String(va || '').localeCompare(String(vb || '')) * dir;
             }
 
             // Nulls go last
@@ -192,8 +212,8 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
 
     // Category counts
     const catCounts = useMemo(() => {
-        if (!data) return {};
-        const counts = { all: data.length };
+        if (!data) return {} as Record<string, number>;
+        const counts: Record<string, number> = { all: data.length };
         for (const r of data) {
             counts[r.category] = (counts[r.category] || 0) + 1;
         }
@@ -202,8 +222,8 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
 
     // Group headers for multi-row header
     const groupHeaders = useMemo(() => {
-        const hdrGroups = [];
-        let cur = null;
+        const hdrGroups: { name: string; span: number }[] = [];
+        let cur: { name: string; span: number } | null = null;
         for (const col of COLUMNS) {
             const g = col.group || '';
             if (!cur || cur.name !== g) {
@@ -227,7 +247,7 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center h-full gap-3">
-                <p className="text-[#f87171] text-sm font-medium">{error}</p>
+                <p className="text-[#f87171] text-sm font-medium">{error?.message || 'Unknown error'}</p>
                 <button
                     onClick={() => window.location.reload()}
                     className="text-xs text-[#a3a3a3] hover:text-white transition-all duration-300 tracking-widest uppercase px-6 py-2.5 rounded-sm border border-[#262626] hover:border-[#a3a3a3] hover:bg-[#121212]"
@@ -367,8 +387,8 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
 // Cell background
 // =====================================================
 
-function getCellBg(row, col) {
-    const v = row[col.key];
+function getCellBg(row: EnrichedScreenerRow, col: ScreenerColumn): string | undefined {
+    const v = row[col.key] as number | null | undefined;
     if (col.type === 'change' || col.type === 'pct_change') return changeBg(v);
     if (col.type === 'net') {
         if (v == null || v === 0) return '';
@@ -382,20 +402,22 @@ function getCellBg(row, col) {
 // Cell rendering
 // =====================================================
 
-function renderCell(row, col) {
-    const v = row[col.key];
+function renderCell(row: EnrichedScreenerRow, col: ScreenerColumn): React.ReactNode {
+    const raw = row[col.key];
 
     switch (col.type) {
-        case 'text':
+        case 'text': {
+            const v = raw as string | null | undefined;
             if (col.key === 'name') {
                 const assetName = v ? v.split(' - ')[0] : '';
                 return (
-                    <span className="text-[#e5e5e5] group-hover:text-white font-medium transition-colors truncate block max-w-[180px]" title={v}>
+                    <span className="text-[#e5e5e5] group-hover:text-white font-medium transition-colors truncate block max-w-[180px]" title={v ?? undefined}>
                         {assetName}
                     </span>
                 );
             }
             return <span className="text-[#a3a3a3]">{v || '—'}</span>;
+        }
 
         case 'tag': {
             const colors = CAT_COLORS[row.category] || CAT_COLORS.other;
@@ -404,18 +426,19 @@ function renderCell(row, col) {
                     className="inline-block px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-wider"
                     style={{ backgroundColor: colors.bg, color: colors.text }}
                 >
-                    {v}
+                    {raw}
                 </span>
             );
         }
 
         case 'date':
-            return <span className="text-[#a3a3a3] tabular-nums font-mono">{formatDate(v)}</span>;
+            return <span className="text-[#a3a3a3] tabular-nums font-mono">{formatDate(raw as string | null | undefined)}</span>;
 
         case 'number':
-            return <span className="text-[#a3a3a3] tabular-nums font-mono">{formatNumber(v)}</span>;
+            return <span className="text-[#a3a3a3] tabular-nums font-mono">{formatNumber(raw as number | null | undefined)}</span>;
 
         case 'change': {
+            const v = raw as number | null | undefined;
             if (v == null) return <span className="text-[#525252]">—</span>;
             const color = v > 0 ? 'text-green-400' : v < 0 ? 'text-red-400' : 'text-[#525252]';
             return (
@@ -426,18 +449,21 @@ function renderCell(row, col) {
         }
 
         case 'net': {
+            const v = raw as number | null | undefined;
             if (v == null) return <span className="text-[#525252]">—</span>;
             const color = v > 0 ? 'text-green-400' : v < 0 ? 'text-red-400' : 'text-[#a3a3a3]';
             return <span className={`tabular-nums font-mono font-medium ${color}`}>{formatNumber(v)}</span>;
         }
 
         case 'pct': {
+            const v = raw as number | null | undefined;
             if (v == null) return <span className="text-[#525252]">—</span>;
             const color = v > 0 ? 'text-green-400/80' : v < 0 ? 'text-red-400/80' : 'text-[#a3a3a3]';
             return <span className={`tabular-nums font-mono text-[10px] ${color}`}>{formatPctSigned(v)}</span>;
         }
 
         case 'pct_change': {
+            const v = raw as number | null | undefined;
             if (v == null) return <span className="text-[#525252]">—</span>;
             const color = v > 0 ? 'text-green-400' : v < 0 ? 'text-red-400' : 'text-[#525252]';
             return (
@@ -451,15 +477,15 @@ function renderCell(row, col) {
             const gk = col.groupKey;
             return (
                 <PositionBar
-                    long={row[`${gk}_long`]}
-                    short={row[`${gk}_short`]}
-                    changeLong={row[`${gk}_change_long`]}
-                    changeShort={row[`${gk}_change_short`]}
+                    long={row[`${gk}_long`] as number | null}
+                    short={row[`${gk}_short`] as number | null}
+                    changeLong={row[`${gk}_change_long`] as number | null | undefined}
+                    changeShort={row[`${gk}_change_short`] as number | null | undefined}
                 />
             );
         }
 
         default:
-            return <span className="text-[#a3a3a3]">{v ?? '—'}</span>;
+            return <span className="text-[#a3a3a3]">{(raw as string | number) ?? '—'}</span>;
     }
 }

@@ -9,7 +9,7 @@ import { fetchMarkets, fetchMarketData, fetchScreener, fetchGroups } from '@/lib
  * Fetch market list for a given report type + subtype.
  * Cached for 5 minutes (default staleTime).
  */
-export function useMarkets(reportType, subtype) {
+export function useMarkets(reportType: string, subtype: string) {
     return useQuery({
         queryKey: ['markets', reportType, subtype],
         queryFn: () => fetchMarkets(reportType, subtype),
@@ -21,10 +21,10 @@ export function useMarkets(reportType, subtype) {
  * Fetch full market data (weeks, stats, prices).
  * Only enabled when a market code is provided.
  */
-export function useMarketData(reportType, subtype, code) {
+export function useMarketData(reportType: string, subtype: string, code: string | null) {
     return useQuery({
         queryKey: ['marketData', reportType, subtype, code],
-        queryFn: () => fetchMarketData(reportType, subtype, code),
+        queryFn: () => fetchMarketData(reportType, subtype, code!),
         enabled: !!code,
     });
 }
@@ -33,12 +33,10 @@ export function useMarketData(reportType, subtype, code) {
  * Fetch screener data + group definitions in parallel.
  * Returns { data, groups, isLoading, error }.
  */
-export function useScreenerData(reportType, subtype) {
+export function useScreenerData(reportType: string, subtype: string) {
     const screener = useQuery({
         queryKey: ['screener', reportType, subtype],
         queryFn: () => fetchScreener(reportType, subtype),
-        // Backend now returns { items, total, limit, offset }
-        select: (data) => data?.items ?? data,
     });
 
     const groupsQuery = useQuery({

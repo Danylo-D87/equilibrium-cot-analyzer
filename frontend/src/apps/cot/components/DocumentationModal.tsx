@@ -19,7 +19,19 @@ const T = {
    Section navigation definitions
    ===================================================== */
 
-const SECTIONS = {
+interface SectionChild {
+    id: string;
+    title: string;
+}
+
+interface Section {
+    id: string;
+    title: string;
+    icon: string;
+    children?: SectionChild[];
+}
+
+const SECTIONS: Record<string, (lang: string) => Section[]> = {
     report: (lang) => [
         { id: 'overview', title: lang === 'ua' ? 'Огляд' : 'Overview', icon: '◈' },
         {
@@ -97,7 +109,7 @@ const SECTIONS = {
    Reusable helper components
    ===================================================== */
 
-function Formula({ children }) {
+function Formula({ children }: { children: React.ReactNode }) {
     return (
         <div className="my-3 px-4 py-3 bg-surface border border-border rounded-sm font-mono text-[11.5px] text-text-secondary leading-relaxed whitespace-pre-wrap">
             {children}
@@ -105,8 +117,10 @@ function Formula({ children }) {
     );
 }
 
-function Tag({ color = 'emerald', children }) {
-    const colors = {
+type TagColor = 'emerald' | 'red' | 'amber' | 'blue' | 'gray' | 'green' | 'purple';
+
+function Tag({ color = 'emerald', children }: { color?: TagColor; children: React.ReactNode }) {
+    const colors: Record<TagColor, string> = {
         emerald: 'bg-white/5 text-text-primary border-border',
         red: 'bg-red-500/10 text-red-400 border-red-500/20',
         amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
@@ -122,7 +136,7 @@ function Tag({ color = 'emerald', children }) {
     );
 }
 
-function Note({ children }) {
+function Note({ children }: { children: React.ReactNode }) {
     return (
         <div className="my-4 px-4 py-3 bg-surface border-l-2 border-border-hover rounded-r-sm text-[11.5px] text-text-secondary leading-relaxed">
             <span className="text-text-primary font-semibold mr-1.5">📌</span>
@@ -131,7 +145,7 @@ function Note({ children }) {
     );
 }
 
-function InfoTable({ rows }) {
+function InfoTable({ rows }: { rows: [string, string][] }) {
     return (
         <div className="my-4 space-y-2 text-[11.5px]">
             {rows.map((r, i) => (
@@ -144,7 +158,7 @@ function InfoTable({ rows }) {
     );
 }
 
-function ParticipantCard({ name, tag, tagColor, description }) {
+function ParticipantCard({ name, tag, tagColor, description }: { name: string; tag: string; tagColor: TagColor; description: string }) {
     return (
         <div className="px-4 py-3 bg-white/[0.02] border border-border rounded-sm mb-3">
             <div className="flex items-center gap-2 mb-2">
@@ -160,8 +174,8 @@ function ParticipantCard({ name, tag, tagColor, description }) {
    Report documentation tab
    ===================================================== */
 
-function ReportDocContent({ lang }) {
-    const L = (ua, en) => lang === 'ua' ? ua : en;
+function ReportDocContent({ lang }: { lang: string }) {
+    const L = (ua: string, en: string): string => lang === 'ua' ? ua : en;
 
     return (
         <div className="prose-dark">
@@ -694,16 +708,16 @@ ${L('Результат', 'Result')}: 0% — 100%`}</Formula>
                     'At the top of the table, statistical rows provide context for each numerical column:'
                 )}</p>
                 <div className="my-4 space-y-3 text-[11.5px]">
-                    {[
-                        ['Max.', (ua, en) => lang === 'ua' ? 'Абсолютний максимум за весь доступний період' : 'Absolute maximum over entire available period'],
-                        ['Min.', (ua, en) => lang === 'ua' ? 'Абсолютний мінімум за весь доступний період' : 'Absolute minimum over entire available period'],
-                        ['Max. 5y', (ua, en) => lang === 'ua' ? 'Максимум за останні 5 років (260 тижнів)' : 'Maximum over last 5 years (260 weeks)'],
-                        ['Min. 5y', (ua, en) => lang === 'ua' ? 'Мінімум за останні 5 років (260 тижнів)' : 'Minimum over last 5 years (260 weeks)'],
-                        ['13 week avg', (ua, en) => lang === 'ua' ? 'Середнє арифметичне за останні 13 тижнів (≈ квартал)' : 'Arithmetic average over last 13 weeks (≈ quarter)'],
-                    ].map(([label, descFn], i) => (
+                    {([
+                        ['Max.', L('Абсолютний максимум за весь доступний період', 'Absolute maximum over entire available period')],
+                        ['Min.', L('Абсолютний мінімум за весь доступний період', 'Absolute minimum over entire available period')],
+                        ['Max. 5y', L('Максимум за останні 5 років (260 тижнів)', 'Maximum over last 5 years (260 weeks)')],
+                        ['Min. 5y', L('Мінімум за останні 5 років (260 тижнів)', 'Minimum over last 5 years (260 weeks)')],
+                        ['13 week avg', L('Середнє арифметичне за останні 13 тижнів (≈ квартал)', 'Arithmetic average over last 13 weeks (≈ quarter)')],
+                    ] as [string, string][]).map(([label, desc], i) => (
                         <div key={i} className="flex gap-3">
                             <span className="text-[#a3a3a3] font-semibold min-w-[100px]">{label}</span>
-                            <span className="text-[#a3a3a3]">{descFn()}</span>
+                            <span className="text-[#a3a3a3]">{desc}</span>
                         </div>
                     ))}
                 </div>
@@ -808,8 +822,8 @@ ${L('Діапазон', 'Range')}: 0.05 (${L('ледь видимий', 'barely 
    Screener documentation tab
    ===================================================== */
 
-function ScreenerDocContent({ lang }) {
-    const L = (ua, en) => lang === 'ua' ? ua : en;
+function ScreenerDocContent({ lang }: { lang: string }) {
+    const L = (ua: string, en: string): string => lang === 'ua' ? ua : en;
 
     return (
         <div className="prose-dark">
@@ -929,8 +943,8 @@ function ScreenerDocContent({ lang }) {
    Charts documentation tab
    ===================================================== */
 
-function ChartsDocContent({ lang }) {
-    const L = (ua, en) => lang === 'ua' ? ua : en;
+function ChartsDocContent({ lang }: { lang: string }) {
+    const L = (ua: string, en: string): string => lang === 'ua' ? ua : en;
 
     return (
         <div className="prose-dark">
@@ -1091,14 +1105,21 @@ ${L('Діапазон', 'Range')}: 0% — 100%`}</Formula>
    Modal wrapper
    ===================================================== */
 
-export default function DocumentationModal({ isOpen, onClose }) {
+type Lang = 'ua' | 'en';
+
+interface DocumentationModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export default function DocumentationModal({ isOpen, onClose }: DocumentationModalProps) {
     const [activeSection, setActiveSection] = useState('overview');
-    const [expandedGroups, setExpandedGroups] = useState({});
-    const [docTab, setDocTab] = useState('report');
-    const [lang, setLang] = useState(() => {
-        try { return localStorage.getItem('docLang') || 'ua'; } catch { return 'ua'; }
+    const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+    const [docTab, setDocTab] = useState<string>('report');
+    const [lang, setLang] = useState<Lang>(() => {
+        try { return (localStorage.getItem('docLang') as Lang) || 'ua'; } catch { return 'ua'; }
     });
-    const contentRef = useRef(null);
+    const contentRef = useRef<HTMLDivElement>(null);
 
     // Persist language choice
     useEffect(() => {
@@ -1128,7 +1149,7 @@ export default function DocumentationModal({ isOpen, onClose }) {
     const sectionBuilder = SECTIONS[docTab];
     const currentSections = sectionBuilder ? sectionBuilder(lang) : [];
 
-    const switchDocTab = (tab) => {
+    const switchDocTab = (tab: string) => {
         setDocTab(tab);
         const firstSection = SECTIONS[tab]?.(lang)?.[0];
         setActiveSection(firstSection?.id || 'overview');
@@ -1136,11 +1157,11 @@ export default function DocumentationModal({ isOpen, onClose }) {
         if (contentRef.current) contentRef.current.scrollTop = 0;
     };
 
-    const toggleGroup = (id) => {
+    const toggleGroup = (id: string) => {
         setExpandedGroups(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
-    const scrollTo = (id) => {
+    const scrollTo = (id: string) => {
         if (!contentRef.current) return;
         const el = contentRef.current.querySelector(`#${id}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });

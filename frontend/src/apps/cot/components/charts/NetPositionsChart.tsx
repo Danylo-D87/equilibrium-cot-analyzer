@@ -1,15 +1,22 @@
-import React from 'react';
 import {
     ResponsiveContainer, ComposedChart, Line, XAxis, YAxis,
     Tooltip, CartesianGrid, ReferenceLine, Legend,
 } from 'recharts';
 import { COLORS, fmtCompact, fmtNum, fmtDate, fmtTick } from './chartConstants';
+import type { GroupMeta } from './chartConstants';
+import type { Week } from '../../types';
 
 // ---------------------------------------------------------------------------
 // Tooltip
 // ---------------------------------------------------------------------------
 
-function NetTooltip({ active, payload, label }) {
+interface TooltipEntry {
+    color: string;
+    name: string;
+    value: number;
+}
+
+function NetTooltip({ active, payload, label }: { active?: boolean; payload?: TooltipEntry[]; label?: string }) {
     if (!active || !payload?.length) return null;
     return (
         <div className="bg-surface border border-border rounded-sm px-3 py-2.5 shadow-2xl">
@@ -29,7 +36,14 @@ function NetTooltip({ active, payload, label }) {
 // Chart
 // ---------------------------------------------------------------------------
 
-export default function NetPositionsChart({ chartData, groupsMeta, groupColors }) {
+interface NetPositionsChartProps {
+    chartData: Week[];
+    groupsMeta: GroupMeta[];
+    groupColors: Record<string, string>;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function NetPositionsChart({ chartData, groupsMeta, groupColors: _groupColors }: NetPositionsChartProps) {
     return (
         <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
