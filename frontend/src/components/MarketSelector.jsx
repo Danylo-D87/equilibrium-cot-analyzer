@@ -1,24 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-
-// Category display order
-const CATEGORY_ORDER = [
-    'currencies', 'crypto', 'energy', 'metals', 'grains', 'softs',
-    'indices', 'rates', 'livestock', 'other'
-];
-
-// Short display labels for category pills
-const CATEGORY_LABELS = {
-    currencies: 'FX',
-    crypto: 'Crypto',
-    energy: 'Energy',
-    metals: 'Metals',
-    grains: 'Grains',
-    softs: 'Softs',
-    indices: 'Indices',
-    rates: 'Rates',
-    livestock: 'Livestock',
-    other: 'Other',
-};
+import { CATEGORY_KEYS, CATEGORY_LABELS } from '../utils/constants';
 
 export default function MarketSelector({ markets, selected, onChange }) {
     const [open, setOpen] = useState(false);
@@ -67,7 +48,7 @@ export default function MarketSelector({ markets, selected, onChange }) {
         // Build ordered groups
         const ordered = [];
         const flatList = [];
-        for (const cat of CATEGORY_ORDER) {
+        for (const cat of CATEGORY_KEYS) {
             if (groups[cat]?.length) {
                 ordered.push({ category: cat, display: groups[cat][0].category_display || cat, markets: groups[cat] });
                 flatList.push(...groups[cat]);
@@ -75,7 +56,7 @@ export default function MarketSelector({ markets, selected, onChange }) {
         }
         // Any remaining categories
         for (const cat of Object.keys(groups)) {
-            if (!CATEGORY_ORDER.includes(cat)) {
+            if (!CATEGORY_KEYS.includes(cat)) {
                 ordered.push({ category: cat, display: cat, markets: groups[cat] });
                 flatList.push(...groups[cat]);
             }

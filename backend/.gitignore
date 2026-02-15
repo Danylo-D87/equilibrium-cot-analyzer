@@ -1,0 +1,31 @@
+# Backend: .gitignore
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Runtime data
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/downloads/
+data/logs/*.log
+data/pipeline.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*

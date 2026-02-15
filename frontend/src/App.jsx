@@ -1,122 +1,66 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, Suspense, lazy } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
+import { useAppStore } from './store/useAppStore';
+import { useMarkets, useMarketData } from './hooks/useMarketQueries';
+import { REPORT_TYPES, SUBTYPES, DEFAULT_MARKET_CODES } from './utils/constants';
 import MarketSelector from './components/MarketSelector';
 import CotReportTable from './components/CotReportTable';
-import DocumentationModal from './components/DocumentationModal';
-import BubbleChartModal from './components/BubbleChartModal';
 import ScreenerTable from './components/ScreenerTable';
+import ErrorBoundary from './components/ui/ErrorBoundary';
+import Spinner from './components/ui/Spinner';
 
-async function fetchJson(url) {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const text = await res.text();
-    if (!text || text.trimStart().startsWith('<')) return null;
-    return JSON.parse(text);
-}
+// Lazy-load heavy modals — they're rarely opened
+const DocumentationModal = lazy(() => import('./components/DocumentationModal'));
+const BubbleChartModal = lazy(() => import('./components/BubbleChartModal'));
 
-const REPORT_TYPES = [
-    { key: 'legacy', label: 'Legacy' },
-    { key: 'disagg', label: 'Disaggregated' },
-    { key: 'tff', label: 'TFF' },
-];
+// =====================================================
+// Inner app (uses store + React Query)
+// =====================================================
 
-const SUBTYPES = [
-    { key: 'fo', label: 'Futures Only' },
-    { key: 'co', label: 'Combined' },
-];
+function AppInner() {
+    const {
+        reportType, setReportType,
+        subtype, setSubtype,
+        selectedMarketCode, setSelectedMarketCode,
+        activeTab, setActiveTab,
+        fitMode, toggleFitMode,
+        docsOpen, setDocsOpen,
+        chartOpen, setChartOpen,
+    } = useAppStore();
 
-function App() {
-    const [markets, setMarkets] = useState([]);
-    const [selectedMarket, setSelectedMarket] = useState(null);
-    const [marketData, setMarketData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [dataLoading, setDataLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [docsOpen, setDocsOpen] = useState(false);
-    const [chartOpen, setChartOpen] = useState(false);
-    const [fitMode, setFitMode] = useState(false);
-    const [activeTab, setActiveTab] = useState('report'); // 'report' | 'screener'
+    // --- Data fetching via React Query ---
+    const { data: markets = [], isLoading: marketsLoading, error: marketsError } = useMarkets(reportType, subtype);
+    const { data: marketData = null, isLoading: dataLoading } = useMarketData(reportType, subtype, selectedMarketCode);
 
-    // Report type & subtype toggles
-    const [reportType, setReportType] = useState(() => localStorage.getItem('reportType') || 'legacy');
-    const [subtype, setSubtype] = useState(() => localStorage.getItem('subtype') || 'fo');
-
-    // Persist report type / subtype
-    useEffect(() => { localStorage.setItem('reportType', reportType); }, [reportType]);
-    useEffect(() => { localStorage.setItem('subtype', subtype); }, [subtype]);
-
-    // Load market list when report type or subtype changes
+    // --- Auto-select market when list loads or changes ---
     useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const data = await fetchJson(`/data/markets_${reportType}_${subtype}.json`);
-                if (!data) throw new Error(`No data for ${reportType}/${subtype} \u2014 run pipeline first`);
-                if (cancelled) return;
-                setMarkets(data);
-                const savedCode = localStorage.getItem('selectedMarket');
-                const found = savedCode && data.find(m => m.code === savedCode);
-                if (found) {
-                    setSelectedMarket(found);
-                } else {
-                    // Default market per report type
-                    const defaults = { legacy: '099741', disagg: '088691', tff: '133741' };
-                    const def = data.find(m => m.code === defaults[reportType]);
-                    setSelectedMarket(def || data[0] || null);
-                }
-            } catch (err) {
-                if (!cancelled) setError(err.message);
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [reportType, subtype]);
+        if (!markets.length) return;
+        if (selectedMarketCode && markets.find(m => m.code === selectedMarketCode)) return;
+        const def = markets.find(m => m.code === DEFAULT_MARKET_CODES[reportType]);
+        setSelectedMarketCode(def?.code || markets[0]?.code || null);
+    }, [markets, reportType, selectedMarketCode, setSelectedMarketCode]);
 
-    // Load market data when selection or report type/subtype changes
-    useEffect(() => {
-        if (!selectedMarket) return;
-        let cancelled = false;
-        (async () => {
-            try {
-                setDataLoading(true);
-                const data = await fetchJson(`/data/market_${selectedMarket.code}_${reportType}_${subtype}.json`);
-                if (!data) { setMarketData(null); return; }
-                if (!cancelled) {
-                    setMarketData(data);
-                    localStorage.setItem('selectedMarket', selectedMarket.code);
-                }
-            } catch (err) {
-                if (!cancelled) setError(err.message);
-            } finally {
-                if (!cancelled) setDataLoading(false);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [selectedMarket, reportType, subtype]);
-
-    // Handler for screener row click — navigate to that market's report
+    // --- Screener row click → switch to report tab ---
     const handleScreenerSelect = useCallback((code) => {
-        const found = markets.find(m => m.code === code);
-        if (found) {
-            setSelectedMarket(found);
-            setActiveTab('report');
-        }
-    }, [markets]);
+        setSelectedMarketCode(code);
+        setActiveTab('report');
+    }, [setSelectedMarketCode, setActiveTab]);
 
-    if (loading) {
+    const selectedMarket = markets.find(m => m.code === selectedMarketCode) || null;
+
+    if (marketsLoading && !markets.length) {
         return (
             <div className="h-screen bg-[#050505] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#e5e5e5]" />
+                    <Spinner />
                     <span className="text-[#525252] text-xs tracking-[0.2em] uppercase font-medium">Loading data…</span>
                 </div>
             </div>
         );
     }
 
-    if (error) {
+    if (marketsError) {
         return (
             <div className="h-screen bg-[#050505] flex items-center justify-center">
                 <div className="text-center space-y-4 max-w-md">
@@ -126,7 +70,7 @@ function App() {
                             <path d="M12 8v4M12 16h.01" />
                         </svg>
                     </div>
-                    <p className="text-[#f87171] text-sm font-medium">{error}</p>
+                    <p className="text-[#f87171] text-sm font-medium">{marketsError.message}</p>
                     <button
                         onClick={() => window.location.reload()}
                         className="text-xs text-[#a3a3a3] hover:text-white transition-all duration-300 tracking-widest uppercase px-6 py-2.5 rounded-sm border border-[#262626] hover:border-[#a3a3a3] hover:bg-[#121212]"
@@ -152,7 +96,7 @@ function App() {
                     </span>
                 </div>
 
-                {/* View tabs — flat text */}
+                {/* View tabs */}
                 <nav className="flex items-center gap-0 flex-shrink-0 mr-4">
                     <button
                         onClick={() => setActiveTab('report')}
@@ -178,7 +122,7 @@ function App() {
                 {/* Thin divider */}
                 <div className="w-px h-4 bg-[#1a1a1a] flex-shrink-0 mr-4" />
 
-                {/* Report Type — compact inline */}
+                {/* Report Type */}
                 <div className="flex items-center gap-0 flex-shrink-0 mr-3">
                     {REPORT_TYPES.map((rt, i) => (
                         <React.Fragment key={rt.key}>
@@ -190,13 +134,13 @@ function App() {
                                     : 'text-[#404040] hover:text-[#737373]'
                                     }`}
                             >
-                                {rt.key === 'disagg' ? 'Disagg' : rt.label}
+                                {rt.shortLabel}
                             </button>
                         </React.Fragment>
                     ))}
                 </div>
 
-                {/* Subtype — minimal two-letter toggle */}
+                {/* Subtype */}
                 <div className="flex items-center gap-0 flex-shrink-0">
                     {SUBTYPES.map((st, i) => (
                         <React.Fragment key={st.key}>
@@ -208,7 +152,7 @@ function App() {
                                     : 'text-[#404040] hover:text-[#737373]'
                                     }`}
                             >
-                                {st.key === 'fo' ? 'FO' : 'CO'}
+                                {st.shortLabel}
                             </button>
                         </React.Fragment>
                     ))}
@@ -224,7 +168,7 @@ function App() {
                             <MarketSelector
                                 markets={markets}
                                 selected={selectedMarket}
-                                onChange={setSelectedMarket}
+                                onChange={(m) => setSelectedMarketCode(m.code)}
                             />
                             <button
                                 onClick={() => setChartOpen(true)}
@@ -254,54 +198,73 @@ function App() {
                 </div>
             </header>
 
-            <DocumentationModal isOpen={docsOpen} onClose={() => setDocsOpen(false)} />
-            <BubbleChartModal isOpen={chartOpen} onClose={() => setChartOpen(false)} data={marketData} />
+            {/* Lazy-loaded modals */}
+            <Suspense fallback={null}>
+                {docsOpen && <DocumentationModal isOpen={docsOpen} onClose={() => setDocsOpen(false)} />}
+            </Suspense>
+            <Suspense fallback={null}>
+                {chartOpen && <BubbleChartModal isOpen={chartOpen} onClose={() => setChartOpen(false)} data={marketData} />}
+            </Suspense>
 
-            {/* Main content — switches by tab */}
+            {/* Main content */}
             <main className="flex-1 overflow-hidden relative">
-                {activeTab === 'report' ? (
-                    <>
-                        {dataLoading ? (
-                            <div className="flex items-center justify-center h-full">
-                                <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-[#e5e5e5]" />
-                            </div>
-                        ) : marketData ? (
-                            <CotReportTable data={marketData} fitMode={fitMode} />
-                        ) : null}
+                <ErrorBoundary>
+                    {activeTab === 'report' ? (
+                        <>
+                            {dataLoading ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <Spinner />
+                                </div>
+                            ) : marketData ? (
+                                <CotReportTable data={marketData} fitMode={fitMode} />
+                            ) : null}
 
-                        {/* Fit to screen button */}
-                        {marketData && (
-                            <button
-                                onClick={() => setFitMode(f => !f)}
-                                className={`fixed bottom-5 right-5 z-40 w-10 h-10 flex items-center justify-center rounded-sm border transition-all duration-300 shadow-lg shadow-black/40 ${fitMode
-                                    ? 'bg-[#e5e5e5]/10 border-[#e5e5e5]/30 text-[#e5e5e5]'
-                                    : 'bg-[#0a0a0a]/90 border-[#262626] text-[#525252] hover:text-[#e5e5e5] hover:border-[#404040] hover:bg-[#121212]'
-                                    } backdrop-blur-sm`}
-                                title={fitMode ? 'Звичайний розмір' : 'Вмістити на екран'}
-                            >
-                                {fitMode ? (
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="15 3 21 3 21 9" />
-                                        <polyline points="9 21 3 21 3 15" />
-                                        <line x1="21" y1="3" x2="14" y2="10" />
-                                        <line x1="3" y1="21" x2="10" y2="14" />
-                                    </svg>
-                                ) : (
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <polyline points="4 14 4 20 10 20" />
-                                        <polyline points="20 10 20 4 14 4" />
-                                        <line x1="14" y1="10" x2="21" y2="3" />
-                                        <line x1="3" y1="21" x2="10" y2="14" />
-                                    </svg>
-                                )}
-                            </button>
-                        )}
-                    </>
-                ) : (
-                    <ScreenerTable onSelectMarket={handleScreenerSelect} reportType={reportType} subtype={subtype} />
-                )}
+                            {/* Fit to screen button */}
+                            {marketData && (
+                                <button
+                                    onClick={toggleFitMode}
+                                    className={`fixed bottom-5 right-5 z-40 w-10 h-10 flex items-center justify-center rounded-sm border transition-all duration-300 shadow-lg shadow-black/40 ${fitMode
+                                        ? 'bg-[#e5e5e5]/10 border-[#e5e5e5]/30 text-[#e5e5e5]'
+                                        : 'bg-[#0a0a0a]/90 border-[#262626] text-[#525252] hover:text-[#e5e5e5] hover:border-[#404040] hover:bg-[#121212]'
+                                        } backdrop-blur-sm`}
+                                    title={fitMode ? 'Normal size' : 'Fit to screen'}
+                                >
+                                    {fitMode ? (
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="15 3 21 3 21 9" />
+                                            <polyline points="9 21 3 21 3 15" />
+                                            <line x1="21" y1="3" x2="14" y2="10" />
+                                            <line x1="3" y1="21" x2="10" y2="14" />
+                                        </svg>
+                                    ) : (
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="4 14 4 20 10 20" />
+                                            <polyline points="20 10 20 4 14 4" />
+                                            <line x1="14" y1="10" x2="21" y2="3" />
+                                            <line x1="3" y1="21" x2="10" y2="14" />
+                                        </svg>
+                                    )}
+                                </button>
+                            )}
+                        </>
+                    ) : (
+                        <ScreenerTable onSelectMarket={handleScreenerSelect} reportType={reportType} subtype={subtype} />
+                    )}
+                </ErrorBoundary>
             </main>
         </div>
+    );
+}
+
+// =====================================================
+// Root wrapper with providers
+// =====================================================
+
+function App() {
+    return (
+        <QueryClientProvider client={queryClient}>
+            <AppInner />
+        </QueryClientProvider>
     );
 }
 

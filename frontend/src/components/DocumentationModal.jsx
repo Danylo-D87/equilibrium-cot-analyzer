@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 /* =====================================================
    Bilingual content helper
@@ -66,14 +67,25 @@ const SECTIONS = {
     ],
     screener: (lang) => [
         { id: 'scr-overview', title: lang === 'ua' ? 'Огляд Screener' : 'Screener Overview', icon: '◈' },
-        { id: 'scr-columns', title: lang === 'ua' ? 'Колонки скринера' : 'Screener Columns', icon: '≡' },
-        { id: 'scr-filters', title: lang === 'ua' ? 'Фільтри та пошук' : 'Filters & Search', icon: '⚙' },
-        { id: 'scr-signals-col', title: lang === 'ua' ? 'Колонка Signals' : 'Signals Column', icon: '⚡' },
+        {
+            id: 'scr-columns', title: lang === 'ua' ? 'Колонки скринера' : 'Screener Columns', icon: '≡', children: [
+                { id: 'scr-col-fixed', title: lang === 'ua' ? 'Загальні' : 'Fixed' },
+                { id: 'scr-col-group', title: lang === 'ua' ? 'По групах' : 'Per Group' },
+                { id: 'scr-col-oi', title: 'Open Interest' },
+                { id: 'scr-col-total', title: 'Total L/S' },
+            ]
+        },
+        { id: 'scr-filters', title: lang === 'ua' ? 'Фільтри та сортування' : 'Filters & Sorting', icon: '⚙' },
     ],
     charts: (lang) => [
         { id: 'ch-overview', title: lang === 'ua' ? 'Огляд графіків' : 'Charts Overview', icon: '◈' },
         { id: 'ch-net', title: 'Net Position Chart', icon: '◉' },
-        { id: 'ch-cot-index', title: 'COT Index Chart', icon: '◎' },
+        {
+            id: 'ch-indicators', title: lang === 'ua' ? 'Режим Indicators' : 'Indicators Mode', icon: '◎', children: [
+                { id: 'ch-ind-cot', title: 'COT Index' },
+                { id: 'ch-ind-wci', title: 'WCI' },
+            ]
+        },
         { id: 'ch-price', title: lang === 'ua' ? 'Графік ціни' : 'Price Chart', icon: '◇' },
         { id: 'ch-8signals', title: '8 COT Signals', icon: '⚡' },
         { id: 'ch-bubbles', title: lang === 'ua' ? 'Режим Bubbles' : 'Bubbles View', icon: '◉' },
@@ -804,78 +816,110 @@ function ScreenerDocContent({ lang }) {
             <section id="scr-overview" className="doc-section">
                 <h2>{L('Огляд Screener', 'Screener Overview')}</h2>
                 <p>{L(
-                    'Screener — це таблиця з оглядом усіх ринків одночасно. Дозволяє порівнювати позиціонування, шукати екстремуми та фільтрувати ринки за категоріями, сигналами та пошуковим запитом.',
-                    'Screener is a table providing an overview of all markets simultaneously. Allows comparing positioning, finding extremes, and filtering markets by categories, signals, and search query.'
+                    'Screener — таблиця з оглядом усіх ринків одночасно. Для кожного ринку показано структуру позицій кожної групи трейдерів: загальну кількість, розподіл Long/Short, зміни та частку від Open Interest.',
+                    'Screener is a table providing an overview of all markets simultaneously. For each market it shows the position structure of each trader group: total count, Long/Short distribution, changes, and share of Open Interest.'
                 )}</p>
                 <p>{L(
-                    'Для кожного ринку відображаються: остання дата звіту, категорія, біржа, активні сигнали, Open Interest та ключові метрики для кожної групи учасників (Net, Δ Net, % OI, COT 1Y, Crowded).',
-                    'For each market displayed: last report date, category, exchange, active signals, Open Interest, and key metrics for each participant group (Net, Δ Net, % OI, COT 1Y, Crowded).'
+                    'Натискання на рядок ринку відкриває детальні графіки для аналізу.',
+                    'Clicking a market row opens detailed charts for analysis.'
                 )}</p>
             </section>
 
             <section id="scr-columns" className="doc-section">
                 <h2>{L('Колонки скринера', 'Screener Columns')}</h2>
-                <div className="my-4 space-y-3 text-[11.5px]">
-                    {[
-                        ['Market', L('Назва ринку (актив)', 'Market name (asset)')],
-                        ['Category', L('Категорія: FX, Crypto, Energy, Metals, Grains, Softs, Indices, Rates, Livestock, Other', 'Category: FX, Crypto, Energy, Metals, Grains, Softs, Indices, Rates, Livestock, Other')],
-                        ['Exch', L('Код біржі (CME, CBT, NYM тощо)', 'Exchange code (CME, CBT, NYM etc.)')],
-                        ['Date', L('Дата останнього тижневого звіту', 'Date of last weekly report')],
-                        ['Signals', L('Активні BUY/SELL сигнали з вказанням групи', 'Active BUY/SELL signals with group indicator')],
-                        ['OI', L('Open Interest — загальна кількість відкритих контрактів', 'Open Interest — total open contracts')],
-                        ['OI Δ', L('Тижнева зміна Open Interest', 'Weekly Open Interest change')],
-                        ['Net', L('Net Position для кожної групи', 'Net Position for each group')],
-                        ['Δ Net', L('Тижнева зміна Net Position', 'Weekly Net Position change')],
-                        ['% OI', L('Net Position як % від Open Interest', 'Net Position as % of Open Interest')],
-                        ['COT 1Y', L('COT Index (52 тижні) — нормалізоване позиціонування', 'COT Index (52 weeks) — normalized positioning')],
-                        ['Crowd', L('Crowded Level — сигнал при екстремумах', 'Crowded Level — signal at extremes')],
-                    ].map(([col, desc], i) => (
-                        <div key={i} className="flex gap-3">
-                            <span className="text-[#e5e5e5] font-semibold min-w-[80px] flex-shrink-0">{col}</span>
-                            <span className="text-[#a3a3a3]">{desc}</span>
-                        </div>
-                    ))}
-                </div>
+
+                <article id="scr-col-fixed" className="doc-article">
+                    <h3>{L('Загальні колонки', 'Fixed Columns')}</h3>
+                    <div className="my-4 space-y-3 text-[11.5px]">
+                        {[
+                            ['Market', L('Назва ринку (актив). Відображається лише назва інструменту без біржі.', 'Market name (asset). Shows instrument name without exchange.')],
+                            ['Category', L('Категорія: FX, Crypto, Energy, Metals, Grains, Softs, Indices, Rates, Livestock, Other', 'Category: FX, Crypto, Energy, Metals, Grains, Softs, Indices, Rates, Livestock, Other')],
+                            ['Date', L('Дата останнього тижневого звіту CFTC', 'Date of last weekly CFTC report')],
+                        ].map(([col, desc], i) => (
+                            <div key={i} className="flex gap-3">
+                                <span className="text-[#e5e5e5] font-semibold min-w-[80px] flex-shrink-0">{col}</span>
+                                <span className="text-[#a3a3a3]">{desc}</span>
+                            </div>
+                        ))}
+                    </div>
+                </article>
+
+                <article id="scr-col-group" className="doc-article">
+                    <h3>{L('Колонки по групах учасників', 'Per-Group Columns')}</h3>
+                    <p>{L(
+                        'Для кожної групи трейдерів (кількість груп залежить від типу звіту) відображається набір з 5 колонок:',
+                        'For each trader group (number of groups depends on report type) a set of 5 columns is displayed:'
+                    )}</p>
+                    <div className="my-4 space-y-3 text-[11.5px]">
+                        {[
+                            ['Pos', L('Загальна кількість позицій групи (Long + Short). Показує масштаб присутності групи на ринку.', 'Total positions of the group (Long + Short). Shows the scale of group presence in the market.')],
+                            ['L/S', L('Візуальна шкала пропорції Long (зелений) та Short (червоний). При наведенні — tooltip з точною кількістю Long/Short позицій, їх відсотками та тижневими змінами.', 'Visual bar showing Long (green) and Short (red) proportion. On hover — tooltip with exact Long/Short counts, percentages, and weekly changes.')],
+                            ['Δ', L('Тижнева зміна загальної кількості позицій (Δ Long + Δ Short). Зелений — зростання, червоний — скорочення.', 'Weekly change in total positions (Δ Long + Δ Short). Green — increase, red — decrease.')],
+                            ['% OI', L('Загальна кількість позицій групи як відсоток від Open Interest. Показує частку ринку, яку займає ця група.', 'Total group positions as percentage of Open Interest. Shows the market share occupied by this group.')],
+                            ['Δ%', L('Тижнева зміна частки % OI. Показує чи група нарощує або скорочує свою присутність на ринку.', 'Weekly change in % OI share. Shows whether the group is increasing or decreasing its market presence.')],
+                        ].map(([col, desc], i) => (
+                            <div key={i} className="flex gap-3">
+                                <span className="text-[#e5e5e5] font-semibold min-w-[50px] flex-shrink-0">{col}</span>
+                                <span className="text-[#a3a3a3]">{desc}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <Formula>{`Pos = Long + Short
+Δ = Δ Long + Δ Short
+% OI = (Pos / Open Interest) × 100
+Δ% = % OI${L(' поточний', ' current')} − % OI${L(' минулий тиждень', ' previous week')}`}</Formula>
+                </article>
+
+                <article id="scr-col-oi" className="doc-article">
+                    <h3>Open Interest</h3>
+                    <p>{L(
+                        'Блок Open Interest розташований в кінці таблиці після колонок усіх груп:',
+                        'Open Interest block is located at the end of the table after all group columns:'
+                    )}</p>
+                    <div className="my-4 space-y-3 text-[11.5px]">
+                        {[
+                            ['OI', L('Загальна кількість відкритих контрактів на ринку.', 'Total number of open contracts in the market.')],
+                            ['Δ OI', L('Тижнева зміна Open Interest. Зростання = нові позиції відкриваються, зменшення = позиції закриваються.', 'Weekly Open Interest change. Increase = new positions opening, decrease = positions closing.')],
+                        ].map(([col, desc], i) => (
+                            <div key={i} className="flex gap-3">
+                                <span className="text-[#e5e5e5] font-semibold min-w-[50px] flex-shrink-0">{col}</span>
+                                <span className="text-[#a3a3a3]">{desc}</span>
+                            </div>
+                        ))}
+                    </div>
+                </article>
+
+                <article id="scr-col-total" className="doc-article">
+                    <h3>Total L/S</h3>
+                    <p>{L(
+                        'Окрема секція з загальним баром Long/Short по всьому ринку — сумує позиції всіх груп учасників. Показує загальний баланс бичачого та ведмежого позиціонування на ринку.',
+                        'Separate section with an overall Long/Short bar across all groups. Shows the total balance of bullish and bearish positioning in the market.'
+                    )}</p>
+                    <p>{L(
+                        'При наведенні — tooltip із сумарними Long та Short позиціями всіх груп та їх змінами за тиждень.',
+                        'On hover — tooltip with total Long and Short positions across all groups and their weekly changes.'
+                    )}</p>
+                </article>
             </section>
 
             <section id="scr-filters" className="doc-section">
-                <h2>{L('Фільтри та пошук', 'Filters & Search')}</h2>
+                <h2>{L('Фільтри та сортування', 'Filters & Sorting')}</h2>
                 <div className="my-4 space-y-3 text-[11.5px]">
                     <div className="flex gap-3">
-                        <span className="text-[#e5e5e5] font-semibold min-w-[120px]">{L('Пошук', 'Search')}</span>
-                        <span className="text-[#a3a3a3]">{L('Фільтрує ринки за назвою або кодом', 'Filters markets by name or code')}</span>
-                    </div>
-                    <div className="flex gap-3">
                         <span className="text-[#e5e5e5] font-semibold min-w-[120px]">{L('Категорії', 'Categories')}</span>
-                        <span className="text-[#a3a3a3]">{L('Фільтрація за типом активу (FX, Crypto, Energy тощо)', 'Filter by asset type (FX, Crypto, Energy etc.)')}</span>
-                    </div>
-                    <div className="flex gap-3">
-                        <span className="text-[#e5e5e5] font-semibold min-w-[120px]">{L('Сигнали', 'Signals')}</span>
-                        <span className="text-[#a3a3a3]">{L('All — усі ринки, Active — з сигналами, BUY/SELL — конкретний тип', 'All — all markets, Active — with signals, BUY/SELL — specific type')}</span>
+                        <span className="text-[#a3a3a3]">{L('Фільтрація за типом активу (FX, Crypto, Energy, Metals тощо). Кожна кнопка показує кількість ринків у категорії.', 'Filter by asset type (FX, Crypto, Energy, Metals etc.). Each button shows the number of markets in the category.')}</span>
                     </div>
                     <div className="flex gap-3">
                         <span className="text-[#e5e5e5] font-semibold min-w-[120px]">{L('Сортування', 'Sorting')}</span>
-                        <span className="text-[#a3a3a3]">{L('Натисніть на заголовок колонки для сортування (▲/▼)', 'Click column header to sort (▲/▼)')}</span>
+                        <span className="text-[#a3a3a3]">{L('Натисніть на заголовок будь-якої колонки для сортування (▲ asc / ▼ desc). Колонка L/S сортує по частці Short позицій.', 'Click any column header to sort (▲ asc / ▼ desc). L/S column sorts by Short position ratio.')}</span>
                     </div>
                 </div>
-            </section>
-
-            <section id="scr-signals-col" className="doc-section">
-                <h2>{L('Колонка Signals', 'Signals Column')}</h2>
-                <p>{L(
-                    'Колонка Signals у скринері показує усі активні BUY та SELL сигнали для ринку. Кожен сигнал містить тип (BUY/SELL) та назву групи, яка його згенерувала.',
-                    'The Signals column in the screener shows all active BUY and SELL signals for a market. Each signal contains the type (BUY/SELL) and the name of the group that generated it.'
-                )}</p>
-                <div className="my-3 text-[11.5px] space-y-2">
-                    <div className="flex items-center gap-2">
-                        <span className="inline-block px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase bg-green-500/[0.12] text-green-400">BUY (Comm)</span>
-                        <span className="text-[#a3a3a3]">— {L('Commercials на екстремально бичачому рівні', 'Commercials at extremely bullish level')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="inline-block px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase bg-red-500/[0.12] text-red-400">SELL (L.S)</span>
-                        <span className="text-[#a3a3a3]">— {L('Large Speculators на екстремально бичачому рівні (контраріанський SELL)', 'Large Speculators at extremely bullish level (contrarian SELL)')}</span>
-                    </div>
-                </div>
+                <Note>
+                    {L(
+                        'За замовчуванням таблиця сортується по Open Interest (найбільші ринки зверху). Натискання на L/S будь-якої групи дозволяє знайти ринки з найбільш шортовим або лонговим позиціонуванням.',
+                        'By default the table is sorted by Open Interest (largest markets first). Clicking L/S of any group helps find markets with the most short or long positioning.'
+                    )}
+                </Note>
             </section>
         </div>
     );
@@ -893,12 +937,26 @@ function ChartsDocContent({ lang }) {
             <section id="ch-overview" className="doc-section">
                 <h2>{L('Огляд графіків', 'Charts Overview')}</h2>
                 <p>{L(
-                    'Модальне вікно Charts надає інтерактивну візуалізацію даних COT для обраного ринку. Доступні кілька режимів відображення та часових діапазонів (6M, 1Y, 2Y, ALL).',
-                    'The Charts modal provides interactive visualization of COT data for the selected market. Multiple view modes and time ranges (6M, 1Y, 2Y, ALL) are available.'
+                    'Модальне вікно Charts надає інтерактивну візуалізацію даних COT для обраного ринку. Доступні три режими відображення та часові діапазони (6M, 1Y, 2Y, ALL).',
+                    'The Charts modal provides interactive visualization of COT data for the selected market. Three view modes and time ranges (6M, 1Y, 2Y, ALL) are available.'
                 )}</p>
+                <div className="my-4 space-y-2 text-[11.5px]">
+                    <div className="flex gap-3">
+                        <span className="text-[#e5e5e5] font-semibold min-w-[100px]">Bubbles</span>
+                        <span className="text-[#a3a3a3]">{L('Ціна + бульбашки Net Position + Delta Histogram', 'Price + Net Position bubbles + Delta Histogram')}</span>
+                    </div>
+                    <div className="flex gap-3">
+                        <span className="text-[#e5e5e5] font-semibold min-w-[100px]">Net Positions</span>
+                        <span className="text-[#a3a3a3]">{L('Лінійний графік Net Position для кожної групи', 'Line chart of Net Position for each group')}</span>
+                    </div>
+                    <div className="flex gap-3">
+                        <span className="text-[#e5e5e5] font-semibold min-w-[100px]">Indicators</span>
+                        <span className="text-[#a3a3a3]">{L('Ціна (зверху) + індикатор WCI/COT Index (знизу)', 'Price (top) + WCI/COT Index indicator (bottom)')}</span>
+                    </div>
+                </div>
                 <p>{L(
-                    'У верхній частині відображається назва ринку та код біржі. Панель управління дозволяє обрати режим відображення та часовий діапазон.',
-                    'The top displays market name and exchange code. The control panel allows selecting view mode and time range.'
+                    'У верхній частині відображається назва ринку та код біржі. Панель управління дозволяє обрати режим відображення, часовий діапазон та перемикати групи трейдерів.',
+                    'The top displays market name and exchange code. The control panel allows selecting view mode, time range, and toggling trader groups.'
                 )}</p>
             </section>
 
@@ -916,16 +974,51 @@ function ChartsDocContent({ lang }) {
                 </Note>
             </section>
 
-            <section id="ch-cot-index" className="doc-section">
-                <h2>COT Index Chart</h2>
+            <section id="ch-indicators" className="doc-section">
+                <h2>{L('Режим Indicators', 'Indicators Mode')}</h2>
                 <p>{L(
-                    'Лінійний графік COT Index для кожної групи. Показує нормалізоване позиціонування у діапазоні 0-100%. Горизонтальні лінії на рівнях 20% та 80% позначають зони екстремумів, де генеруються сигнали.',
-                    'Line chart of COT Index for each group. Shows normalized positioning in the 0-100% range. Horizontal lines at 20% and 80% mark extreme zones where signals are generated.'
+                    'Двопанельний режим: верхня панель (65%) — графік ціни, нижня панель (35%) — лінійний графік обраного індикатора для кожної групи. Доступні перемикачі груп трейдерів для фільтрації ліній.',
+                    'Dual-panel mode: top panel (65%) — price chart, bottom panel (35%) — line chart of the selected indicator for each group. Group toggle switches available for filtering lines.'
                 )}</p>
-                <p>{L(
-                    'Доступний вибір періоду COT Index: 3M (13 тижнів), 1Y (52 тижні), 3Y (156 тижнів).',
-                    'COT Index period selection available: 3M (13 weeks), 1Y (52 weeks), 3Y (156 weeks).'
-                )}</p>
+
+                <article id="ch-ind-cot" className="doc-article">
+                    <h3>COT Index</h3>
+                    <div className="doc-meta">
+                        <Tag color="emerald">{L('Розрахункова', 'Calculated')}</Tag>
+                        <Tag color="blue">{L('3 періоди', '3 periods')}</Tag>
+                    </div>
+                    <p>{L(
+                        'Стохастичний осцилятор позиціонування. Показує де знаходиться поточна Net Position відносно діапазону за lookback-період. Горизонтальні лінії на 20% та 80% позначають зони екстремумів.',
+                        'Stochastic oscillator of positioning. Shows where current Net Position sits relative to the range over a lookback period. Horizontal lines at 20% and 80% mark extreme zones.'
+                    )}</p>
+                    <div className="my-3 text-[11.5px] space-y-1">
+                        <div className="flex gap-2"><span className="text-[#a3a3a3] min-w-[60px]">3m</span> <span className="text-[#a3a3a3]">= 13 {L('тижнів', 'weeks')} (≈ {L('квартал', 'quarter')})</span></div>
+                        <div className="flex gap-2"><span className="text-[#a3a3a3] min-w-[60px]">1y</span> <span className="text-[#a3a3a3]">= 52 {L('тижні', 'weeks')} ({L('рік', 'year')})</span></div>
+                        <div className="flex gap-2"><span className="text-[#a3a3a3] min-w-[60px]">3y</span> <span className="text-[#a3a3a3]">= 156 {L('тижнів', 'weeks')} (3 {L('роки', 'years')})</span></div>
+                    </div>
+                    <Formula>{`COT Index = ((Net − Min Net) / (Max Net − Min Net)) × 100
+${L('Діапазон', 'Range')}: 0% — 100%`}</Formula>
+                </article>
+
+                <article id="ch-ind-wci" className="doc-article">
+                    <h3>WCI — Williams Commercial Index (26w)</h3>
+                    <div className="doc-meta">
+                        <Tag color="emerald">{L('Розрахункова', 'Calculated')}</Tag>
+                        <Tag color="amber">{L('Фіксований період: 26 тижнів', 'Fixed period: 26 weeks')}</Tag>
+                    </div>
+                    <p>{L(
+                        'Індикатор Ларрі Вільямса. Та сама формула що й COT Index, але з фіксованим lookback-періодом 26 тижнів (≈ 6 місяців).',
+                        'Larry Williams\' indicator. Same formula as COT Index, but with a fixed 26-week lookback period (≈ 6 months).'
+                    )}</p>
+                    <Formula>{`WCI = ((Net − Min Net₂₆w) / (Max Net₂₆w − Min Net₂₆w)) × 100`}</Formula>
+                </article>
+
+                <Note>
+                    {L(
+                        'В режимі Indicators доступні перемикачі груп трейдерів (аналогічно режиму Bubbles), які дозволяють показувати/приховувати окремі групи на графіку індикатора.',
+                        'In Indicators mode, trader group toggles are available (similar to Bubbles mode), allowing you to show/hide individual groups on the indicator chart.'
+                    )}
+                </Note>
             </section>
 
             <section id="ch-price" className="doc-section">
@@ -1012,13 +1105,7 @@ export default function DocumentationModal({ isOpen, onClose }) {
         try { localStorage.setItem('docLang', lang); } catch { }
     }, [lang]);
 
-    // Close on Escape
-    useEffect(() => {
-        if (!isOpen) return;
-        const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
-        document.addEventListener('keydown', handleKey);
-        return () => document.removeEventListener('keydown', handleKey);
-    }, [isOpen, onClose]);
+    useEscapeKey(onClose, isOpen);
 
     // Scroll spy
     useEffect(() => {

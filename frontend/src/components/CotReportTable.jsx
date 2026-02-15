@@ -1,73 +1,12 @@
 ﻿import React, { useMemo, useRef, useEffect, useState } from 'react';
+import { formatNumber, formatPct, formatDate } from '../utils/formatters';
+import { GREEN, RED, getColorBySign, getColorMono, getColorCentered, getColorCrowded } from '../utils/colors';
 
 /**
  * COT Report Table — dynamic columns based on group metadata.
  * Supports Legacy (3 groups), Disaggregated (5 groups), TFF (5 groups).
  * Gradient heatmap, arrows, BUY/SELL signals.
  */
-
-// =====================================================
-// Color utilities
-// =====================================================
-
-const GREEN = [0, 176, 80];
-const RED = [220, 53, 69];
-const MAX_OPACITY = 0.85;
-const MIN_OPACITY = 0.05;
-
-function getCellColorBySign(value, maxAbs) {
-    if (value == null || value === 0 || !maxAbs) return '';
-    const color = value > 0 ? GREEN : RED;
-    const raw = Math.min(Math.abs(value) / maxAbs, 1);
-    const opacity = MIN_OPACITY + raw * (MAX_OPACITY - MIN_OPACITY);
-    return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${opacity.toFixed(3)})`;
-}
-
-function getCellColorMono(value, maxAbs, color) {
-    if (value == null || !maxAbs) return '';
-    const raw = Math.min(Math.abs(value) / maxAbs, 1);
-    if (raw < 0.01) return '';
-    const opacity = MIN_OPACITY + raw * (MAX_OPACITY - MIN_OPACITY);
-    return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${opacity.toFixed(3)})`;
-}
-
-function getCellColorCentered(value) {
-    if (value == null) return '';
-    const v = Math.max(0, Math.min(100, value));
-    const deviation = Math.abs(v - 50) / 50;
-    if (deviation < 0.02) return '';
-    const color = v > 50 ? GREEN : RED;
-    const opacity = MIN_OPACITY + deviation * (MAX_OPACITY - MIN_OPACITY);
-    return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${opacity.toFixed(3)})`;
-}
-
-function getCellColorCrowded(crowdedObj) {
-    if (!crowdedObj || crowdedObj.value == null) return '';
-    return getCellColorCentered(crowdedObj.value);
-}
-
-// =====================================================
-// Number formatting
-// =====================================================
-
-function formatNumber(val) {
-    if (val == null) return '—';
-    const num = Math.round(val);
-    const sign = num < 0 ? '-' : '';
-    const abs = Math.abs(num).toLocaleString('en-US').replace(/,/g, ' ');
-    return sign + abs;
-}
-
-function formatPct(val) {
-    if (val == null) return '—';
-    return `${Math.round(val)}%`;
-}
-
-function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const [y, m, d] = dateStr.split('-');
-    return `${d}.${m}.${y}`;
-}
 
 // =====================================================
 // Arrow component
@@ -330,17 +269,17 @@ export default function CotReportTable({ data, fitMode = false }) {
 function getCellBg(value, type, maxAbs) {
     switch (type) {
         case 'change_long':
-            return getCellColorMono(value, maxAbs, GREEN);
+            return getColorMono(value, maxAbs, GREEN);
         case 'change_short':
-            return getCellColorMono(value, maxAbs, RED);
+            return getColorMono(value, maxAbs, RED);
         case 'change':
         case 'net':
         case 'pct':
-            return getCellColorBySign(value, maxAbs);
+            return getColorBySign(value, maxAbs);
         case 'centered':
-            return getCellColorCentered(value);
+            return getColorCentered(value);
         case 'crowded':
-            return getCellColorCrowded(value);
+            return getColorCrowded(value);
         default:
             return '';
     }

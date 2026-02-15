@@ -11,26 +11,19 @@ import {
     ReferenceLine,
     Legend,
 } from 'recharts';
+import { formatNumber, formatCompact, formatSigned, formatDateShort, formatDateTick } from '../utils/formatters';
+import { TIMEFRAMES, CHART_COLORS, GROUP_COLOR_PALETTE } from '../utils/constants';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 // =====================================================
 // Constants
 // =====================================================
-
-const TIMEFRAMES = [
-    { key: '6m', label: '6M', weeks: 26 },
-    { key: '1y', label: '1Y', weeks: 52 },
-    { key: '2y', label: '2Y', weeks: 104 },
-    { key: 'all', label: 'ALL', weeks: Infinity },
-];
 
 const GROUPS_FALLBACK = [
     { key: 'g1', label: 'G1', full: 'Group 1', color: '#10b981' },
     { key: 'g2', label: 'G2', full: 'Group 2', color: '#f59e0b' },
     { key: 'g3', label: 'G3', full: 'Group 3', color: '#ef4444' },
 ];
-
-// Fixed color palette for up to 5 groups
-const GROUP_COLOR_PALETTE = ['#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6'];
 
 function buildGroupsMeta(dataGroups) {
     if (!dataGroups || !dataGroups.length) return GROUPS_FALLBACK;
@@ -48,15 +41,7 @@ function buildGroupColors(groupsMeta) {
     return colors;
 }
 
-const COLORS = {
-    buy: '#3b82f6',
-    sell: '#ef4444',
-    mixed: '#8b5cf6',
-    oi: '#6366f1',
-    grid: '#262626',
-    axis: '#525252',
-    zero: '#262626',
-};
+const COLORS = CHART_COLORS;
 
 // 8-signal COT matrix: Price + Longs + Shorts
 const COT_SIGNALS = [
@@ -90,42 +75,17 @@ const COT_INDEX_PERIODS = [
     { key: '3y', label: '3Y' },
 ];
 
-// =====================================================
-// Formatters
-// =====================================================
+const INDICATOR_TYPES = [
+    { key: 'cot_index', label: 'COT Index' },
+    { key: 'wci', label: 'WCI' },
+];
 
-function fmtCompact(val) {
-    if (val == null) return '';
-    const abs = Math.abs(val);
-    if (abs >= 1e6) return `${(val / 1e6).toFixed(1)}M`;
-    if (abs >= 1e3) return `${(val / 1e3).toFixed(0)}K`;
-    return val.toString();
-}
-
-function fmtNum(val) {
-    if (val == null) return '—';
-    return Math.round(val).toLocaleString('en-US').replace(/,/g, ' ');
-}
-
-function fmtSigned(val) {
-    if (val == null) return '—';
-    const n = Math.round(val);
-    const sign = n > 0 ? '+' : n < 0 ? '−' : '';
-    return sign + Math.abs(n).toLocaleString('en-US').replace(/,/g, ' ');
-}
-
-function fmtDate(d) {
-    if (!d) return '';
-    const [y, m, day] = d.split('-');
-    return `${day}.${m}.${y.slice(2)}`;
-}
-
-function fmtTick(d) {
-    if (!d) return '';
-    const [y, m] = d.split('-');
-    const mo = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${mo[parseInt(m)]} ${y.slice(2)}`;
-}
+// Aliases for brevity within this file
+const fmtCompact = formatCompact;
+const fmtNum = formatNumber;
+const fmtSigned = formatSigned;
+const fmtDate = formatDateShort;
+const fmtTick = formatDateTick;
 
 // =====================================================
 // Net Positions Chart
@@ -166,35 +126,42 @@ function NetTooltip({ active, payload, label }) {
 }
 
 // =====================================================
-// COT Index Chart
+// Indicator Chart (COT Index / WCI) — bottom panel
 // =====================================================
 
-function CotIndexChart({ chartData, period, groupsMeta, groupColors }) {
+function IndicatorChart({ chartData, indicatorType, period, groupsMeta, activeGroups }) {
+    const getDataKey = (gk) => {
+        if (indicatorType === 'wci') return `wci_${gk}`;
+        return `cot_index_${gk}_${period}`;
+    };
+
+    const visibleGroups = groupsMeta.filter(g => activeGroups.includes(g.key));
+
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+            <ComposedChart data={chartData} margin={{ top: 8, right: 60, bottom: 0, left: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} />
-                <XAxis dataKey="date" tickFormatter={fmtTick} tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={{ stroke: COLORS.grid }} tickLine={false} interval="preserveStartEnd" minTickGap={60} />
-                <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={false} tickLine={false} width={40} ticks={[0, 20, 50, 80, 100]} />
-                <Tooltip content={<CotIndexTooltip />} />
-                <Legend verticalAlign="top" height={28} iconType="line" iconSize={10} wrapperStyle={{ fontSize: '11px' }} />
+                <XAxis dataKey="date" tickFormatter={fmtTick} tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={{ stroke: COLORS.grid }} tickLine={false} interval="preserveStartEnd" minTickGap={80} />
+                <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={false} tickLine={false} width={40} ticks={[0, 20, 50, 80, 100]} orientation="right" />
+                <Tooltip content={<IndicatorTooltip indicatorType={indicatorType} />} cursor={{ stroke: '#262626', strokeDasharray: '3 3' }} />
                 <ReferenceLine y={80} stroke="#10b98133" strokeDasharray="3 3" />
                 <ReferenceLine y={50} stroke={COLORS.zero} strokeDasharray="4 4" />
                 <ReferenceLine y={20} stroke="#ef444433" strokeDasharray="3 3" />
-                {groupsMeta.map(g => (
-                    <Line key={g.key} type="monotone" dataKey={`cot_index_${g.key}_${period}`} name={g.full} stroke={g.color} strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: g.color }} connectNulls />
+                {visibleGroups.map(g => (
+                    <Line key={g.key} type="monotone" dataKey={getDataKey(g.key)} name={g.full} stroke={g.color} strokeWidth={1.5} dot={false} activeDot={{ r: 3, fill: g.color }} connectNulls />
                 ))}
             </ComposedChart>
         </ResponsiveContainer>
     );
 }
 
-function CotIndexTooltip({ active, payload, label }) {
+function IndicatorTooltip({ active, payload, label, indicatorType }) {
     if (!active || !payload?.length) return null;
+    const title = indicatorType === 'wci' ? 'WCI' : 'COT Index';
     return (
         <div className="bg-[#0a0a0a] border border-[#262626] rounded-sm px-3 py-2.5 shadow-2xl">
-            <div className="text-[10px] text-[#525252] mb-1.5 font-medium uppercase tracking-wider">{fmtDate(label)}</div>
-            {payload.map((entry, i) => (
+            <div className="text-[10px] text-[#525252] mb-1.5 font-medium uppercase tracking-wider">{fmtDate(label)} · {title}</div>
+            {payload.filter(e => e.value != null).map((entry, i) => (
                 <div key={i} className="flex items-center gap-2 text-[11px]">
                     <span className="inline-block w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
                     <span className="text-[#a3a3a3] min-w-[80px]">{entry.name}</span>
@@ -227,6 +194,62 @@ function LinesTooltip({ active, payload, label }) {
                 </div>
             ))}
         </div>
+    );
+}
+
+// =====================================================
+// Price Chart (top panel for Indicators mode)
+// =====================================================
+
+function IndicatorPriceChart({ prices, timeframe }) {
+    const chartData = useMemo(() => {
+        if (!prices?.length) return [];
+        const tf = TIMEFRAMES.find(t => t.key === timeframe);
+        const daysBack = tf.weeks === Infinity ? Infinity : tf.weeks * 7;
+
+        let bars = prices;
+        if (daysBack !== Infinity) {
+            const cutoff = new Date();
+            cutoff.setDate(cutoff.getDate() - daysBack);
+            const cutoffStr = cutoff.toISOString().slice(0, 10);
+            bars = prices.filter(p => p.date >= cutoffStr);
+        }
+        return bars;
+    }, [prices, timeframe]);
+
+    if (!chartData.length) {
+        return (
+            <div className="w-full h-full flex items-center justify-center">
+                <p className="text-[#525252] text-xs uppercase tracking-wider">Цінові дані недоступні</p>
+            </div>
+        );
+    }
+
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={chartData} margin={{ top: 8, right: 60, bottom: 0, left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} />
+                <XAxis dataKey="date" tickFormatter={fmtTick} tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={{ stroke: '#1a1a1a' }} tickLine={false} interval="preserveStartEnd" minTickGap={80} />
+                <YAxis yAxisId="price" orientation="right" tickFormatter={fmtCompact} tick={{ fontSize: 10, fill: COLORS.axis }} axisLine={false} tickLine={false} width={55} domain={['auto', 'auto']} />
+                <Tooltip
+                    content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null;
+                        const d = payload[0]?.payload;
+                        return (
+                            <div className="bg-[#0a0a0a] border border-[#262626] rounded-sm px-3 py-2 shadow-xl">
+                                <div className="text-[10px] text-[#525252] mb-1">{fmtDate(label)}</div>
+                                <div className="flex items-center justify-between gap-3 text-[11px]">
+                                    <span className="text-[#a3a3a3]">Price</span>
+                                    <span className="text-white font-medium font-mono">{fmtNum(d?.close)}</span>
+                                </div>
+                            </div>
+                        );
+                    }}
+                    cursor={{ stroke: '#262626', strokeDasharray: '3 3' }}
+                />
+                <Line yAxisId="price" type="monotone" dataKey="close" stroke="rgba(255,255,255,0.7)" strokeWidth={1.5} dot={false} isAnimationActive={false} name="Price" />
+            </ComposedChart>
+        </ResponsiveContainer>
     );
 }
 
@@ -690,30 +713,37 @@ export default function BubbleChartModal({ isOpen, onClose, data }) {
     const [timeframe, setTimeframe] = useState('1y');
     const [viewMode, setViewMode] = useState('bubbles');
     const [cotPeriod, setCotPeriod] = useState('1y');
+    const [indicatorType, setIndicatorType] = useState('cot_index');
 
     // Derive groups from data
     const groupsMeta = useMemo(() => buildGroupsMeta(data?.groups), [data?.groups]);
     const groupColors = useMemo(() => buildGroupColors(groupsMeta), [groupsMeta]);
 
-    // Default active groups to first group
+    // Default active groups to first group (for bubbles)
     const [activeGroups, setActiveGroups] = useState([]);
+    // Indicator groups — default all on
+    const [indicatorGroups, setIndicatorGroups] = useState([]);
 
     // Reset active groups when groupsMeta changes
     useEffect(() => {
         if (groupsMeta.length > 0) {
             setActiveGroups([groupsMeta[0].key]);
+            setIndicatorGroups(groupsMeta.map(g => g.key));
         }
     }, [groupsMeta]);
 
-    useEffect(() => {
-        if (!isOpen) return;
-        const h = (e) => { if (e.key === 'Escape') onClose(); };
-        document.addEventListener('keydown', h);
-        return () => document.removeEventListener('keydown', h);
-    }, [isOpen, onClose]);
+    useEscapeKey(onClose, isOpen);
 
     const toggleGroup = useCallback((key) => {
         setActiveGroups(prev =>
+            prev.includes(key)
+                ? prev.length > 1 ? prev.filter(g => g !== key) : prev
+                : [...prev, key]
+        );
+    }, []);
+
+    const toggleIndicatorGroup = useCallback((key) => {
+        setIndicatorGroups(prev =>
             prev.includes(key)
                 ? prev.length > 1 ? prev.filter(g => g !== key) : prev
                 : [...prev, key]
@@ -788,28 +818,50 @@ export default function BubbleChartModal({ isOpen, onClose, data }) {
                                 Net Positions
                             </button>
                             <button
-                                onClick={() => setViewMode('cot_index')}
-                                className={`px-2.5 py-1 rounded-sm text-[10px] font-bold tracking-wider uppercase transition-all duration-300 ${viewMode === 'cot_index' ? 'bg-[#e5e5e5] text-black' : 'text-[#525252] hover:text-[#a3a3a3]'}`}
+                                onClick={() => setViewMode('indicators')}
+                                className={`px-2.5 py-1 rounded-sm text-[10px] font-bold tracking-wider uppercase transition-all duration-300 ${viewMode === 'indicators' ? 'bg-[#e5e5e5] text-black' : 'text-[#525252] hover:text-[#a3a3a3]'}`}
                             >
-                                COT Index
+                                Indicators
                             </button>
                         </div>
 
-                        {/* COT Index period sub-tabs */}
-                        {viewMode === 'cot_index' && (
+                        {/* Indicator type & period sub-tabs */}
+                        {viewMode === 'indicators' && (
                             <>
                                 <span className="text-[10px] text-[#262626]">│</span>
-                                <div className="flex gap-0.5">
-                                    {COT_INDEX_PERIODS.map(p => (
+                                <div className="flex gap-0.5 bg-[#0a0a0a] border border-[#262626] rounded-sm p-0.5">
+                                    {INDICATOR_TYPES.map(it => (
                                         <button
-                                            key={p.key}
-                                            onClick={() => setCotPeriod(p.key)}
-                                            className={`px-2.5 py-1 rounded-sm text-[10px] font-bold tracking-wider uppercase transition-all duration-300 ${cotPeriod === p.key ? 'bg-[#e5e5e5] text-black' : 'text-[#525252] hover:text-[#a3a3a3]'}`}
+                                            key={it.key}
+                                            onClick={() => setIndicatorType(it.key)}
+                                            className={`px-2.5 py-1 rounded-sm text-[10px] font-bold tracking-wider uppercase transition-all duration-300 ${indicatorType === it.key ? 'bg-[#e5e5e5] text-black' : 'text-[#525252] hover:text-[#a3a3a3]'}`}
                                         >
-                                            {p.label}
+                                            {it.label}
                                         </button>
                                     ))}
                                 </div>
+                                {indicatorType === 'cot_index' && (
+                                    <>
+                                        <span className="text-[10px] text-[#262626]">│</span>
+                                        <div className="flex gap-0.5">
+                                            {COT_INDEX_PERIODS.map(p => (
+                                                <button
+                                                    key={p.key}
+                                                    onClick={() => setCotPeriod(p.key)}
+                                                    className={`px-2.5 py-1 rounded-sm text-[10px] font-bold tracking-wider uppercase transition-all duration-300 ${cotPeriod === p.key ? 'bg-[#e5e5e5] text-black' : 'text-[#525252] hover:text-[#a3a3a3]'}`}
+                                                >
+                                                    {p.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                                {indicatorType === 'wci' && (
+                                    <>
+                                        <span className="text-[10px] text-[#262626]">│</span>
+                                        <span className="text-[10px] text-[#525252] tracking-wider">26W lookback</span>
+                                    </>
+                                )}
                             </>
                         )}
 
@@ -829,16 +881,18 @@ export default function BubbleChartModal({ isOpen, onClose, data }) {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        {/* Group toggles (only for bubbles view) */}
-                        {viewMode === 'bubbles' && (
+                        {/* Group toggles (bubbles + indicators) */}
+                        {(viewMode === 'bubbles' || viewMode === 'indicators') && (
                             <>
                                 <div className="flex gap-1">
                                     {groupsMeta.map(g => {
-                                        const on = activeGroups.includes(g.key);
+                                        const groups = viewMode === 'indicators' ? indicatorGroups : activeGroups;
+                                        const toggle = viewMode === 'indicators' ? toggleIndicatorGroup : toggleGroup;
+                                        const on = groups.includes(g.key);
                                         return (
                                             <button
                                                 key={g.key}
-                                                onClick={() => toggleGroup(g.key)}
+                                                onClick={() => toggle(g.key)}
                                                 className={`px-2.5 py-1 rounded-sm text-[11px] font-semibold transition-all duration-200 border ${on
                                                     ? ''
                                                     : 'border-transparent text-[#525252] hover:text-[#a3a3a3] opacity-40'
@@ -896,13 +950,27 @@ export default function BubbleChartModal({ isOpen, onClose, data }) {
                                 <NetPositionsChart chartData={chartData} groupsMeta={groupsMeta} groupColors={groupColors} />
                             )}
                         </div>
-                    ) : viewMode === 'cot_index' ? (
-                        <div className="flex-1 min-h-0 p-4">
-                            {chartData.length === 0 ? (
-                                <div className="flex items-center justify-center h-full text-[#525252] text-xs uppercase tracking-wider">No data available</div>
-                            ) : (
-                                <CotIndexChart chartData={chartData} period={cotPeriod} groupsMeta={groupsMeta} groupColors={groupColors} />
+                    ) : viewMode === 'indicators' ? (
+                        <div className="flex-1 min-h-0 flex flex-col">
+                            {hasPrices ? (
+                                <div style={{ flex: '65 1 0%' }} className="min-h-0 px-2 pt-1">
+                                    <IndicatorPriceChart prices={data?.prices} timeframe={timeframe} />
+                                </div>
+                            ) : null}
+                            {hasPrices && (
+                                <div className="flex-shrink-0 h-px bg-[#262626] relative my-1">
+                                    <span className="absolute left-4 -top-2.5 text-[9px] text-[#525252] bg-[#0a0a0a] px-1.5 tracking-widest uppercase font-bold">
+                                        {indicatorType === 'wci' ? 'WCI (26W)' : `COT Index (${cotPeriod.toUpperCase()})`}
+                                    </span>
+                                </div>
                             )}
+                            <div style={{ flex: hasPrices ? '35 1 0%' : '1 1 0%' }} className="min-h-0 px-2 pb-1">
+                                {chartData.length === 0 ? (
+                                    <div className="flex items-center justify-center h-full text-[#525252] text-xs uppercase tracking-wider">No data available</div>
+                                ) : (
+                                    <IndicatorChart chartData={chartData} indicatorType={indicatorType} period={cotPeriod} groupsMeta={groupsMeta} activeGroups={indicatorGroups} />
+                                )}
+                            </div>
                         </div>
                     ) : hasPrices ? (
                         /* Bubbles + Delta histogram */
@@ -982,9 +1050,13 @@ export default function BubbleChartModal({ isOpen, onClose, data }) {
                                 </div>
                             ))}
                         </>
-                    ) : viewMode === 'cot_index' ? (
+                    ) : viewMode === 'indicators' ? (
                         <>
-                            {groupsMeta.map(g => (
+                            <span className="text-[10px] text-[#a3a3a3] font-medium uppercase tracking-wider">
+                                {indicatorType === 'wci' ? 'WCI 26W' : `COT Index ${cotPeriod.toUpperCase()}`}
+                            </span>
+                            <span className="text-[10px] text-[#262626]">│</span>
+                            {groupsMeta.filter(g => indicatorGroups.includes(g.key)).map(g => (
                                 <div key={g.key} className="flex items-center gap-1.5">
                                     <span className="w-2.5 h-0.5 rounded" style={{ backgroundColor: g.color }} />
                                     <span className="text-[10px] text-[#525252] uppercase tracking-wider">{g.full}</span>

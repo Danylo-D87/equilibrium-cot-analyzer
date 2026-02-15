@@ -1,0 +1,27 @@
+[Unit]
+Description=Market Analytics Platform — FastAPI Backend
+After=network.target
+
+[Service]
+Type=simple
+User=cftc
+Group=cftc
+WorkingDirectory=/opt/cftc/backend
+ExecStart=/opt/cftc/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --log-level info
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/cftc
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

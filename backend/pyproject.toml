@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cftc-analyzer"
+version = "2.0.0"
+description = "Financial data analytics platform — COT reports, price data, and more"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+readme = "README.md"
+
+dependencies = [
+    "fastapi>=0.104",
+    "uvicorn[standard]>=0.24",
+    "requests>=2.31",
+    "yfinance>=0.2.31",
+    "apscheduler>=3.10,<4",
+    "pytz>=2024.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "httpx>=0.25",
+    "ruff>=0.1",
+]
+
+[project.scripts]
+cftc-server = "scripts.run_server:main"
+cftc-pipeline = "scripts.run_pipeline:main"
+cftc-update = "scripts.auto_update:main"
+cftc-health = "scripts.health_check:main"
+
+[tool.setuptools.packages.find]
+include = ["app*", "scripts*"]
+
+# ── Ruff (linter + formatter) ──────────────────────────────
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",         # pyflakes
+    "I",         # isort
+    "UP",        # pyupgrade
+    "B",         # bugbear
+    "SIM",       # simplify
+]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "scripts"]
+
+# ── Pytest ──────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
