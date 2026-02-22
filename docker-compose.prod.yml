@@ -1,0 +1,18 @@
+# docker-compose.prod.yml — Production overrides
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  postgres:
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # from secrets manager / .env
+    volumes:
+      - /opt/cftc/pgdata:/var/lib/postgresql/data
+    # Do not expose port externally in production
+    ports: []
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge

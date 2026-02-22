@@ -41,10 +41,10 @@ export default {
                 },
                 accent: 'var(--color-accent)',
                 bronze: {
-                    DEFAULT: 'var(--color-bronze)',
-                    hover: 'var(--color-bronze-hover)',
-                    glow: 'var(--color-bronze-glow)',
-                    muted: 'var(--color-bronze-muted)',
+                    DEFAULT: '#c4a87c',
+                    hover: '#d4bc96',
+                    glow: 'rgba(196, 168, 124, 0.08)',
+                    muted: 'rgba(196, 168, 124, 0.30)',
                 },
             },
             fontFamily: {

@@ -14,12 +14,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
+from app.core.database import init_async_engine, dispose_async_engine
 from app.core.exceptions import AppError
 from app.core.logging import setup_logging
 from app.core import scheduler as core_scheduler
 
 # --- Module routers ---
 from app.modules.cot.router import router as cot_router
+from app.modules.auth.router import router as auth_router
+from app.modules.users.router import router as users_router
+from app.modules.journal.router import router as journal_router
+from app.modules.market_data.router import router as market_data_router
+from app.modules.admin.router import router as admin_router
 from app.modules.cot.scheduler import register_scheduled_job
 from app.modules.prices.scheduler import register_daily_price_job
 
@@ -32,11 +38,15 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: configure logging, create dirs, start scheduler."""
+    """Startup: configure logging, create dirs, init DB engines, start scheduler."""
     setup_logging()
     settings.ensure_directories()
 
     logger.info("Starting %s v%s", settings.app_name, settings.app_version)
+
+    # Initialise async PostgreSQL engine (auth + journal)
+    init_async_engine()
+    logger.info("PostgreSQL engine ready")
 
     # Register module jobs and start scheduler
     register_scheduled_job()       # COT pipeline — every Friday 23:00 Kyiv
@@ -47,6 +57,9 @@ async def lifespan(app: FastAPI):
 
     logger.info("Shutting down...")
     core_scheduler.shutdown()
+
+    # Dispose PostgreSQL connection pool
+    await dispose_async_engine()
 
 
 # ------------------------------------------------------------------
@@ -83,10 +96,12 @@ def create_app() -> FastAPI:
         )
 
     # --- Mount module routers ---
+    app.include_router(auth_router, prefix="/api/v1")
+    app.include_router(users_router, prefix="/api/v1")
+    app.include_router(admin_router, prefix="/api/v1")
     app.include_router(cot_router, prefix="/api/v1")
-
-    # Future modules will be mounted here:
-    # app.include_router(some_other_router, prefix="/api/v1")
+    app.include_router(journal_router, prefix="/api/v1")
+    app.include_router(market_data_router, prefix="/api/v1")
 
     return app
 

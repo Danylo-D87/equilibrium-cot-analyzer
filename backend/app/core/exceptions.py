@@ -41,3 +41,17 @@ class ExternalServiceError(AppError):
 
     def __init__(self, message: str = "External service unavailable"):
         super().__init__(message=message, status_code=502)
+
+
+class AuthenticationError(AppError):
+    """Authentication failed (invalid or missing credentials)."""
+
+    def __init__(self, message: str = "Not authenticated"):
+        super().__init__(message=message, status_code=401)
+
+
+class ForbiddenError(AppError):
+    """Insufficient permissions to access the resource."""
+
+    def __init__(self, message: str = "Forbidden"):
+        super().__init__(message=message, status_code=403)

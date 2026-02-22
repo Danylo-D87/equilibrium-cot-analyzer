@@ -1,6 +1,6 @@
-# 🐍 Backend — Market Analytics Platform
+# 🐍 Backend — Equilibrium Market Analytics Platform
 
-> **FastAPI + SQLite + APScheduler — automated CFTC COT data pipeline & REST API**
+> **FastAPI + PostgreSQL + SQLite + APScheduler — auth system, trading journal, CFTC COT pipeline & REST API**
 
 🇺🇸 [English](#-english) · 🇺🇦 [Українська](#-українська)
 
@@ -14,15 +14,15 @@
 
 ### Overview
 
-The backend is a Python application built with **FastAPI** that:
+The backend is a Python application built with **FastAPI** that provides:
 
-1. **Downloads** weekly COT (Commitment of Traders) reports from CFTC.gov
-2. **Parses** raw CSV data and normalizes it into a unified g1–g5 schema
-3. **Stores** data in SQLite (WAL mode) with efficient indexing
-4. **Calculates** derived analytics — COT Index, WCI, signals, statistics
-5. **Exports** static JSON files for the frontend
-6. **Serves** a REST API with TTL caching
-7. **Schedules** automatic updates via APScheduler
+1. **Authentication** — JWT + refresh tokens, OAuth 2.0 (Google, GitHub), email verification
+2. **User Management** — roles (admin/user), per-module permissions (`cot`, `journal`)
+3. **Trading Journal** — portfolios, trades, image attachments, 15+ analytics endpoints
+4. **COT Pipeline** — downloads, parses, stores, calculates & exports CFTC COT data
+5. **Price Data** — Yahoo Finance (100+ tickers) + BTC benchmark (Binance/ccxt)
+6. **REST API** — with Swagger/ReDoc docs, TTL caching, structured error handling
+7. **Scheduler** — automatic updates via APScheduler (COT weekly, prices daily)
 
 ### Architecture
 
@@ -31,17 +31,38 @@ backend/
 ├── app/                        # Application package
 │   ├── __init__.py
 │   ├── main.py                 # FastAPI app factory + lifespan
+│   │
 │   ├── core/                   # Shared infrastructure
-│   │   ├── config.py           # App-level settings (env-driven)
-│   │   ├── database.py         # SQLite connection helpers (WAL mode)
+│   │   ├── config.py           # App settings (30+ env vars, dataclass)
+│   │   ├── database.py         # Dual DB: SQLite (COT) + async PostgreSQL
+│   │   ├── models.py           # SQLAlchemy models (User, Token, OAuth, Verify)
+│   │   ├── security.py         # JWT tokens (HS256) + bcrypt hashing
+│   │   ├── email.py            # Resend.com email service (verification, welcome)
 │   │   ├── cache.py            # Generic TTL cache (thread-safe, max size)
 │   │   ├── exceptions.py       # Exception hierarchy → HTTP errors
 │   │   ├── logging.py          # Structured logging (file + console)
-│   │   ├── migrations.py       # Version-based DB schema migrations
+│   │   ├── migrations.py       # SQLite version-based schema migrations
 │   │   └── scheduler.py        # APScheduler wrapper (pytz timezones)
 │   │
+│   ├── middleware/
+│   │   └── auth.py             # JWT auth deps, permission & admin guards
+│   │
 │   ├── modules/                # Domain modules (plug-in style)
-│   │   ├── cot/                # 📊 COT reports module
+│   │   ├── auth/               # 🔐 Authentication
+│   │   │   ├── router.py       # 11 endpoints: register, login, OAuth, etc.
+│   │   │   ├── service.py      # Auth business logic (553 lines)
+│   │   │   ├── schemas.py      # Pydantic request/response models
+│   │   │   └── oauth.py        # OAuth 2.0 for Google & GitHub
+│   │   │
+│   │   ├── users/              # 👤 User management (admin only)
+│   │   │   ├── router.py       # 7 endpoints: list, update, permissions
+│   │   │   ├── service.py      # User CRUD + permission management
+│   │   │   └── schemas.py      # Admin schemas
+│   │   │
+│   │   ├── admin/              # 📊 Admin statistics
+│   │   │   └── router.py       # Aggregated user stats endpoint
+│   │   │
+│   │   ├── cot/                # 📈 COT reports module
 │   │   │   ├── config.py       # COT-specific settings
 │   │   │   ├── constants.py    # Column mappings for 3 report types
 │   │   │   ├── downloader.py   # CFTC ZIP/CSV downloader
@@ -53,33 +74,69 @@ backend/
 │   │   │   ├── service.py      # Read-only API service layer
 │   │   │   ├── router.py       # /api/v1/cot/* endpoints
 │   │   │   ├── dependencies.py # FastAPI dependency injection
-│   │   │   └── scheduler.py    # Cron jobs (Fri 23:00, daily 00:00)
+│   │   │   └── scheduler.py    # Cron: Fri 23:00 Kyiv
 │   │   │
-│   │   └── prices/             # 💰 Price data module
-│   │       ├── config.py       # 100+ CFTC → Yahoo Finance ticker mappings
-│   │       ├── yahoo.py        # Yahoo Finance downloader (yfinance)
-│   │       └── service.py      # PriceService (ThreadPoolExecutor, 23h cache)
+│   │   ├── journal/            # 📓 Trading Journal
+│   │   │   ├── models.py       # Portfolio, Trade, TradeImage, Settings
+│   │   │   ├── schemas.py      # 35+ Pydantic schemas
+│   │   │   ├── storage.py      # Async SQLAlchemy CRUD (524 lines)
+│   │   │   ├── service.py      # Business logic bridge
+│   │   │   ├── analyzer.py     # PortfolioAnalyzer (1296 lines, 15+ metrics)
+│   │   │   ├── image_service.py # Image upload/compress/serve (WebP)
+│   │   │   ├── config.py       # Module-specific settings
+│   │   │   ├── dependencies.py # FastAPI dependencies
+│   │   │   ├── router.py       # Sub-router aggregator
+│   │   │   └── routers/        # Sub-routers
+│   │   │       ├── settings.py     # GET/PUT journal settings
+│   │   │       ├── portfolios.py   # Portfolio CRUD
+│   │   │       ├── trades.py       # Trade CRUD + filtering + pagination
+│   │   │       ├── images.py       # Upload/serve/delete/reorder/caption
+│   │   │       ├── analytics.py    # 15+ chart/metric endpoints
+│   │   │       └── enums.py        # Trade type/style/direction/status enums
+│   │   │
+│   │   ├── prices/             # 💰 Price data module
+│   │   │   ├── config.py       # 100+ CFTC → Yahoo Finance ticker mappings
+│   │   │   ├── yahoo.py        # Yahoo Finance downloader (yfinance)
+│   │   │   ├── service.py      # PriceService (ThreadPoolExecutor, 23h cache)
+│   │   │   └── scheduler.py    # Cron: daily 00:00 Kyiv
+│   │   │
+│   │   └── market_data/        # 📉 Market benchmark data
+│   │       ├── router.py       # /api/v1/market-data/btc/* (status, refresh)
+│   │       └── btc_service.py  # BTC price data via ccxt (Binance)
 │   │
 │   └── utils/                  # Shared helpers
 │       └── categories.py       # Market categorization & meta builders
 │
+├── alembic/                    # PostgreSQL migrations
+│   ├── env.py                  # Alembic environment
+│   └── versions/               # Migration files
+│       ├── 001_initial_auth.py         # users, permissions, refresh_tokens
+│       ├── 002_journal_tables.py       # portfolios, trades, images, settings
+│       ├── 003_image_caption.py        # Add caption to trade_images
+│       └── 004_oauth_email_verification.py  # oauth_accounts, email_verifications
+│
 ├── scripts/                    # CLI entry points
 │   ├── run_server.py           # Start API server (uvicorn)
-│   ├── run_pipeline.py         # Run data pipeline
+│   ├── run_pipeline.py         # Run COT data pipeline
 │   ├── auto_update.py          # Cron/timer entry point
 │   └── health_check.py         # Data diagnostics
 │
 ├── data/                       # Runtime data
-│   ├── app.db                  # SQLite database (generated)
+│   ├── app.db                  # SQLite database (COT, generated)
 │   ├── ticker_map.json         # CFTC→Yahoo ticker map
 │   └── logs/                   # Log files
+│
+├── uploads/                    # Journal image storage
+│   └── images/{user_id}/       # Per-user image directories
 │
 ├── tests/                      # Test suite
 │   ├── __init__.py
 │   └── conftest.py
 │
+├── alembic.ini                 # Alembic configuration
+├── seed_users.py               # Seed initial admin user
 ├── pyproject.toml              # Project metadata & tool config
-└── requirements.txt            # Pinned dependencies
+└── requirements.txt            # Dependencies
 ```
 
 ---
@@ -95,6 +152,15 @@ venv\Scripts\activate        # Windows
 # source venv/bin/activate   # Linux/macOS
 pip install -r requirements.txt
 
+# Start PostgreSQL (from project root)
+cd .. && docker compose up -d && cd backend
+
+# Run Alembic migrations (PostgreSQL)
+alembic upgrade head
+
+# Seed initial admin user
+python seed_users.py
+
 # Run initial data pipeline (downloads COT + prices, ~5 min)
 python scripts/run_pipeline.py --verbose
 
@@ -105,7 +171,7 @@ python scripts/run_server.py
 python scripts/health_check.py
 ```
 
-**API docs:** http://localhost:8000/api/docs  
+**API docs:** http://localhost:8000/api/docs
 **ReDoc:** http://localhost:8000/api/redoc
 
 ---
@@ -114,18 +180,48 @@ python scripts/health_check.py
 
 | Variable | Default | Description |
 |---|---|---|
+| **General** | | |
+| `APP_NAME` | `Market Analytics Platform` | Application name |
 | `DEBUG` | `false` | Enable debug mode (verbose logging) |
-| `DB_PATH` | `data/app.db` | SQLite database file path |
+| `DB_PATH` | `data/app.db` | SQLite database file path (COT) |
 | `JSON_OUTPUT_DIR` | `../frontend/public/data` | Directory for exported JSON files |
 | `LOG_DIR` | `data/logs` | Directory for log files |
+| **API Server** | | |
 | `API_HOST` | `127.0.0.1` | API server bind host |
 | `API_PORT` | `8000` | API server bind port |
-| `API_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated CORS origins |
+| `API_CORS_ORIGINS` | `http://localhost:5173,...` | Comma-separated CORS origins |
+| **HTTP Client** | | |
 | `HTTP_TIMEOUT` | `60` | HTTP client timeout (seconds) |
 | `HTTP_RETRIES` | `3` | HTTP retry attempts |
 | `HTTP_RETRY_BACKOFF` | `2` | Base backoff seconds for retries |
 | `DATA_STALE_DAYS` | `10` | Days before data is considered stale |
-| `COT_YEARS` | `5` | Years of historical COT data to download |
+| **PostgreSQL** | | |
+| `DATABASE_URL` | `postgresql+asyncpg://equilibrium:dev_password@localhost:5432/equilibrium_db` | Async PostgreSQL connection |
+| `POSTGRES_PASSWORD` | `dev_password` | Docker PostgreSQL password |
+| `POSTGRES_PORT` | `5432` | Docker PostgreSQL port |
+| **JWT** | | |
+| `JWT_SECRET_KEY` | `CHANGE-ME-TO-...` | JWT signing key (**change in production!**) |
+| `JWT_ALGORITHM` | `HS256` | JWT algorithm |
+| `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | `15` | Access token TTL |
+| `JWT_REFRESH_TOKEN_EXPIRE_DAYS` | `7` | Refresh token TTL |
+| **Email (Resend.com)** | | |
+| `RESEND_API_KEY` | `""` | Resend.com API key (empty = debug mode) |
+| `EMAIL_FROM` | `noreply@equilibriumm.tech` | Sender email address |
+| `EMAIL_FROM_NAME` | `Equilibrium` | Sender display name |
+| **OAuth** | | |
+| `OAUTH_GOOGLE_CLIENT_ID` | `""` | Google OAuth client ID |
+| `OAUTH_GOOGLE_CLIENT_SECRET` | `""` | Google OAuth client secret |
+| `OAUTH_GITHUB_CLIENT_ID` | `""` | GitHub OAuth client ID |
+| `OAUTH_GITHUB_CLIENT_SECRET` | `""` | GitHub OAuth client secret |
+| `OAUTH_LINKEDIN_CLIENT_ID` | `""` | LinkedIn OAuth client ID |
+| `OAUTH_LINKEDIN_CLIENT_SECRET` | `""` | LinkedIn OAuth client secret |
+| `BACKEND_URL` | `http://localhost:8000` | Backend public URL (OAuth callbacks) |
+| **Uploads** | | |
+| `UPLOAD_DIR` | `backend/uploads` | Image upload directory |
+| `MAX_IMAGE_SIZE` | `5242880` | Max upload size (5 MB) |
+| `APP_URL` | `http://localhost:5173` | Frontend public URL (emails, OAuth) |
+| **COT Module** | | |
+| `COT_YEARS` | `5` | Years of historical COT data |
 | `COT_CROWDED_BUY` | `80` | COT Index threshold for BUY crowded signal |
 | `COT_CROWDED_SELL` | `20` | COT Index threshold for SELL crowded signal |
 | `PRICE_YEARS` | `3` | Years of Yahoo Finance price history |
@@ -135,15 +231,60 @@ python scripts/health_check.py
 
 ### API Endpoints
 
-All endpoints are prefixed with `/api/v1/cot` and tagged `COT`.
+#### Auth Module — `/api/v1/auth`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/auth/register` | — | Register (returns 202, sends 6-digit email code) |
+| `POST` | `/auth/verify-email` | — | Verify email code → issues JWT access + refresh tokens |
+| `POST` | `/auth/resend-verification` | — | Resend verification code |
+| `POST` | `/auth/login` | — | Login → access token (body) + HttpOnly refresh cookie |
+| `POST` | `/auth/refresh` | Cookie | Refresh access token via HttpOnly cookie |
+| `POST` | `/auth/logout` | ✅ | Revoke refresh token, clear cookie |
+| `GET` | `/auth/me` | ✅ | Get current user profile |
+| `PUT` | `/auth/me` | ✅ | Update profile (nickname, language, timezone) |
+| `PUT` | `/auth/me/password` | ✅ | Change password |
+| `GET` | `/auth/oauth/{provider}` | — | Initiate OAuth flow (google/github) |
+| `GET` | `/auth/oauth/{provider}/callback` | — | OAuth callback handler |
+
+**Auth flow:**
+- **Registration:** `register` → 6-digit email code (10 min TTL) → `verify-email` → JWT tokens issued
+- **Login:** `login` → access token (15 min) + refresh token as HttpOnly/Secure/SameSite cookie (7 days)
+- **Token refresh:** `refresh` reads HttpOnly cookie → returns new access token
+- **OAuth:** Redirect to provider → callback receives code → auto-register or login → redirect to frontend with access token
+- **Re-registration:** Allowed for unverified accounts (updates credentials, resends code)
+
+**JWT payload:** `sub` (user_id), `role`, `perms` (list), `exp`, `iat`, `type`
+
+#### Users Module — `/api/v1/users` (admin only)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/users` | List all users |
+| `GET` | `/users/{id}` | User detail |
+| `PUT` | `/users/{id}` | Update user (role, active, nickname) |
+| `DELETE` | `/users/{id}` | Deactivate user (soft delete) |
+| `GET` | `/users/{id}/permissions` | List user permissions |
+| `POST` | `/users/{id}/permissions` | Grant permission (`cot` or `journal`) |
+| `DELETE` | `/users/{id}/permissions/{perm}` | Revoke permission |
+
+#### Admin Module — `/api/v1/admin` (admin only)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/admin/stats` | Aggregated user statistics with date range filter |
+
+Returns: total/active/inactive/verified/unverified users, breakdown by role and permission, registrations per day.
+
+#### COT Module — `/api/v1/cot`
 
 | Method | Path | Cache TTL | Description |
 |--------|------|-----------|-------------|
-| `GET` | `/markets/{report_type}/{subtype}` | 10 min | List all markets for a report type/subtype |
-| `GET` | `/markets/{report_type}/{subtype}/{code}` | 10 min | Full market data: weeks, stats, groups, prices |
-| `GET` | `/screener/{report_type}/{subtype}` | 5 min | Screener data with optional `limit` and `offset` params |
-| `GET` | `/groups/{report_type}` | — | Trader group definitions for a report type |
-| `GET` | `/status` | — | System status: DB stats, scheduler state, data freshness |
+| `GET` | `/cot/markets/{report_type}/{subtype}` | 10 min | List all markets for a report type/subtype |
+| `GET` | `/cot/markets/{report_type}/{subtype}/{code}` | 10 min | Full market data: weeks, stats, groups, prices |
+| `GET` | `/cot/screener/{report_type}/{subtype}` | 5 min | Screener data with optional `limit`/`offset` |
+| `GET` | `/cot/groups/{report_type}` | — | Trader group definitions |
+| `GET` | `/cot/status` | — | System status: DB, scheduler, data freshness |
 
 **Path parameters:**
 
@@ -153,20 +294,184 @@ All endpoints are prefixed with `/api/v1/cot` and tagged `COT`.
 | `subtype` | `fo`, `co` | Futures Only or Futures + Options Combined |
 | `code` | e.g. `099741` | CFTC contract market code |
 
-**Screener query params:**
+#### Journal Module — `/api/v1/journal` (requires `journal` permission)
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `limit` | `0` | Number of results (0 = all) |
-| `offset` | `0` | Pagination offset |
+**Settings:**
 
-All caches are **invalidated** after each COT pipeline or price update run.
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/journal/settings` | Get user's journal settings |
+| `PUT` | `/journal/settings` | Update settings (initial_balance, risk_free_rate, currency, display_mode) |
+
+**Portfolios:**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/journal/portfolios` | List portfolios |
+| `POST` | `/journal/portfolios` | Create portfolio |
+| `PUT` | `/journal/portfolios/{id}` | Update portfolio |
+| `DELETE` | `/journal/portfolios/{id}` | Delete portfolio |
+
+**Trades:**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/journal/trades` | List trades (with filters, pagination) |
+| `POST` | `/journal/trades` | Create trade |
+| `PUT` | `/journal/trades/{id}` | Update trade |
+| `DELETE` | `/journal/trades/{id}` | Delete trade |
+
+**Images:**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/journal/trades/{id}/images` | Upload image (auto WebP compress) |
+| `GET` | `/journal/images/{id}` | Serve image (with `thumb` param) |
+| `DELETE` | `/journal/images/{id}` | Delete image |
+| `PUT` | `/journal/images/{id}/caption` | Update image caption |
+| `PUT` | `/journal/trades/{id}/images/reorder` | Reorder images |
+
+**Analytics (all accept filter params: `portfolio_id`, `date_from`, `date_to`):**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/journal/metrics` | Key portfolio metrics |
+| `GET` | `/journal/equity-curve` | Equity curve data |
+| `GET` | `/journal/assets-exposure` | Assets exposure breakdown |
+| `GET` | `/journal/alpha-curve` | Alpha vs benchmark curve |
+| `GET` | `/journal/drawdown` | Drawdown analysis |
+| `GET` | `/journal/rolling-metrics` | Rolling Sharpe, Sortino, etc. |
+| `GET` | `/journal/daily-returns` | Daily returns distribution |
+| `GET` | `/journal/rolling-win-rate` | Rolling win rate |
+| `GET` | `/journal/r-multiple-distribution` | R-multiple distribution |
+| `GET` | `/journal/risk-adjusted-comparison` | Risk-adjusted comparison |
+| `GET` | `/journal/nav-history` | NAV history |
+| `GET` | `/journal/rolling-information-ratio` | Rolling information ratio |
+| `GET` | `/journal/expected-vs-actual` | Expected vs actual returns |
+| `GET` | `/journal/comparative-drawdown` | Comparative drawdown |
+| `GET` | `/journal/nav-vs-hwm` | NAV vs High Water Mark |
+| `GET` | `/journal/rolling-tracking-error` | Rolling tracking error |
+
+**Enums:**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/journal/enums` | Trade type, style, direction, status options |
+
+#### Market Data Module — `/api/v1/market-data`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/market-data/btc/status` | BTC cache status (dates, price, staleness) |
+| `POST` | `/market-data/btc/refresh` | Force-refresh BTC price cache |
 
 ---
 
-### Data Pipeline
+### Database Architecture
 
-The pipeline is orchestrated by `pipeline.py` and follows this flow:
+**Dual-database approach:**
+
+| Database | Engine | Purpose |
+|----------|--------|---------|
+| **SQLite** | WAL mode, file-based | COT data storage (265K+ records) |
+| **PostgreSQL 16** | async via asyncpg + SQLAlchemy 2.0 | Auth, users, journal, all new modules |
+
+PostgreSQL runs in Docker (see `docker-compose.yml`). Managed via **Alembic** migrations.
+
+#### PostgreSQL Models (`app/core/models.py`)
+
+| Model | Key Fields |
+|-------|------------|
+| **User** | email, password_hash (nullable for OAuth), nickname, language, timezone, role (`admin`/`user`), is_active, email_verified |
+| **UserPermission** | user_id, permission (`cot`/`journal`), granted_at, granted_by |
+| **RefreshToken** | user_id, token_hash (SHA-256), expires_at, revoked |
+| **OAuthAccount** | user_id, provider (google/github/linkedin), provider_user_id, provider_email |
+| **EmailVerification** | user_id, code_hash (SHA-256), expires_at, used |
+
+#### Journal Models (`app/modules/journal/models.py`)
+
+| Model | Key Fields |
+|-------|------------|
+| **Portfolio** | user_id, name, initial_capital, description, is_active, timestamps |
+| **Trade** | user_id, portfolio_id, date, pair, type (Option/Futures/Crypto), style (Swing/Intraday/Smart Idea), direction (Long/Short), status (TP/SL/BE/Active), risk_amount, profit_amount, rr_ratio, entry_price, exit_price, notes |
+| **TradeImage** | trade_id, user_id, filename, storage_path, sort_order, file_size, mime_type, caption |
+| **UserJournalSettings** | user_id (PK), initial_balance, risk_free_rate, default_currency, display_mode |
+
+#### Alembic Migrations
+
+| Version | Description |
+|---------|-------------|
+| `001_initial_auth` | `users`, `user_permissions`, `refresh_tokens` tables |
+| `002_journal_tables` | `portfolios`, `trades`, `trade_images`, `user_journal_settings` |
+| `003_image_caption` | Add `caption` column to `trade_images` |
+| `004_oauth_email_verification` | `oauth_accounts`, `email_verifications` tables; `password_hash` nullable |
+
+#### SQLite Schema (COT)
+
+| Table | Description |
+|-------|-------------|
+| `cot_data` | COT report rows (UNIQUE: report_type, subtype, date, code) |
+| `download_log` | Tracks downloaded years |
+| `schema_version` | Migration tracking |
+
+---
+
+### Security & Auth
+
+#### Password Hashing
+- **bcrypt** (direct, Python 3.12+ compatible)
+- No passlib dependency at runtime
+
+#### JWT Tokens
+- Algorithm: HS256
+- Access token: 15 min TTL, payload: `sub`, `role`, `perms`, `exp`, `iat`, `type`
+- Issued in response body
+
+#### Refresh Tokens
+- Opaque: `secrets.token_urlsafe(64)`
+- Stored as SHA-256 hash in PostgreSQL
+- Delivered via HttpOnly / Secure / SameSite=Lax cookie
+- TTL: 7 days
+
+#### OAuth 2.0
+- Google, GitHub (LinkedIn config exists, not fully wired)
+- Flow: redirect → provider auth → callback → auto-register or login → redirect to frontend
+
+#### Email Verification
+- 6-digit code, SHA-256 stored, 10 min TTL
+- Sent via Resend.com REST API
+- Debug mode: prints to console when `RESEND_API_KEY` is empty
+
+#### Auth Middleware (`middleware/auth.py`)
+- `get_current_user` — decode JWT, lookup PostgreSQL
+- `get_current_active_user` — verify user is active
+- `require_permission(perm)` — dependency factory checking permission
+- `require_admin()` — dependency factory checking role == `admin`
+
+---
+
+### Exception Hierarchy
+
+```
+AppError (base, HTTP 500)
+├── NotFoundError (404)
+├── AuthenticationError (401)
+├── ForbiddenError (403)
+├── ConflictError (409)
+├── ValidationError (422)
+└── ExternalServiceError (502)
+```
+
+All exceptions caught by a single FastAPI handler returning structured JSON:
+```json
+{
+  "detail": "Market 099741 not found"
+}
+```
+
+---
+
+### COT Data Pipeline
 
 ```
 ┌─────────────┐    ┌──────────┐    ┌──────────┐    ┌────────────┐
@@ -182,29 +487,16 @@ The pipeline is orchestrated by `pipeline.py` and follows this flow:
 
 **Step-by-step:**
 
-1. **Lock acquisition** — File-based lock (`pipeline.lock`) with PID check prevents concurrent runs
-2. **For each `report_type × subtype` combination (6 total):**
-   1. Check `download_log` table — skip years already downloaded (unless `--force`)
-   2. Download yearly ZIPs from `https://www.cftc.gov/files/dea/history/...{year}.zip`
-   3. Extract CSV from ZIP
-   4. Parse CSV → normalize columns to unified `g1–g5` schema via `constants.py` mappings
-   5. Upsert rows to SQLite (`INSERT OR REPLACE` on unique `report_type + subtype + date + code`)
-   6. Log downloaded year to `download_log`
-   7. Download & parse current week TXT file (headerless)
-   8. Upsert current week rows
-3. **Collect all unique market codes** across all variants
-4. **Download prices** (unless `--no-prices`):
-   - Map CFTC codes → Yahoo Finance tickers via `ticker_map.json`
-   - ThreadPoolExecutor with max 8 workers
-   - Results cached in class-level dict (23-hour TTL)
-5. **Export JSON files** for each `report_type × subtype`:
-   - Bulk-load all market data from SQLite
-   - Run calculator for each market → weeks + stats
-   - Write per-market detail: `market_{code}_{type}_{sub}.json`
-   - Write markets list: `markets_{type}_{sub}.json` (if applicable)
-   - Write screener data
-   - Write group definitions: `groups_{type}.json`
-6. **Lock release**
+1. **Lock acquisition** — File-based lock (`pipeline.lock`) with PID check
+2. **For each `report_type × subtype` (6 combinations):**
+   - Check `download_log` — skip downloaded years (unless `--force`)
+   - Download yearly ZIPs from CFTC.gov
+   - Parse CSV → normalize to unified `g1–g5` schema
+   - Upsert rows to SQLite
+   - Download & parse current week TXT
+3. **Download prices** — CFTC codes → Yahoo Finance tickers, ThreadPoolExecutor (4 workers)
+4. **Export JSON** — per-market detail, screener data, group definitions
+5. **Lock release**
 
 ---
 
@@ -215,8 +507,6 @@ The pipeline is orchestrated by `pipeline.py` and follows this flow:
 | **Legacy** | `legacy` | g1: Large Speculators (speculative, has_spread) · g2: Commercials (commercial) · g3: Small Traders (small) |
 | **Disaggregated** | `disagg` | g1: Producer/Merchant (commercial) · g2: Swap Dealers (commercial, has_spread) · g3: Managed Money (speculative, has_spread) · g4: Other Reportables (speculative, has_spread) · g5: Non-Reportable (small) |
 | **TFF** | `tff` | g1: Dealer/Intermediary (commercial, has_spread) · g2: Asset Manager (speculative, has_spread) · g3: Leveraged Funds (speculative, has_spread) · g4: Other Reportables (speculative, has_spread) · g5: Non-Reportable (small) |
-
-**Subtypes:** `fo` (Futures Only), `co` (Futures + Options Combined)
 
 ---
 
@@ -252,111 +542,39 @@ Based on **1Y COT Index** with role-based signal interpretation:
 | **Speculative** | `SELL` signal | `BUY` signal |
 | **Small** | `SELL` signal | `BUY` signal |
 
-#### Statistics
-
-| Stat | Description |
-|------|-------------|
-| `max` / `min` | All-time extreme values |
-| `max_5y` / `min_5y` | 5-year extremes (260 weeks) |
-| `avg_13w` | 13-week moving average |
-
----
-
-### Database Schema
-
-**SQLite** with WAL mode, foreign keys enabled, version-based migration system.
-
-#### `cot_data` table
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | INTEGER PK | Auto-increment |
-| `report_type` | TEXT | `legacy`, `disagg`, `tff` |
-| `subtype` | TEXT | `fo`, `co` |
-| `report_date` | TEXT | ISO date (YYYY-MM-DD) |
-| `cftc_contract_code` | TEXT | CFTC market code |
-| `market_and_exchange` | TEXT | Market name + exchange |
-| `cftc_commodity_code` | TEXT | Commodity code |
-| `open_interest` | REAL | Total open interest |
-| `oi_change` | REAL | Week-over-week OI change |
-| `g1_long` ... `g5_short` | REAL | Long/short positions per group |
-| `g1_long_change` ... | REAL | Week-over-week changes |
-| `g1_spread` ... | REAL | Spreading positions (where applicable) |
-| `total_rept_long/short` | REAL | Total reportable positions |
-
-**UNIQUE constraint:** `(report_type, subtype, report_date, cftc_contract_code)`
-
-#### Indexes
-
-| Index | Columns | Purpose |
-|-------|---------|---------|
-| `idx_cot_rt_st` | `report_type, subtype` | Filter by variant |
-| `idx_cot_code_date` | `cftc_contract_code, report_date` | Market timeseries |
-| `idx_cot_date` | `report_date` | Date range queries |
-
-#### `download_log` table
-
-Tracks which years have been downloaded to avoid redundant fetches.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `report_type` | TEXT | Report type |
-| `subtype` | TEXT | Subtype |
-| `year` | INTEGER | Downloaded year |
-| `downloaded` | TEXT | ISO timestamp |
-
-#### `schema_version` table
-
-Version-based migration tracking.
-
 ---
 
 ### Caching Architecture
 
 | Cache | TTL | Scope | Description |
 |-------|-----|-------|-------------|
-| Market detail | 10 min | API router | `/markets/{type}/{subtype}/{code}` |
-| Markets list | 10 min | API router | `/markets/{type}/{subtype}` |
-| Screener | 5 min | API router | `/screener/{type}/{subtype}` (only when limit=0) |
+| Market detail | 10 min | API router | `/cot/markets/{type}/{subtype}/{code}` |
+| Markets list | 10 min | API router | `/cot/markets/{type}/{subtype}` |
+| Screener | 5 min | API router | `/cot/screener/{type}/{subtype}` |
 | Price data | 23 hours | PriceService class | Yahoo Finance OHLCV per ticker |
 
-All API caches are **thread-safe** (lock-based) with periodic cleanup and max size enforcement. Caches are invalidated after each pipeline run.
+All API caches are **thread-safe** (lock-based) with periodic cleanup. Caches invalidated after each pipeline run.
 
 ---
 
 ### Scheduler Configuration
-
-Two cron jobs registered at startup:
 
 | Job ID | Schedule | Timezone | Description |
 |--------|----------|----------|-------------|
 | `weekly_cot_update` | **Friday 23:00** | `Europe/Kyiv` | Full COT pipeline (download + calculate + export) |
 | `daily_price_update` | **Daily 00:00** | `Europe/Kyiv` | Yahoo Finance prices → re-export JSON |
 
-Both use APScheduler `CronTrigger` with `misfire_grace_time=3600`. Duplicate concurrent runs are prevented.
-
-**Why Friday 23:00 Kyiv?** CFTC publishes data every Friday ~15:30 ET. By 23:00 Kyiv time the data is always available.
+Both use APScheduler `CronTrigger` with `misfire_grace_time=3600`.
 
 ---
 
-### Exception Hierarchy
+### Image Handling (Journal)
 
-```
-AppError (base, HTTP 500)
-├── NotFoundError (404)
-├── ConflictError (409)
-├── ValidationError (422)
-└── ExternalServiceError (502)
-```
-
-All exceptions are caught by a single FastAPI exception handler returning structured JSON:
-```json
-{
-  "error": "NotFoundError",
-  "message": "Market 099741 not found",
-  "status_code": 404
-}
-```
+- Auto-compression to **WebP** (max 1920px width, quality 85)
+- Auto-thumbnail generation (400px, quality 75)
+- Per-user isolation: `uploads/images/{user_id}/{uuid}.webp`
+- Max **10 images** per trade, max **5 MB** per upload
+- Supports drag-and-drop reordering and captions
 
 ---
 
@@ -367,8 +585,6 @@ All exceptions are caught by a single FastAPI exception handler returning struct
 ```bash
 python scripts/run_server.py [--reload]
 ```
-
-Starts uvicorn with settings from `config.py`. `--reload` enables hot reload for development.
 
 #### `run_pipeline.py`
 
@@ -391,140 +607,59 @@ python scripts/auto_update.py [OPTIONS]
 
 Options:
   --force               Force re-download
-  --dry-run             Check health only, return exit code 0 (fresh) or 2 (stale)
+  --dry-run             Check health only
   --no-prices           Skip price download
   --type TYPE           Specific report type
   --subtype SUBTYPE     Specific subtype
   --verbose, -v         Verbose logging
-  --log-file PATH       Log to file
 ```
 
 #### `health_check.py`
 
 ```bash
 python scripts/health_check.py [--json]
-
-Checks:
-  - Database existence and accessibility
-  - Record counts per report_type/subtype
-  - Data freshness (latest report_date vs today)
-  - Year coverage completeness
-  - JSON export file existence per variant
 ```
-
----
-
-### Exported JSON Structure
-
-All files exported to `JSON_OUTPUT_DIR` (default: `../frontend/public/data/`).
-
-#### Market Detail — `market_{code}_{type}_{sub}.json`
-
-```json
-{
-  "market": {
-    "code": "099741",
-    "name": "GOLD - COMMODITY EXCHANGE INC.",
-    "exchange": "COMMODITY EXCHANGE INC.",
-    "category": "metals",
-    "category_display": "Metals",
-    "report_type": "legacy",
-    "report_type_display": "Legacy",
-    "subtype": "fo",
-    "subtype_display": "Futures Only"
-  },
-  "groups": [
-    { "key": "g1", "name": "Large Speculators", "short": "L.S", "role": "speculative", "has_spread": true }
-  ],
-  "weeks": [
-    {
-      "date": "2024-01-02",
-      "open_interest": 500000,
-      "oi_change": 5000,
-      "oi_pct": 1.0,
-      "g1_long": 250000,
-      "g1_short": 100000,
-      "g1_net": 150000,
-      "g1_change": 5000,
-      "g1_pct_net_oi": 30.0,
-      "cot_index_g1_3m": 75.5,
-      "cot_index_g1_1y": 68.2,
-      "cot_index_g1_3y": 55.1,
-      "wci_g1": 72.3,
-      "crowded_g1": { "value": 68.2, "signal": null }
-    }
-  ],
-  "stats": {
-    "max": { "g1_net": 300000 },
-    "min": { "g1_net": -50000 },
-    "max_5y": { "g1_net": 280000 },
-    "min_5y": { "g1_net": -30000 },
-    "avg_13w": { "g1_net": 145000 }
-  },
-  "prices": [
-    { "date": "2024-01-02", "open": 2060.5, "high": 2075.0, "low": 2055.0, "close": 2070.2, "volume": 185000 }
-  ]
-}
-```
-
-#### Group Definitions — `groups_{type}.json`
-
-```json
-[
-  { "key": "g1", "name": "Large Speculators", "short": "L.S", "role": "speculative", "has_spread": true },
-  { "key": "g2", "name": "Commercials", "short": "Comm", "role": "commercial", "has_spread": false },
-  { "key": "g3", "name": "Small Traders", "short": "S.T", "role": "small", "has_spread": false }
-]
-```
-
----
-
-### Market Categories
-
-Markets are automatically categorized by keyword matching on their names:
-
-| Category | Examples |
-|----------|---------|
-| **Currencies** | EURO FX, JAPANESE YEN, BRITISH POUND |
-| **Crypto** | BITCOIN, ETHEREUM, SOLANA |
-| **Metals** | GOLD, SILVER, COPPER, PLATINUM |
-| **Energy** | CRUDE OIL, NATURAL GAS, HEATING OIL |
-| **Grains** | WHEAT, CORN, SOYBEANS |
-| **Softs** | COCOA, COFFEE, COTTON, SUGAR |
-| **Livestock** | LIVE CATTLE, LEAN HOGS |
-| **Indices** | S&P 500, NASDAQ, DOW JONES, VIX |
-| **Rates** | 10-YEAR NOTE, 2-YEAR NOTE, EURODOLLAR |
-| **Other** | Everything else |
-
----
-
-### Ticker Mapping
-
-100+ CFTC contract codes mapped to Yahoo Finance tickers. Source: `data/ticker_map.json` with built-in fallback dict in code.
-
-**Coverage:** Crypto (BTC, ETH, SOL, XRP, DOGE...), Currencies (EUR, GBP, JPY, CHF...), Energy (CL, NG, HO...), Grains (ZW, ZC, ZS...), Metals (GC, SI, HG...), Indices (ES, NQ, RTY...), Livestock, Softs, Rates.
 
 ---
 
 ### Dependencies
 
 **Core:**
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `fastapi` | ≥ 0.104 | Web framework |
-| `uvicorn` | ≥ 0.24 | ASGI server |
-| `requests` | ≥ 2.31 | HTTP client (CFTC downloads) |
-| `apscheduler` | ≥ 3.10, < 4 | Background task scheduling |
-| `yfinance` | ≥ 0.2.31 | Yahoo Finance API |
-| `pytz` | ≥ 2024.1 | Timezone support |
 
-**Dev (optional):**
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `pytest` | ≥ 7.0 | Testing framework |
-| `pytest-asyncio` | ≥ 0.21 | Async test support |
-| `httpx` | ≥ 0.25 | Async HTTP client (tests) |
-| `ruff` | ≥ 0.1 | Linter & formatter |
+| Package | Purpose |
+|---------|---------|
+| `fastapi` ≥ 0.104 | Web framework |
+| `uvicorn[standard]` ≥ 0.24 | ASGI server |
+| `sqlalchemy[asyncio]` ≥ 2.0 | Async ORM (PostgreSQL) |
+| `asyncpg` | PostgreSQL async driver |
+| `alembic` | Database migrations |
+| `requests` ≥ 2.31 | HTTP client (CFTC downloads) |
+| `apscheduler` ≥ 3.10, < 4 | Background scheduling |
+| `yfinance` ≥ 0.2.31 | Yahoo Finance API |
+| `pytz` ≥ 2024.1 | Timezone support |
+
+**Auth:**
+
+| Package | Purpose |
+|---------|---------|
+| `python-jose[cryptography]` | JWT tokens |
+| `passlib[bcrypt]` | Password hashing |
+| `python-multipart` | File upload support |
+| `authlib` ≥ 1.3 | OAuth library |
+| `httpx` ≥ 0.25 | Async HTTP client (OAuth, Resend) |
+| `resend` ≥ 2.0 | Email service SDK |
+| `email-validator` | Email validation |
+| `pydantic-settings` | Settings management |
+
+**Journal:**
+
+| Package | Purpose |
+|---------|---------|
+| `pandas` ≥ 2.2 | Portfolio analytics |
+| `numpy` ≥ 1.26 | Portfolio analytics |
+| `ccxt` ≥ 4 | Binance BTC benchmark data |
+| `aiofiles` | Async file I/O (images) |
+| `Pillow` | Image compression/thumbnails (WebP) |
 
 ---
 
@@ -539,7 +674,8 @@ Markets are automatically categorized by keyword matching on their names:
    from app.modules.your_module.router import router as ym_router
    app.include_router(ym_router, prefix="/api/v1")
    ```
-6. (Optional) Register scheduled jobs in `app/modules/your_module/scheduler.py`
+6. If it uses PostgreSQL, create models in `models.py` and add Alembic migration
+7. (Optional) Register scheduled jobs in `scheduler.py`
 
 ---
 
@@ -549,15 +685,15 @@ Markets are automatically categorized by keyword matching on their names:
 
 ### Огляд
 
-Бекенд — це Python-додаток на **FastAPI**, який:
+Бекенд — це Python-додаток на **FastAPI**, який надає:
 
-1. **Завантажує** щотижневі COT-звіти з CFTC.gov
-2. **Парсить** сирі CSV-дані та нормалізує в єдину g1–g5 схему
-3. **Зберігає** дані в SQLite (WAL режим) з ефективною індексацією
-4. **Розраховує** похідну аналітику — COT Index, WCI, сигнали, статистику
-5. **Експортує** статичні JSON-файли для фронтенду
-6. **Обслуговує** REST API з TTL кешуванням
-7. **Планує** автоматичні оновлення через APScheduler
+1. **Аутентифікацію** — JWT + refresh-токени, OAuth 2.0 (Google, GitHub), верифікація email
+2. **Управління користувачами** — ролі (admin/user), per-module дозволи (`cot`, `journal`)
+3. **Торговий журнал** — портфелі, угоди, вкладені зображення, 15+ ендпоінтів аналітики
+4. **COT-пайплайн** — завантаження, парсинг, зберігання, розрахунки та експорт даних CFTC COT
+5. **Цінові дані** — Yahoo Finance (100+ тікерів) + BTC бенчмарк (Binance/ccxt)
+6. **REST API** — з документацією Swagger/ReDoc, TTL кешуванням, структурованою обробкою помилок
+7. **Шедулер** — автоматичні оновлення через APScheduler (COT щотижня, ціни щодня)
 
 ---
 
@@ -572,7 +708,16 @@ venv\Scripts\activate        # Windows
 # source venv/bin/activate   # Linux/macOS
 pip install -r requirements.txt
 
-# Запустити початковий пайплайн (завантажує COT + ціни, ~5 хв)
+# Запустити PostgreSQL (з кореня проекту)
+cd .. && docker compose up -d && cd backend
+
+# Запустити Alembic міграції (PostgreSQL)
+alembic upgrade head
+
+# Створити початкового адміна
+python seed_users.py
+
+# Запустити початковий пайплайн (COT + ціни, ~5 хв)
 python scripts/run_pipeline.py --verbose
 
 # Запустити API сервер
@@ -582,7 +727,7 @@ python scripts/run_server.py
 python scripts/health_check.py
 ```
 
-**Документація API:** http://localhost:8000/api/docs  
+**Документація API:** http://localhost:8000/api/docs
 **ReDoc:** http://localhost:8000/api/redoc
 
 ---
@@ -591,50 +736,108 @@ python scripts/health_check.py
 
 | Змінна | За замовч. | Опис |
 |--------|-----------|------|
+| **Загальні** | | |
+| `APP_NAME` | `Market Analytics Platform` | Назва додатку |
 | `DEBUG` | `false` | Увімкнути режим відладки |
-| `DB_PATH` | `data/app.db` | Шлях до SQLite бази |
+| `DB_PATH` | `data/app.db` | Шлях до SQLite бази (COT) |
 | `JSON_OUTPUT_DIR` | `../frontend/public/data` | Директорія для експорту JSON |
 | `LOG_DIR` | `data/logs` | Директорія логів |
+| **API Сервер** | | |
 | `API_HOST` | `127.0.0.1` | Хост API сервера |
 | `API_PORT` | `8000` | Порт API сервера |
 | `API_CORS_ORIGINS` | `http://localhost:5173,...` | CORS-дозволені джерела |
-| `HTTP_TIMEOUT` | `60` | Таймаут HTTP запитів (сек) |
-| `HTTP_RETRIES` | `3` | Кількість повторних спроб |
-| `HTTP_RETRY_BACKOFF` | `2` | Базовий backoff (сек) |
-| `DATA_STALE_DAYS` | `10` | Днів до позначки "застарілі дані" |
-| `COT_YEARS` | `5` | Кількість років COT даних |
-| `COT_CROWDED_BUY` | `80` | Поріг COT Index для BUY сигналу |
-| `COT_CROWDED_SELL` | `20` | Поріг COT Index для SELL сигналу |
-| `PRICE_YEARS` | `3` | Кількість років цінових даних |
-| `TICKER_MAP_PATH` | `data/ticker_map.json` | Шлях до маппінгу тікерів |
+| **PostgreSQL** | | |
+| `DATABASE_URL` | `postgresql+asyncpg://...` | Async PostgreSQL підключення |
+| `POSTGRES_PASSWORD` | `dev_password` | Docker PostgreSQL пароль |
+| **JWT** | | |
+| `JWT_SECRET_KEY` | `CHANGE-ME-TO-...` | Ключ підпису JWT (**змінити в прод!**) |
+| `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | `15` | TTL access-токена |
+| `JWT_REFRESH_TOKEN_EXPIRE_DAYS` | `7` | TTL refresh-токена |
+| **Email** | | |
+| `RESEND_API_KEY` | `""` | API ключ Resend.com (порожній = debug) |
+| `EMAIL_FROM` | `noreply@equilibriumm.tech` | Email відправника |
+| **OAuth** | | |
+| `OAUTH_GOOGLE_CLIENT_ID` | `""` | Google OAuth ID |
+| `OAUTH_GOOGLE_CLIENT_SECRET` | `""` | Google OAuth секрет |
+| `OAUTH_GITHUB_CLIENT_ID` | `""` | GitHub OAuth ID |
+| `OAUTH_GITHUB_CLIENT_SECRET` | `""` | GitHub OAuth секрет |
+| `BACKEND_URL` | `http://localhost:8000` | Публічний URL бекенду (OAuth callbacks) |
+| **Завантаження** | | |
+| `UPLOAD_DIR` | `backend/uploads` | Директорія зображень |
+| `MAX_IMAGE_SIZE` | `5242880` | Макс. розмір завантаження (5 МБ) |
+| `APP_URL` | `http://localhost:5173` | Публічний URL фронтенду |
 
 ---
 
 ### API Ендпоінти
 
-Всі ендпоінти мають префікс `/api/v1/cot` та тег `COT`.
+#### Auth — `/api/v1/auth`
+
+| Метод | Шлях | Auth | Опис |
+|-------|------|------|------|
+| `POST` | `/auth/register` | — | Реєстрація (надсилає 6-значний код) |
+| `POST` | `/auth/verify-email` | — | Верифікація email → видача JWT |
+| `POST` | `/auth/login` | — | Логін → access + HttpOnly refresh cookie |
+| `POST` | `/auth/refresh` | Cookie | Оновити access token |
+| `POST` | `/auth/logout` | ✅ | Відкликати refresh token |
+| `GET` | `/auth/me` | ✅ | Профіль поточного користувача |
+| `PUT` | `/auth/me` | ✅ | Оновити профіль |
+| `PUT` | `/auth/me/password` | ✅ | Змінити пароль |
+| `GET` | `/auth/oauth/{provider}` | — | Ініціювати OAuth (google/github) |
+
+#### Users — `/api/v1/users` (тільки адмін)
+
+| Метод | Шлях | Опис |
+|-------|------|------|
+| `GET` | `/users` | Список користувачів |
+| `GET` | `/users/{id}` | Деталі користувача |
+| `PUT` | `/users/{id}` | Оновити (роль, активність, нікнейм) |
+| `DELETE` | `/users/{id}` | Деактивувати (soft delete) |
+| `POST` | `/users/{id}/permissions` | Видати дозвіл (`cot`/`journal`) |
+| `DELETE` | `/users/{id}/permissions/{perm}` | Відкликати дозвіл |
+
+#### COT — `/api/v1/cot`
 
 | Метод | Шлях | Кеш TTL | Опис |
 |-------|------|---------|------|
-| `GET` | `/markets/{report_type}/{subtype}` | 10 хв | Список ринків за типом/підтипом |
-| `GET` | `/markets/{report_type}/{subtype}/{code}` | 10 хв | Повні дані ринку: тижні, статистика, групи, ціни |
-| `GET` | `/screener/{report_type}/{subtype}` | 5 хв | Скринер з опціональними `limit` та `offset` |
-| `GET` | `/groups/{report_type}` | — | Визначення груп трейдерів |
-| `GET` | `/status` | — | Стан системи: БД, шедулер, свіжість даних |
+| `GET` | `/cot/markets/{type}/{subtype}` | 10 хв | Список ринків |
+| `GET` | `/cot/markets/{type}/{subtype}/{code}` | 10 хв | Повні дані ринку |
+| `GET` | `/cot/screener/{type}/{subtype}` | 5 хв | Скринер |
+| `GET` | `/cot/groups/{type}` | — | Визначення груп трейдерів |
+| `GET` | `/cot/status` | — | Стан системи |
 
-**Параметри шляху:**
+#### Journal — `/api/v1/journal` (потребує дозвіл `journal`)
 
-| Параметр | Значення | Опис |
-|----------|----------|------|
-| `report_type` | `legacy`, `disagg`, `tff` | Тип COT-звіту |
-| `subtype` | `fo`, `co` | Futures Only або Futures + Options Combined |
-| `code` | напр. `099741` | Код контракту CFTC |
+Підроутери: settings, portfolios, trades, images, analytics, enums.
 
-Всі кеші **інвалідуються** після кожного запуску пайплайну.
+15+ ендпоінтів аналітики: `/metrics`, `/equity-curve`, `/drawdown`, `/alpha-curve`, `/rolling-metrics`, `/daily-returns`, `/rolling-win-rate`, `/r-multiple-distribution`, `/risk-adjusted-comparison`, `/nav-history`, `/rolling-information-ratio`, `/expected-vs-actual`, `/comparative-drawdown`, `/nav-vs-hwm`, `/rolling-tracking-error`.
 
 ---
 
-### Пайплайн даних
+### Архітектура баз даних
+
+**Дуальний підхід:**
+
+| База даних | Движок | Призначення |
+|------------|--------|-------------|
+| **SQLite** | WAL, файловий | Дані COT (265K+ записів) |
+| **PostgreSQL 16** | async asyncpg + SQLAlchemy 2.0 | Auth, users, journal, всі нові модулі |
+
+PostgreSQL працює в Docker. Керується через **Alembic** міграції (4 версії).
+
+---
+
+### Безпека та Auth
+
+- **bcrypt** для хешування паролів
+- **JWT** access-токени (HS256, 15 хв)
+- **Opaque refresh-токени** (SHA-256 в БД, HttpOnly cookie, 7 днів)
+- **OAuth 2.0** — Google, GitHub
+- **Email верифікація** — 6-значний код через Resend.com (10 хв TTL)
+
+---
+
+### COT-пайплайн
 
 ```
 ┌─────────────┐    ┌──────────┐    ┌──────────┐    ┌────────────┐
@@ -648,118 +851,15 @@ python scripts/health_check.py
 └─────────────┘    └──────────┘
 ```
 
-**Покроково:**
-
-1. **Блокування** — файловий лок (`pipeline.lock`) з перевіркою PID
-2. **Для кожної комбінації `report_type × subtype` (6 разом):**
-   1. Перевірка `download_log` — пропуск вже завантажених років (якщо не `--force`)
-   2. Завантаження річних ZIP з CFTC.gov
-   3. Витягнення CSV з ZIP
-   4. Парсинг CSV → нормалізація колонок в `g1–g5` схему
-   5. Upsert в SQLite (`INSERT OR REPLACE`)
-   6. Запис у лог завантажень
-   7. Завантаження та парсинг поточного тижня (TXT)
-   8. Upsert поточного тижня
-3. **Збір унікальних кодів ринків**
-4. **Завантаження цін** (якщо не `--no-prices`):
-   - Маппінг CFTC кодів → Yahoo Finance тікери
-   - ThreadPoolExecutor (до 8 потоків)
-   - Кеш на рівні класу (23 год TTL)
-5. **Експорт JSON** для кожного `report_type × subtype`
-6. **Зняття блокування**
-
 ---
 
-### Типи звітів та групи трейдерів
+### Обробка зображень (Journal)
 
-| Тип звіту | Ключ | Групи |
-|-----------|------|-------|
-| **Legacy** | `legacy` | g1: Large Speculators (спекулятивна) · g2: Commercials (комерційна) · g3: Small Traders (мала) |
-| **Disaggregated** | `disagg` | g1: Producer/Merchant (комерційна) · g2: Swap Dealers (комерційна) · g3: Managed Money (спекулятивна) · g4: Other Reportables (спекулятивна) · g5: Non-Reportable (мала) |
-| **TFF** | `tff` | g1: Dealer/Intermediary (комерційна) · g2: Asset Manager (спекулятивна) · g3: Leveraged Funds (спекулятивна) · g4: Other Reportables (спекулятивна) · g5: Non-Reportable (мала) |
-
----
-
-### Розрахункові індикатори
-
-#### Потижневі розрахунки
-
-| Індикатор | Формула |
-|-----------|---------|
-| **Нетто-позиція** | `net = g_k_long - g_k_short` |
-| **Зміна нетто** | `net_change = g_k_long_change - g_k_short_change` |
-| **% Нетто/OI** | `pct_net_oi = (net / open_interest) × 100` |
-
-#### Серійні індикатори
-
-| Індикатор | Вікно | Формула |
-|-----------|-------|---------|
-| **COT Index 3м** | 13 тижнів | `(net - min) / (max - min) × 100` |
-| **COT Index 1р** | 52 тижні | Та сама формула |
-| **COT Index 3р** | 156 тижнів | Та сама формула |
-| **WCI** | 26 тижнів | Та сама формула |
-
-#### Crowded Level
-
-На основі **1Y COT Index** з інтерпретацією за роллю:
-
-| Роль трейдера | COT Index ≥ 80 | COT Index ≤ 20 |
-|---------------|-----------------|-----------------|
-| **Комерційна** | `BUY` сигнал | `SELL` сигнал |
-| **Спекулятивна** | `SELL` сигнал | `BUY` сигнал |
-| **Мала** | `SELL` сигнал | `BUY` сигнал |
-
----
-
-### Схема бази даних
-
-**SQLite** з WAL режимом, увімкненими зовнішніми ключами та версійною міграцією.
-
-#### Таблиця `cot_data`
-
-| Колонка | Тип | Опис |
-|---------|-----|------|
-| `id` | INTEGER PK | Автоінкремент |
-| `report_type` | TEXT | `legacy`, `disagg`, `tff` |
-| `subtype` | TEXT | `fo`, `co` |
-| `report_date` | TEXT | ISO дата |
-| `cftc_contract_code` | TEXT | Код ринку CFTC |
-| `market_and_exchange` | TEXT | Назва ринку + біржа |
-| `open_interest` | REAL | Загальний відкритий інтерес |
-| `g1_long` ... `g5_short` | REAL | Позиції по групах |
-
-**UNIQUE:** `(report_type, subtype, report_date, cftc_contract_code)`
-
----
-
-### CLI Скрипти
-
-#### `run_server.py`
-
-```bash
-python scripts/run_server.py [--reload]
-```
-
-#### `run_pipeline.py`
-
-```bash
-python scripts/run_pipeline.py [--force] [--type TYPE] [--subtype SUBTYPE]
-                               [--no-prices] [--verbose] [--log-file PATH]
-```
-
-#### `auto_update.py`
-
-```bash
-python scripts/auto_update.py [--force] [--dry-run] [--no-prices]
-                              [--type TYPE] [--subtype SUBTYPE]
-                              [--verbose] [--log-file PATH]
-```
-
-#### `health_check.py`
-
-```bash
-python scripts/health_check.py [--json]
-```
+- Авто-компресія у **WebP** (макс. 1920px, якість 85)
+- Авто-мініатюри (400px, якість 75)
+- Ізоляція по користувачах: `uploads/images/{user_id}/{uuid}.webp`
+- Макс. **10 зображень** на угоду, **5 МБ** на файл
+- Підтримка перетягування та підписів
 
 ---
 
@@ -770,19 +870,24 @@ python scripts/health_check.py [--json]
 | `weekly_cot_update` | **П'ятниця 23:00** | `Europe/Kyiv` | Повний COT пайплайн |
 | `daily_price_update` | **Щоденно 00:00** | `Europe/Kyiv` | Оновлення цін Yahoo Finance |
 
-**Чому п'ятниця 23:00 Київ?** CFTC публікує дані щоп'ятниці ~15:30 ET. До 23:00 за Києвом дані завжди доступні.
+---
+
+### Залежності
+
+**Core:** fastapi, uvicorn, sqlalchemy[asyncio], asyncpg, alembic, requests, apscheduler, yfinance, pytz
+
+**Auth:** python-jose, passlib[bcrypt], python-multipart, authlib, httpx, resend, email-validator, pydantic-settings
+
+**Journal:** pandas, numpy, ccxt, aiofiles, Pillow
 
 ---
 
 ### Додавання нового модуля
 
 1. Створити `app/modules/your_module/` з `__init__.py`
-2. Додати `config.py` для налаштувань модуля
-3. Реалізувати доменну логіку (storage, service, etc.)
+2. Додати `config.py` для налаштувань
+3. Реалізувати доменну логіку
 4. Створити `router.py` з FastAPI `APIRouter`
-5. Підключити роутер в `app/main.py`:
-   ```python
-   from app.modules.your_module.router import router as ym_router
-   app.include_router(ym_router, prefix="/api/v1")
-   ```
-6. (Опціонально) Зареєструвати заплановані задачі в `scheduler.py`
+5. Підключити у `app/main.py`
+6. Якщо використовує PostgreSQL — створити моделі та Alembic міграцію
+7. (Опціонально) Зареєструвати заплановані задачі

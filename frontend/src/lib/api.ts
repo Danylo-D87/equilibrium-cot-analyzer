@@ -1,10 +1,12 @@
 // =====================================================
-// Centralized API client with error handling
-// Falls back to pre-exported static JSON in public/data/
-// when the backend is not available.
+// Centralized API client with auth support.
+//
+// Access token is stored in-memory (never localStorage).
+// Refresh token is an HttpOnly cookie (managed by backend).
+// On 401, a silent refresh is attempted once before failing.
 // =====================================================
 
-import type { Market, MarketData, Group, ScreenerRow, PricePoint, Week } from '../apps/cot/types';
+import type { Market, MarketData, Group, ScreenerRow } from '../apps/cot/types';
 
 /** Custom API error with status code */
 export class ApiError extends Error {
@@ -17,23 +19,86 @@ export class ApiError extends Error {
     }
 }
 
+// ── In-memory access token management ──────────────────────
+
+let _accessToken: string | null = null;
+
+export function setAccessToken(token: string) {
+    _accessToken = token;
+}
+
+export function clearAccessToken() {
+    _accessToken = null;
+}
+
+export function getAccessToken(): string | null {
+    return _accessToken;
+}
+
+// ── Core fetch with auth ───────────────────────────────────
+
+interface FetchJsonInit extends RequestInit {
+    /** Internal flag — do not set manually */
+    _retry?: boolean;
+}
+
 /**
- * Fetch JSON with automatic error extraction.
- * Throws ApiError on network or HTTP errors.
+ * Fetch JSON with automatic auth header injection and 401 refresh.
  */
-export async function fetchJson<T>(url: string): Promise<T> {
+export async function fetchJson<T>(
+    url: string,
+    init?: FetchJsonInit,
+): Promise<T> {
+    const headers = new Headers(init?.headers);
+
+    // Attach access token if available
+    if (_accessToken && !headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${_accessToken}`);
+    }
+
     let res: Response;
     try {
-        res = await fetch(url);
+        res = await fetch(url, {
+            ...init,
+            headers,
+            credentials: init?.credentials ?? 'same-origin',
+        });
     } catch {
         throw new ApiError('Cannot connect to the server — is the backend running?');
+    }
+
+    // Auto-refresh on 401 (once), but not for auth endpoints that legitimately return 401
+    const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/verify-email') || url.includes('/auth/refresh');
+    if (res.status === 401 && !init?._retry && !isAuthEndpoint) {
+        try {
+            const refreshRes = await fetch('/api/v1/auth/refresh', {
+                method: 'POST',
+                credentials: 'include',
+            });
+            if (refreshRes.ok) {
+                const data = await refreshRes.json();
+                setAccessToken(data.access_token);
+                return fetchJson<T>(url, { ...init, _retry: true });
+            }
+        } catch {
+            // refresh failed — fall through
+        }
+        clearAccessToken();
+        throw new ApiError('Session expired — please log in again', 401);
     }
 
     if (!res.ok) {
         let detail = `HTTP ${res.status}`;
         try {
             const body = await res.json();
-            if (body?.detail) detail = body.detail;
+            console.error(`[API ${res.status}] ${res.url}`, body);
+            if (body?.detail) {
+                detail = Array.isArray(body.detail)
+                    ? body.detail.map((e: { loc?: unknown[]; msg?: string }) =>
+                          `${(e.loc ?? []).slice(1).join('.')}: ${e.msg ?? e}`
+                      ).join(' | ')
+                    : String(body.detail);
+            }
         } catch {
             /* ignore parse errors */
         }
@@ -43,93 +108,33 @@ export async function fetchJson<T>(url: string): Promise<T> {
     return res.json() as Promise<T>;
 }
 
-/** Silently fetch a static JSON file; returns null on failure. */
-async function fetchStatic<T>(url: string): Promise<T | null> {
-    try {
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        return (await res.json()) as T;
-    } catch {
-        return null;
-    }
-}
-
-// =====================================================
-// Typed API endpoints (with static-file fallback)
-// =====================================================
+// ── COT-specific API functions ─────────────────────────────
 
 const BASE = '/api/v1/cot';
 
 /** Fetch market list for a report type + subtype */
 export async function fetchMarkets(reportType: string, subtype: string): Promise<Market[]> {
-    try {
-        return await fetchJson<Market[]>(`${BASE}/markets/${reportType}/${subtype}`);
-    } catch {
-        const data = await fetchStatic<Market[]>(`/data/markets_${reportType}_${subtype}.json`);
-        if (data) return data;
-        throw new ApiError('Failed to load market list from both API and static data');
-    }
+    return fetchJson<Market[]>(`${BASE}/markets/${reportType}/${subtype}`);
 }
 
-/**
- * Fetch full market data (weeks, stats, prices).
- * Static fallback: report-specific file has market/groups/weeks/stats,
- * base market file provides prices.
- */
+/** Fetch full market data (weeks, stats, prices). */
 export async function fetchMarketData(
     reportType: string,
     subtype: string,
     code: string,
 ): Promise<MarketData> {
-    try {
-        return await fetchJson<MarketData>(`${BASE}/markets/${reportType}/${subtype}/${code}`);
-    } catch {
-        // Primary static file: market + groups + weeks + stats (no prices)
-        const reportData = await fetchStatic<{
-            market: Market;
-            groups: Group[];
-            weeks: Week[];
-            stats: MarketData['stats'];
-        }>(`/data/market_${code}_${reportType}_${subtype}.json`);
-
-        if (!reportData) {
-            throw new ApiError('Failed to load market data from both API and static data');
-        }
-
-        // Base market file provides prices
-        const baseData = await fetchStatic<{ prices?: PricePoint[] }>(`/data/market_${code}.json`);
-
-        return {
-            market: reportData.market,
-            groups: reportData.groups,
-            weeks: reportData.weeks,
-            stats: reportData.stats,
-            prices: baseData?.prices ?? [],
-        };
-    }
+    return fetchJson<MarketData>(`${BASE}/markets/${reportType}/${subtype}/${code}`);
 }
 
-/** Fetch screener data (backend wraps rows in `{ items }`) */
+/** Fetch screener data */
 export async function fetchScreener(reportType: string, subtype: string): Promise<ScreenerRow[]> {
-    try {
-        const res = await fetchJson<{ items: ScreenerRow[] } | ScreenerRow[]>(
-            `${BASE}/screener/${reportType}/${subtype}`,
-        );
-        return Array.isArray(res) ? res : res.items;
-    } catch {
-        const data = await fetchStatic<ScreenerRow[]>(`/data/screener_${reportType}_${subtype}.json`);
-        if (data) return data;
-        throw new ApiError('Failed to load screener data from both API and static data');
-    }
+    const res = await fetchJson<{ items: ScreenerRow[] } | ScreenerRow[]>(
+        `${BASE}/screener/${reportType}/${subtype}`,
+    );
+    return Array.isArray(res) ? res : res.items;
 }
 
 /** Fetch group definitions */
 export async function fetchGroups(reportType: string): Promise<Group[]> {
-    try {
-        return await fetchJson<Group[]>(`${BASE}/groups/${reportType}`);
-    } catch {
-        const data = await fetchStatic<Group[]>(`/data/groups_${reportType}.json`);
-        if (data) return data;
-        throw new ApiError('Failed to load groups from both API and static data');
-    }
+    return fetchJson<Group[]>(`${BASE}/groups/${reportType}`);
 }

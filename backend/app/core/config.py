@@ -99,11 +99,102 @@ class Settings:
     # --- Data staleness threshold ---
     data_stale_days: int = field(default_factory=lambda: env_int("DATA_STALE_DAYS", 10))
 
+    # --- PostgreSQL (async, for auth + journal) ---
+    @cached_property
+    def database_url(self) -> str:
+        """Async PostgreSQL connection string."""
+        return env(
+            "DATABASE_URL",
+            "postgresql+asyncpg://equilibrium:dev_password@localhost:5432/equilibrium_db",
+        )
+
+    @cached_property
+    def database_url_sync(self) -> str:
+        """Sync PostgreSQL URL for Alembic migrations."""
+        return self.database_url.replace("+asyncpg", "")
+
+    # --- JWT ---
+    jwt_secret_key: str = field(
+        default_factory=lambda: env("JWT_SECRET_KEY", "CHANGE-ME-TO-A-RANDOM-256-BIT-KEY")
+    )
+    jwt_algorithm: str = field(default_factory=lambda: env("JWT_ALGORITHM", "HS256"))
+    jwt_access_token_expire_minutes: int = field(
+        default_factory=lambda: env_int("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", 15)
+    )
+    jwt_refresh_token_expire_days: int = field(
+        default_factory=lambda: env_int("JWT_REFRESH_TOKEN_EXPIRE_DAYS", 7)
+    )
+
+    # --- Uploads ---
+    @cached_property
+    def upload_dir(self) -> Path:
+        custom = os.environ.get("UPLOAD_DIR")
+        if custom:
+            return Path(custom)
+        return self.base_dir / "uploads"
+
+    max_image_size: int = field(
+        default_factory=lambda: env_int("MAX_IMAGE_SIZE", 5 * 1024 * 1024)  # 5 MB
+    )
+
+    # --- App public URL (used in emails, OAuth callbacks) ---
+    app_url: str = field(
+        default_factory=lambda: env("APP_URL", "http://localhost:5173")
+    )
+
+    # --- Resend.com email service ---
+    resend_api_key: str = field(
+        default_factory=lambda: env("RESEND_API_KEY", "")
+    )
+    email_from: str = field(
+        default_factory=lambda: env("EMAIL_FROM", "noreply@equilibriumm.tech")
+    )
+    email_from_name: str = field(
+        default_factory=lambda: env("EMAIL_FROM_NAME", "Equilibrium")
+    )
+
+    # --- OAuth providers ---
+    # Google
+    oauth_google_client_id: str = field(
+        default_factory=lambda: env("OAUTH_GOOGLE_CLIENT_ID", "")
+    )
+    oauth_google_client_secret: str = field(
+        default_factory=lambda: env("OAUTH_GOOGLE_CLIENT_SECRET", "")
+    )
+    # GitHub
+    oauth_github_client_id: str = field(
+        default_factory=lambda: env("OAUTH_GITHUB_CLIENT_ID", "")
+    )
+    oauth_github_client_secret: str = field(
+        default_factory=lambda: env("OAUTH_GITHUB_CLIENT_SECRET", "")
+    )
+    # LinkedIn
+    oauth_linkedin_client_id: str = field(
+        default_factory=lambda: env("OAUTH_LINKEDIN_CLIENT_ID", "")
+    )
+    oauth_linkedin_client_secret: str = field(
+        default_factory=lambda: env("OAUTH_LINKEDIN_CLIENT_SECRET", "")
+    )
+
+    @cached_property
+    def oauth_callback_base(self) -> str:
+        """Base URL for OAuth callbacks — always backend API."""
+        backend_url = env("BACKEND_URL", "http://localhost:8000")
+        return f"{backend_url}/api/v1/auth/oauth"
+
     def ensure_directories(self) -> None:
         """Create required directories if they don't exist."""
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.log_dir.mkdir(parents=True, exist_ok=True)
+        self.upload_dir.mkdir(parents=True, exist_ok=True)
 
+
+# Load .env file if present (local development)
+try:
+    from dotenv import load_dotenv as _load_dotenv  # type: ignore
+    _load_dotenv(Path(__file__).resolve().parent.parent.parent / '.env', override=False)
+except ImportError:
+    pass
 
 # Singleton settings instance
 settings = Settings()

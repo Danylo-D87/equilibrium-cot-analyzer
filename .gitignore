@@ -37,5 +37,11 @@ Desktop.ini
 # === Legacy/debug scripts ===
 backend/_legacy_*
 
+# === Environment ===
+.env
+
+# === Uploads (user images) ===
+backend/uploads/
+
 # === Build ===
 *.map

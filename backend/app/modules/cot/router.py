@@ -19,10 +19,15 @@ from app.modules.cot.schemas import (
     GroupDef, StatusResponse, PaginatedResponse,
 )
 from app.core.cache import TTLCache
+from app.middleware.auth import require_permission
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/cot", tags=["COT"])
+router = APIRouter(
+    prefix="/cot",
+    tags=["COT"],
+    dependencies=[Depends(require_permission("cot"))],
+)
 
 # ------------------------------------------------------------------
 # Module-level caches
