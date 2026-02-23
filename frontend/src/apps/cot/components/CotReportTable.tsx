@@ -254,7 +254,7 @@ export default function CotReportTable({ data, fitMode = false }: CotReportTable
 
                     {/* Separator */}
                     <tr>
-                        <td colSpan={COLUMN_DEFS.length} className="h-px bg-bronze/15" />
+                        <td colSpan={COLUMN_DEFS.length} className="h-px bg-white/[0.08]" />
                     </tr>
 
                     {/* Data rows (virtualized, newest first) */}

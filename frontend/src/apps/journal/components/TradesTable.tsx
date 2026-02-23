@@ -17,7 +17,7 @@ export default function TradesTable({ trades, loading, onTradeClick, metrics }: 
     if (loading) {
         return (
             <Card className="p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
-                <div className="animate-spin rounded-full h-5 w-5 border-t border-b border-bronze/40 mb-4" />
+                <div className="animate-spin rounded-full h-5 w-5 border-t border-b border-white/30 mb-4" />
                 <div className="text-white/[0.18] text-[8px] tracking-[0.30em] uppercase">Loading data...</div>
             </Card>
         );

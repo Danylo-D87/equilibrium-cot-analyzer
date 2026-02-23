@@ -12,7 +12,7 @@ const ALL_NAV_ITEMS = [
 export default function TopNav() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, isAuthenticated, hasPermission, logout } = useAuth();
+    const { user, isAuthenticated, hasPermission, isAdmin, logout } = useAuth();
 
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -29,9 +29,10 @@ export default function TopNav() {
     }, [menuOpen]);
 
     // Only show nav items the user has access to
-    const visibleItems = ALL_NAV_ITEMS.filter(
-        item => !item.permission || hasPermission(item.permission),
-    );
+    const visibleItems = [
+        ...ALL_NAV_ITEMS.filter(item => !item.permission || hasPermission(item.permission)),
+        ...(isAdmin() ? [{ to: '/admin', label: 'Admin', permission: undefined }] : []),
+    ];
 
     async function handleLogout() {
         setMenuOpen(false);
@@ -40,32 +41,31 @@ export default function TopNav() {
     }
 
     return (
-        <header className="flex-shrink-0 h-11 flex items-center px-6 app-topnav">
-            {/* Brand — serif logo, links home */}
+        <header className="flex-shrink-0 h-12 flex items-center px-6 app-topnav">
+            {/* Brand */}
             <Link
                 to="/"
                 className="flex items-center gap-2.5 flex-shrink-0 select-none mr-8 group"
             >
-                <div className="w-1.5 h-1.5 rounded-full bg-bronze/60 group-hover:bg-bronze transition-colors duration-500" />
-                <span className="font-serif text-[15px] font-normal tracking-[0.18em] text-bronze uppercase group-hover:text-bronze-hover transition-colors duration-300">
+                <span className="font-sans text-[14px] font-medium tracking-[0.12em] text-white/50 group-hover:text-white/80 transition-colors duration-300 uppercase">
                     Equilibrium
                 </span>
             </Link>
 
-            {/* Thin separator */}
-            <div className="w-px h-4 bg-bronze/10 flex-shrink-0 mr-5" />
+            {/* Separator */}
+            <div className="w-px h-4 bg-white/[0.06] flex-shrink-0 mr-5" />
 
             {/* App navigation */}
-            <nav className="flex items-center gap-0.5">
+            <nav className="flex items-center gap-1">
                 {visibleItems.map((item) => {
                     const isActive = location.pathname.startsWith(item.to);
                     return (
                         <Link
                             key={item.to}
                             to={item.to}
-                            className={`px-3 py-1.5 text-[10px] font-semibold tracking-[0.14em] uppercase transition-all duration-300 rounded-sm border ${isActive
-                                ? 'text-bronze bg-bronze/[0.07] border-bronze/15'
-                                : 'text-muted hover:text-bronze/70 border-transparent'
+                            className={`px-3 py-1.5 text-[11px] font-medium tracking-[0.1em] uppercase transition-all duration-300 rounded-pill ${isActive
+                                ? 'text-black bg-white'
+                                : 'text-white/40 hover:text-white/70'
                                 }`}
                         >
                             {item.label}
@@ -76,38 +76,48 @@ export default function TopNav() {
 
             <div className="flex-1" />
 
-            {/* Right side — auth controls */}
+            {/* Right side */}
             {isAuthenticated && user ? (
                 <div ref={menuRef} className="relative">
                     <button
                         onClick={() => setMenuOpen(prev => !prev)}
-                        className="flex items-center gap-2 px-2 py-1 rounded-sm hover:bg-white/[0.03] transition-colors"
+                        className="flex items-center gap-2.5 px-2 py-1 rounded-pill hover:bg-white/[0.04] transition-colors"
                     >
-                        {/* Avatar circle */}
-                        <div className="w-6 h-6 rounded-full bg-bronze/15 border border-bronze/20 flex items-center justify-center">
-                            <span className="text-[9px] font-sans font-semibold text-bronze/70 uppercase">
+                        {/* Avatar */}
+                        <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center">
+                            <span className="text-[10px] font-sans font-medium text-white/60 uppercase">
                                 {(user.nickname ?? user.email)[0]}
                             </span>
                         </div>
-                        <span className="text-[10px] font-sans tracking-[0.08em] text-white/40 hidden sm:inline">
+                        <span className="text-[11px] font-sans tracking-[0.04em] text-white/40 hidden sm:inline">
                             {user.nickname ?? user.email.split('@')[0]}
                         </span>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            strokeWidth="2" className="text-white/20">
+                            strokeWidth="1.5" className="text-white/20">
                             <path d="M6 9l6 6 6-6" />
                         </svg>
                     </button>
 
                     {/* Dropdown */}
                     {menuOpen && (
-                        <div className="absolute right-0 top-full mt-1 w-48 bg-[#0e0e0e] border border-white/[0.08] rounded-sm shadow-xl z-50 py-1">
-                            <div className="px-3 py-2 border-b border-white/[0.06]">
-                                <p className="text-[10px] text-white/50 truncate">{user.email}</p>
-                                <p className="text-[9px] text-white/20 mt-0.5 uppercase tracking-wider">{user.role}</p>
+                        <div className="absolute right-0 top-full mt-2 w-52 bg-[#111111] border border-white/[0.06] rounded-[16px] z-50 py-1 overflow-hidden"
+                            style={{ animation: 'popoverIn 0.18s ease-out' }}>
+                            <div className="px-4 py-3 border-b border-white/[0.04]">
+                                <p className="text-[11px] text-white/50 truncate">{user.email}</p>
+                                <p className="text-[10px] text-white/25 mt-1 uppercase tracking-[0.1em]">{user.role}</p>
                             </div>
+                            {isAdmin() && (
+                                <Link
+                                    to="/admin"
+                                    onClick={() => setMenuOpen(false)}
+                                    className="block w-full text-left px-4 py-3 text-[11px] tracking-[0.08em] text-white/35 hover:text-white/70 hover:bg-white/[0.04] transition-colors uppercase"
+                                >
+                                    Admin Panel
+                                </Link>
+                            )}
                             <button
                                 onClick={handleLogout}
-                                className="w-full text-left px-3 py-2 text-[10px] tracking-[0.1em] text-white/35 hover:text-white/60 hover:bg-white/[0.03] transition-colors uppercase"
+                                className="w-full text-left px-4 py-3 text-[11px] tracking-[0.08em] text-white/35 hover:text-white/70 hover:bg-white/[0.04] transition-colors uppercase"
                             >
                                 Sign Out
                             </button>
@@ -117,7 +127,7 @@ export default function TopNav() {
             ) : (
                 <Link
                     to="/login"
-                    className="px-3 py-1.5 text-[10px] font-sans font-medium tracking-[0.15em] text-bronze/50 hover:text-bronze border border-bronze/15 hover:border-bronze/30 rounded-sm transition-all duration-300 uppercase"
+                    className="px-5 py-2 text-[11px] font-sans font-medium tracking-[0.1em] bg-white text-black rounded-pill hover:bg-white/90 transition-all duration-300 uppercase"
                 >
                     Sign In
                 </Link>

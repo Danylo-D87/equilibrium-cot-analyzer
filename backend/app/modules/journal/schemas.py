@@ -26,7 +26,6 @@ from pydantic import BaseModel, Field
 class TradeType(str, Enum):
     OPTION = "Option"
     FUTURES = "Futures"
-    CRYPTO = "Crypto"
 
 
 class TradeStyle(str, Enum):

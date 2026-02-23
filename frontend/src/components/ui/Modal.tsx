@@ -101,7 +101,7 @@ export default function Modal({
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
             <div
-                className={cn('absolute inset-0 bg-black/65', BLUR_MAP[backdropBlur])}
+                className={cn('absolute inset-0 bg-black/80', BLUR_MAP[backdropBlur])}
                 onClick={onClose}
                 aria-hidden="true"
                 style={{ animation: 'modalFadeIn 0.2s ease-out' }}
@@ -113,7 +113,7 @@ export default function Modal({
                 role="dialog"
                 aria-modal="true"
                 className={cn(
-                    'relative bg-surface border border-border rounded-sm shadow-2xl flex flex-col overflow-hidden',
+                    'relative bg-[#111111] border border-white/[0.06] rounded-[20px] flex flex-col overflow-hidden',
                     SIZE_MAP[size],
                     className,
                 )}
@@ -131,8 +131,8 @@ export default function Modal({
  */
 export function ModalHeader({ title, onClose, children }: ModalHeaderProps) {
     return (
-        <header className="flex-shrink-0 h-10 border-b border-border flex items-center justify-between px-4 bg-surface">
-            <span className="text-xs font-medium tracking-wider uppercase text-text-secondary">
+        <header className="flex-shrink-0 h-12 border-b border-white/[0.04] flex items-center justify-between px-5 bg-transparent">
+            <span className="text-[11px] font-medium tracking-[0.12em] uppercase text-white/50">
                 {title}
             </span>
             <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ export function ModalHeader({ title, onClose, children }: ModalHeaderProps) {
                 {onClose && (
                     <button
                         onClick={onClose}
-                        className="w-8 h-8 flex items-center justify-center rounded-sm text-muted hover:text-white hover:bg-surface-hover border border-transparent hover:border-border transition-all duration-200"
+                        className="w-8 h-8 flex items-center justify-center rounded-full text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-all duration-200"
                         title="Close (Esc)"
                     >
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">

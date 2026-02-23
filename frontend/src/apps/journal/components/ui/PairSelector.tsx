@@ -62,14 +62,14 @@ export default function PairSelector({
                     }}
                     onFocus={() => setIsOpen(true)}
                     placeholder={placeholder}
-                    className="w-full h-9 px-3 bg-white/[0.02] border border-white/[0.06] rounded-md text-[12px] text-white/[0.80] placeholder:text-white/[0.18] focus:outline-none focus:border-bronze/25 focus:bg-bronze/[0.02] hover:border-white/[0.12] transition-all duration-500 font-mono uppercase"
+                    className="w-full h-9 px-3 bg-white/[0.03] border border-white/[0.06] rounded-[12px] text-[12px] text-white/80 placeholder:text-white/20 focus:outline-none focus:border-white/[0.15] hover:border-white/[0.12] transition-all duration-300 font-mono uppercase"
                 />
             </div>
             {isOpen && filtered.length > 0 && (
                 <div
-                    className="absolute z-50 top-full mt-1.5 w-full max-h-52 overflow-y-auto rounded-lg border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.5)] py-1"
+                    className="absolute z-50 top-full mt-1.5 w-full max-h-52 overflow-y-auto rounded-[16px] border border-white/[0.06] py-1"
                     style={{
-                        background: 'linear-gradient(to bottom, rgba(20,20,20,0.97), rgba(10,10,10,0.98))',
+                        background: '#111111',
                         backdropFilter: 'blur(24px)',
                         scrollbarWidth: 'thin',
                         scrollbarColor: 'rgba(255,255,255,0.06) transparent',
@@ -86,8 +86,8 @@ export default function PairSelector({
                             className={cn(
                                 'w-full text-left px-3.5 py-2 text-[11px] font-mono uppercase transition-all duration-200',
                                 pair === value
-                                    ? 'text-bronze bg-bronze/[0.07]'
-                                    : 'text-white/[0.55] hover:bg-white/[0.04] hover:text-white/[0.85] hover:pl-4',
+                                    ? 'text-white bg-white/[0.08]'
+                                    : 'text-white/[0.55] hover:bg-white/[0.04] hover:text-white/[0.85]',
                             )}
                         >
                             {pair}

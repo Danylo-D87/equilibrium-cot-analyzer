@@ -40,17 +40,22 @@ export default {
                     fg: 'var(--color-destructive-fg)',
                 },
                 accent: 'var(--color-accent)',
+                /* Legacy bronze alias — maps to white for monochrome compat */
                 bronze: {
-                    DEFAULT: '#c4a87c',
-                    hover: '#d4bc96',
-                    glow: 'rgba(196, 168, 124, 0.08)',
-                    muted: 'rgba(196, 168, 124, 0.30)',
+                    DEFAULT: '#ffffff',
+                    hover: '#ffffff',
+                    glow: 'rgba(255, 255, 255, 0.06)',
+                    muted: 'rgba(255, 255, 255, 0.20)',
                 },
             },
             fontFamily: {
                 sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-                serif: ['Cinzel', 'Georgia', 'serif'],
+                serif: ['Cinzel', 'Georgia', 'Times New Roman', 'serif'],
                 mono: ['JetBrains Mono', 'monospace'],
+            },
+            borderRadius: {
+                'card': '20px',
+                'pill': '999px',
             },
         },
     },

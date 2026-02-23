@@ -105,7 +105,7 @@ export default function SettingsModal() {
                 {/* Header */}
                 <div className="px-8 py-4 flex items-center justify-between shrink-0 border-b border-white/[0.04]">
                     <div className="flex items-center gap-3">
-                        <div className="w-[5px] h-[5px] rounded-full bg-bronze/50" />
+                        <div className="w-[5px] h-[5px] rounded-full bg-white/30" />
                         <h2 className="text-[9px] font-sans font-medium tracking-[0.28em] text-white/[0.35] uppercase">Settings</h2>
                     </div>
                     <button onClick={() => close(false)} className="p-1.5 text-white/[0.20] hover:text-white/[0.55] hover:bg-white/[0.03] transition-all duration-500">
@@ -121,12 +121,12 @@ export default function SettingsModal() {
                                 <button
                                     key={id}
                                     onClick={() => setSection(id)}
-                                    className={`w-full flex items-center gap-3 px-4 py-2.5 transition-all duration-400 text-[9px] font-sans tracking-[0.18em] uppercase ${section === id
-                                        ? 'bg-bronze/[0.04] text-bronze/80 border-l-2 border-l-bronze/60'
-                                        : 'text-white/[0.22] hover:text-white/[0.40] border-l-2 border-l-transparent hover:border-l-white/[0.05]'
+                                    className={`w-full flex items-center gap-3 px-4 py-2.5 transition-all duration-400 text-[9px] font-sans tracking-[0.18em] uppercase rounded-[12px] ${section === id
+                                        ? 'bg-white/[0.08] text-white border-l-2 border-l-white/60'
+                                        : 'text-white/[0.22] hover:text-white/[0.40] border-l-2 border-l-transparent hover:border-l-white/[0.08]'
                                         }`}
                                 >
-                                    <Icon size={13} strokeWidth={1} className={section === id ? 'text-bronze/60' : 'text-white/[0.20]'} />
+                                    <Icon size={13} strokeWidth={1} className={section === id ? 'text-white/60' : 'text-white/[0.20]'} />
                                     <span>{label}</span>
                                 </button>
                             ))}
@@ -166,7 +166,7 @@ export default function SettingsModal() {
                                                 } catch { flash({ type: 'error', text: 'Failed to save nickname' }); }
                                             }}
                                             disabled={updateSettingsMut.isPending}
-                                            className="flex-1 px-4 py-3 border border-white/[0.06] text-white/[0.35] hover:text-bronze/80 hover:border-bronze/20 hover:bg-bronze/[0.03] text-[10px] font-sans tracking-[0.18em] uppercase transition-all duration-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                                            className="flex-1 px-4 py-3 border border-white/[0.06] text-white/[0.35] hover:text-white/80 hover:border-white/[0.15] hover:bg-white/[0.04] text-[10px] font-sans tracking-[0.18em] uppercase rounded-full transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
                                         >Save</button>
                                         {tempNickname && (
                                             <button
@@ -194,7 +194,7 @@ export default function SettingsModal() {
                                 <div className="bg-white/[0.015] border border-white/[0.03] p-6 space-y-4">
                                     <div>
                                         <h3 className="text-[11px] font-sans font-medium tracking-[0.2em] text-white/[0.55] uppercase mb-2 flex items-center gap-2">
-                                            <Globe size={13} strokeWidth={1.5} className="text-bronze/50" /> Language
+                                            <Globe size={13} strokeWidth={1.5} className="text-white/40" /> Language
                                         </h3>
                                         <p className="text-[11px] text-white/[0.28]">Interface language for the journal module.</p>
                                     </div>
@@ -203,7 +203,7 @@ export default function SettingsModal() {
                                             <button
                                                 key={lang}
                                                 onClick={() => setLanguage(lang)}
-                                                className={`flex items-center justify-center gap-2 px-4 py-3 transition-all duration-300 text-[10px] font-sans tracking-[0.12em] uppercase focus:outline-none ${language === lang ? 'bg-bronze/[0.06] text-bronze/90 border border-bronze/[0.25]' : 'bg-transparent text-white/[0.22] hover:text-white/[0.50] border border-white/[0.03] hover:border-white/[0.08]'
+                                                className={`flex items-center justify-center gap-2 px-4 py-3 transition-all duration-300 text-[10px] font-sans tracking-[0.12em] uppercase rounded-full focus:outline-none ${language === lang ? 'bg-white/[0.10] text-white border border-white/[0.15]' : 'bg-transparent text-white/[0.22] hover:text-white/[0.50] border border-white/[0.03] hover:border-white/[0.08]'
                                                     }`}
                                             >
                                                 <span className="text-base">{lang === 'uk' ? '🇺🇦' : lang === 'en' ? '🇬🇧' : '🇷🇺'}</span>
@@ -221,7 +221,7 @@ export default function SettingsModal() {
                                 {/* New portfolio */}
                                 <div className="bg-white/[0.015] border border-white/[0.03] p-6">
                                     {!showNewForm ? (
-                                        <button onClick={() => setShowNewForm(true)} className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-white/[0.06] text-white/[0.35] hover:text-bronze/80 hover:border-bronze/20 hover:bg-bronze/[0.03] text-[10px] font-sans tracking-[0.18em] uppercase transition-all duration-500">
+                                        <button onClick={() => setShowNewForm(true)} className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-white/[0.06] text-white/[0.35] hover:text-white/80 hover:border-white/[0.15] hover:bg-white/[0.04] text-[10px] font-sans tracking-[0.18em] uppercase rounded-full transition-all duration-300">
                                             <Plus size={13} /> New Portfolio
                                         </button>
                                     ) : (
@@ -232,7 +232,7 @@ export default function SettingsModal() {
                                             <Input label="Description" value={newPort.description} onChange={(e) => setNewPort({ ...newPort, description: e.target.value })} placeholder="Optional" />
                                             <div className="flex gap-3">
                                                 <button onClick={() => { setShowNewForm(false); setNewPort({ name: '', initial_capital: '', description: '' }); }} className="flex-1 px-4 py-3 border border-white/[0.04] text-white/[0.22] hover:text-white/[0.50] hover:border-white/[0.10] text-[10px] font-sans tracking-[0.15em] uppercase transition-all duration-300">Cancel</button>
-                                                <button onClick={handleCreatePortfolio} className="flex-1 px-4 py-3 border border-white/[0.06] text-white/[0.35] hover:text-bronze/80 hover:border-bronze/20 hover:bg-bronze/[0.03] text-[10px] font-sans tracking-[0.18em] uppercase transition-all duration-500">Create</button>
+                                                <button onClick={handleCreatePortfolio} className="flex-1 px-4 py-3 border border-white/[0.06] text-white/[0.35] hover:text-white/80 hover:border-white/[0.15] hover:bg-white/[0.04] text-[10px] font-sans tracking-[0.18em] uppercase rounded-full transition-all duration-300">Create</button>
                                             </div>
                                         </div>
                                     )}
@@ -249,7 +249,7 @@ export default function SettingsModal() {
                                                 <Input label="Description" value={editingPortfolio.description ?? ''} onChange={(e) => setEditingPortfolio({ ...editingPortfolio, description: e.target.value })} />
                                                 <div className="flex gap-3">
                                                     <button onClick={() => setEditingPortfolio(null)} className="flex-1 px-4 py-3 border border-white/[0.04] text-white/[0.22] hover:text-white/[0.50] hover:border-white/[0.10] text-[10px] font-sans tracking-[0.15em] uppercase transition-all duration-300">Cancel</button>
-                                                    <button onClick={handleUpdatePortfolio} className="flex-1 px-4 py-3 border border-white/[0.06] text-white/[0.35] hover:text-bronze/80 hover:border-bronze/20 hover:bg-bronze/[0.03] text-[10px] font-sans tracking-[0.18em] uppercase transition-all duration-500">Save</button>
+                                                    <button onClick={handleUpdatePortfolio} className="flex-1 px-4 py-3 border border-white/[0.06] text-white/[0.35] hover:text-white/80 hover:border-white/[0.15] hover:bg-white/[0.04] text-[10px] font-sans tracking-[0.18em] uppercase rounded-full transition-all duration-300">Save</button>
                                                 </div>
                                             </div>
                                         ) : (
@@ -260,10 +260,10 @@ export default function SettingsModal() {
                                                         {p.description && <p className="text-white/[0.28] text-[11px] mt-1">{p.description}</p>}
                                                     </div>
                                                     <div className="flex gap-1">
-                                                        <button onClick={() => setEditingPortfolio({ ...p, initial_capital: p.initial_capital })} className="p-1.5 text-white/[0.25] hover:text-bronze/70 hover:bg-bronze/[0.05] transition-all duration-300">
+                                                        <button onClick={() => setEditingPortfolio({ ...p, initial_capital: p.initial_capital })} className="p-1.5 text-white/[0.25] hover:text-white/70 hover:bg-white/[0.05] rounded-full transition-all duration-300">
                                                             <Pencil size={14} />
                                                         </button>
-                                                        <button onClick={() => setDeleteConfirm(p.id)} className="p-1.5 text-white/[0.25] hover:text-red-400/70 hover:bg-red-500/[0.08] transition-all duration-300">
+                                                        <button onClick={() => setDeleteConfirm(p.id)} className="p-1.5 text-white/[0.25] hover:text-red-400/70 hover:bg-red-500/[0.08] rounded-full transition-all duration-300">
                                                             <Trash2 size={14} />
                                                         </button>
                                                     </div>

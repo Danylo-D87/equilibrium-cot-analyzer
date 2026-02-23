@@ -94,21 +94,21 @@ export default function DatePicker({ label, value, onChange, placeholder, classN
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    'w-full h-9 px-3 flex items-center justify-between text-[12px] transition-all duration-500 border rounded-md outline-none',
-                    'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12]',
-                    isOpen && 'border-bronze/25 bg-bronze/[0.02]',
+                    'w-full h-9 px-3 flex items-center justify-between text-[12px] transition-all duration-300 border rounded-[12px] outline-none',
+                    'bg-white/[0.03] border-white/[0.06] hover:border-white/[0.12]',
+                    isOpen && 'border-white/[0.15]',
                     displayValue ? 'text-white/[0.80]' : 'text-white/[0.25]',
                 )}
             >
                 <span className="truncate font-mono">{displayValue || placeholder || 'Select date'}</span>
-                <Calendar size={13} className={cn('text-white/[0.20] shrink-0 ml-2 transition-colors duration-300', isOpen && 'text-bronze/50')} />
+                <Calendar size={13} className={cn('text-white/[0.20] shrink-0 ml-2 transition-colors duration-300', isOpen && 'text-white/50')} />
             </button>
 
             {isOpen && (
                 <div
-                    className="absolute z-50 top-full mt-1.5 w-[280px] rounded-lg border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-4"
+                    className="absolute z-50 top-full mt-1.5 w-[280px] rounded-[16px] border border-white/[0.06] p-4"
                     style={{
-                        background: 'linear-gradient(to bottom, rgba(20,20,20,0.97), rgba(10,10,10,0.98))',
+                        background: '#111111',
                         backdropFilter: 'blur(24px)',
                     }}
                 >
@@ -156,15 +156,15 @@ export default function DatePicker({ label, value, onChange, placeholder, classN
                                     className={cn(
                                         'h-8 w-full text-[11px] font-mono transition-all duration-200 relative rounded-md',
                                         isSelected
-                                            ? 'text-bronze bg-bronze/[0.12] font-medium shadow-[0_0_8px_rgba(196,168,124,0.08)]'
+                                            ? 'text-black bg-white font-medium'
                                             : isToday
-                                                ? 'text-white/[0.75] font-medium ring-1 ring-inset ring-bronze/15'
+                                                ? 'text-white/[0.75] font-medium ring-1 ring-inset ring-white/20'
                                                 : 'text-white/[0.40] hover:text-white/[0.80] hover:bg-white/[0.04]',
                                     )}
                                 >
                                     {day}
                                     {isToday && !isSelected && (
-                                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-0.5 h-0.5 rounded-full bg-bronze/60" />
+                                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-0.5 h-0.5 rounded-full bg-white/60" />
                                     )}
                                 </button>
                             );
@@ -176,7 +176,7 @@ export default function DatePicker({ label, value, onChange, placeholder, classN
                         <button
                             type="button"
                             onClick={() => { onChange(todayStr); setIsOpen(false); }}
-                            className="w-full py-1.5 text-[9px] font-medium uppercase tracking-[0.2em] text-white/[0.25] hover:text-bronze/70 transition-colors duration-300"
+                            className="w-full py-1.5 text-[9px] font-medium uppercase tracking-[0.2em] text-white/[0.25] hover:text-white/70 transition-colors duration-300"
                         >
                             Today
                         </button>

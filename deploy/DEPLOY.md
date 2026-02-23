@@ -242,6 +242,56 @@ docker exec -i equilibrium-db psql -U equilibrium equilibrium_db < backup.sql
 
 ---
 
+## Крок після міграцій — Створити першого адміна
+
+Після `alembic upgrade head` базу даних заповнено, але адмінів ще немає. Перший адмін створюється напряму через Python (bcrypt хешування пароля):
+
+```bash
+cd /opt/cftc/backend
+source ../venv/bin/activate
+
+python - <<'EOF'
+import asyncio, bcrypt
+
+ADMIN_EMAIL    = "admin@yourdomain.com"   # ← змінити
+ADMIN_PASSWORD = "StrongPassword123!"     # ← змінити
+ADMIN_NICKNAME = "Admin"
+
+async def main():
+    from app.core.database import init_async_engine, get_async_session
+    from sqlalchemy import text
+    init_async_engine()
+    pw = bcrypt.hashpw(ADMIN_PASSWORD.encode(), bcrypt.gensalt()).decode()
+    async for db in get_async_session():
+        await db.execute(text("""
+            INSERT INTO users (email, password_hash, nickname, role, is_active, email_verified)
+            VALUES (:email, :pw, :nick, 'admin', TRUE, TRUE)
+            ON CONFLICT (email) DO UPDATE SET role = 'admin', is_active = TRUE
+        """), {"email": ADMIN_EMAIL, "pw": pw, "nick": ADMIN_NICKNAME})
+        print(f"Admin created: {ADMIN_EMAIL}")
+
+asyncio.run(main())
+EOF
+```
+
+> Після цього можна логінитись через `/login` і потрапити до `/admin` — там через UI видавати іншим користувачам ролі та дозволи (`cot`, `journal`).
+
+**Альтернатива** — через psql напряму (якщо Python-шлях не підходить):
+
+```bash
+# Спочатку отримати bcrypt-хеш пароля
+python -c "import bcrypt; print(bcrypt.hashpw(b'StrongPassword123!', bcrypt.gensalt()).decode())"
+# → скопіювати хеш
+
+docker exec -it equilibrium-db psql -U equilibrium -d equilibrium_db -c "
+INSERT INTO users (email, password_hash, nickname, role, is_active, email_verified)
+VALUES ('admin@yourdomain.com', '<HASH_З_ПОПЕРЕДНЬОГО_КРОКУ>', 'Admin', 'admin', TRUE, TRUE)
+ON CONFLICT (email) DO UPDATE SET role = 'admin';
+"
+```
+
+---
+
 ## Upload Directory
 
 Trade images are stored in `backend/uploads/images/{user_id}/`:
@@ -476,8 +526,9 @@ sudo systemctl edit cot-api.service
 | 3 | Start PostgreSQL | `docker compose -f ... up -d` |
 | 4 | Run setup script | `sudo bash deploy/full-setup.sh` |
 | 5 | Run migrations | `alembic upgrade head` |
-| 6 | Create uploads dir | `mkdir -p backend/uploads/images` |
-| 7 | (Optional) Seed users | `python seed_users.py` |
+| 6 | Create first admin | `python - <<'EOF' ... EOF` (see above) |
+| 7 | Create uploads dir | `mkdir -p backend/uploads/images` |
+| 8 | (Optional) Seed users | `python seed_users.py` |
 | 8 | Enable HTTPS | `certbot --nginx -d equilibriumm.tech` |
 | 9 | Update URLs in `.env` | Set `APP_URL`, `BACKEND_URL` to https |
 | 10 | Restart backend | `systemctl restart cot-api.service` |

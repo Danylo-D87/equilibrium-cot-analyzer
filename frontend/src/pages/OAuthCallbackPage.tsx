@@ -44,14 +44,14 @@ export default function OAuthCallbackPage() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="min-h-screen bg-[#050505] flex items-center justify-center">
             <div className="text-center">
                 {errorMsg ? (
                     <>
                         <p className="text-red-400/80 text-sm mb-4">{errorMsg}</p>
                         <a
                             href="/login"
-                            className="text-[11px] text-bronze/60 hover:text-bronze transition-colors tracking-widest uppercase"
+                            className="text-[11px] text-white/50 hover:text-white transition-colors tracking-widest uppercase"
                         >
                             Back to Login
                         </a>

@@ -53,7 +53,7 @@ function SortableImageItem({ id, image, index, caption, onRemove, onCaptionChang
 
     if (isEditMode) {
         return (
-            <div ref={setNodeRef} style={style} className="relative group bg-[#0a0a0a] border border-white/[0.05] rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+            <div ref={setNodeRef} style={style} className="relative group bg-[#111111] border border-white/[0.06] rounded-[20px] overflow-hidden flex flex-col">
                 <div className="relative w-full flex-1 flex items-center justify-center bg-black/40 overflow-hidden">
                     <img src={image} alt={`Preview ${index + 1}`} className="w-full max-h-[600px] object-contain" />
                     <div {...attributes} {...listeners} className="absolute top-4 left-4 p-2.5 bg-black/80 rounded-xl cursor-move hover:bg-black opacity-0 group-hover:opacity-100 transition-all duration-300 border border-white/10">
@@ -415,7 +415,7 @@ export default function TradeViewModal() {
     );
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-black/20" onClick={handleClose}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-black/60" onClick={handleClose}>
             {isEditMode ? (
                 /* ══════════════════════════════════════════════
                    Edit Mode – matches TradeFormModal layout
@@ -425,7 +425,7 @@ export default function TradeViewModal() {
                     {/* ── Left: Form Island (420px) ── */}
                     <div className="w-[420px] shrink-0 flex flex-col gap-5 h-full">
                         {/* Form Island */}
-                        <div className="flex-1 bg-[#0a0a0a] border border-white/[0.05] rounded-[2rem] p-8 overflow-y-auto shadow-2xl flex flex-col gap-6 custom-scrollbar-left pl-4">
+                        <div className="flex-1 bg-[#111111] border border-white/[0.06] rounded-[20px] p-8 overflow-y-auto flex flex-col gap-6 custom-scrollbar-left pl-4">
                             <h2 className="text-xs font-medium uppercase tracking-widest text-white/50 pb-4 border-b border-white/10">
                                 Edit Trade
                             </h2>
@@ -515,9 +515,9 @@ export default function TradeViewModal() {
                                             onClick={() => { setRiskMode(riskMode === '$' ? '%' : '$'); setErrors([]); }}
                                             className="flex items-center gap-1 text-[10px] font-mono transition-colors duration-300"
                                         >
-                                            <span className={riskMode === '$' ? 'text-bronze/90' : 'text-white/30'}>$</span>
+                                            <span className={riskMode === '$' ? 'text-white' : 'text-white/30'}>$</span>
                                             <span className="text-white/20">/</span>
-                                            <span className={riskMode === '%' ? 'text-bronze/90' : 'text-white/30'}>%</span>
+                                            <span className={riskMode === '%' ? 'text-white' : 'text-white/30'}>%</span>
                                         </button>
                                     </div>
                                     <input
@@ -527,7 +527,7 @@ export default function TradeViewModal() {
                                         placeholder={riskMode === '%' ? '1.0' : '100'}
                                         value={formData.risk_amount}
                                         onChange={handleChange}
-                                        className="w-full h-10 px-4 bg-white/[0.03] border border-white/10 rounded-xl text-sm text-white/90 placeholder:text-white/20 focus:outline-none focus:border-bronze/40 focus:bg-bronze/[0.03] hover:border-white/20 transition-all duration-300 font-mono"
+                                        className="w-full h-10 px-4 bg-white/[0.03] border border-white/[0.06] rounded-[12px] text-sm text-white/90 placeholder:text-white/20 focus:outline-none focus:border-white/[0.15] hover:border-white/[0.12] transition-all duration-300 font-mono"
                                     />
                                     {riskMode === '%' && editPortfolioCapital > 0 && formData.risk_amount && (
                                         <div className="text-[10px] font-mono text-white/40 pl-1 pt-1">
@@ -546,7 +546,7 @@ export default function TradeViewModal() {
                                         placeholder="2.5"
                                         value={formData.rr_ratio}
                                         onChange={handleChange}
-                                        className="w-full h-10 px-4 bg-white/[0.03] border border-white/10 rounded-xl text-sm text-white/90 placeholder:text-white/20 focus:outline-none focus:border-bronze/40 focus:bg-bronze/[0.03] hover:border-white/20 transition-all duration-300 font-mono"
+                                        className="w-full h-10 px-4 bg-white/[0.03] border border-white/[0.06] rounded-[12px] text-sm text-white/90 placeholder:text-white/20 focus:outline-none focus:border-white/[0.15] hover:border-white/[0.12] transition-all duration-300 font-mono"
                                     />
                                     {formData.risk_amount && formData.rr_ratio && formData.status && (
                                         <div className="text-[10px] font-mono text-white/40 pl-1 pt-1">
@@ -577,7 +577,7 @@ export default function TradeViewModal() {
                         </div>
 
                         {/* Buttons Island */}
-                        <div className="bg-[#0a0a0a] border border-white/[0.05] rounded-[1.5rem] p-4 shadow-2xl flex justify-between items-center shrink-0">
+                        <div className="bg-[#111111] border border-white/[0.06] rounded-[16px] p-4 flex justify-between items-center shrink-0">
                             <button
                                 type="button"
                                 onClick={() => { setIsEditMode(false); setFormData(tradeToForm(localTrade)); setErrors([]); }}
@@ -589,7 +589,7 @@ export default function TradeViewModal() {
                                 <button
                                     type="button"
                                     onClick={() => setShowDeleteConfirm(true)}
-                                    className="px-4 py-3 text-xs font-medium tracking-widest uppercase text-red-400/40 hover:text-red-400/90 hover:bg-red-500/10 rounded-xl transition-all duration-300"
+                                    className="px-4 py-3 text-xs font-medium tracking-widest uppercase text-red-400/40 hover:text-red-400/90 hover:bg-red-500/10 rounded-full transition-all duration-300"
                                 >
                                     Delete
                                 </button>
@@ -597,7 +597,7 @@ export default function TradeViewModal() {
                                     type="button"
                                     onClick={handleSave}
                                     disabled={loading}
-                                    className="px-8 py-3 text-xs font-medium tracking-widest uppercase rounded-xl transition-all duration-300 outline-none focus:outline-none text-bronze/90 bg-bronze/10 border border-bronze/20 hover:bg-bronze/20 hover:border-bronze/40 hover:text-bronze disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(196,168,124,0.1)]"
+                                    className="px-8 py-3 text-xs font-medium tracking-widest uppercase rounded-full transition-all duration-300 outline-none focus:outline-none bg-white text-black hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed"
                                 >
                                     {loading ? 'Saving...' : 'Save Changes'}
                                 </button>
@@ -629,7 +629,7 @@ export default function TradeViewModal() {
                         )}
 
                         {/* Upload Island */}
-                        <label className="group flex flex-col items-center justify-center gap-4 p-12 bg-[#0a0a0a] border-2 border-dashed border-white/10 rounded-[2rem] cursor-pointer hover:border-white/30 hover:bg-[#111] transition-all duration-500 shadow-2xl min-h-[200px]">
+                        <label className="group flex flex-col items-center justify-center gap-4 p-12 bg-[#111111] border-2 border-dashed border-white/[0.06] rounded-[20px] cursor-pointer hover:border-white/[0.15] hover:bg-[#161616] transition-all duration-500 min-h-[200px]">
                             <div className="p-4 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-500">
                                 <Upload size={24} className="text-white/50 group-hover:text-white/90 transition-colors duration-500" />
                             </div>
@@ -678,7 +678,7 @@ export default function TradeViewModal() {
                                         <div className="absolute inset-0 pointer-events-none"
                                             style={{
                                                 background: `
-                                                    radial-gradient(circle at 50% 0%, rgba(138,122,98,0.08) 0%, transparent 70%),
+                                                    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 70%),
                                                     radial-gradient(circle at 50% 100%, rgba(255,255,255,0.02) 0%, transparent 50%)
                                                 `,
                                             }}
@@ -699,7 +699,7 @@ export default function TradeViewModal() {
                                                     <span className="text-[10px] font-sans font-medium tracking-[0.25em] text-white/40 uppercase">
                                                         {nickname ? `Equilibrium × ${nickname}` : 'Equilibrium'}
                                                     </span>
-                                                    <span className="text-[8px] font-sans tracking-[0.2em] text-[#8a7a62]/60 uppercase">
+                                                    <span className="text-[8px] font-sans tracking-[0.2em] text-white/30 uppercase">
                                                         Analytical Space
                                                     </span>
                                                 </div>
@@ -776,7 +776,7 @@ export default function TradeViewModal() {
                                             )}
 
                                             {/* Footer line */}
-                                            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#8a7a62]/20 to-transparent" />
+                                            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/[0.04] to-transparent" />
                                         </div>
                                     </div>
 
@@ -785,9 +785,9 @@ export default function TradeViewModal() {
                                         <button
                                             onClick={handleCopyImage}
                                             disabled={copying}
-                                            className="flex items-center justify-center gap-2.5 px-8 py-3 text-[9px] font-medium uppercase tracking-[0.22em] transition-all duration-300 border outline-none focus:outline-none text-white/[0.55] [background:rgba(196,168,124,0.03)] [border-color:rgba(196,168,124,0.12)] hover:[border-color:rgba(196,168,124,0.18)] hover:text-white/[0.68] disabled:opacity-40"
+                                            className="flex items-center justify-center gap-2.5 px-8 py-3 text-[9px] font-medium uppercase tracking-[0.22em] transition-all duration-300 border rounded-full outline-none focus:outline-none bg-white text-black hover:bg-white/90 disabled:opacity-40"
                                         >
-                                            {copied ? <><Check size={14} strokeWidth={1.5} /><span>Copied!</span></> : copying ? <><div className="animate-spin rounded-full h-3.5 w-3.5 border-b border-bronze/50" /><span>Creating...</span></> : <><Copy size={14} strokeWidth={1.5} /><span>Copy Card</span></>}
+                                            {copied ? <><Check size={14} strokeWidth={1.5} /><span>Copied!</span></> : copying ? <><div className="animate-spin rounded-full h-3.5 w-3.5 border-b border-white/50" /><span>Creating...</span></> : <><Copy size={14} strokeWidth={1.5} /><span>Copy Card</span></>}
                                         </button>
                                     </div>
                                 </div>
@@ -831,7 +831,7 @@ export default function TradeViewModal() {
             {showDeleteConfirm && (
                 <div className="fixed inset-0 z-[110] flex items-center justify-center backdrop-blur-sm bg-black/40" onClick={(e) => e.stopPropagation()}>
                     <div className="relative border border-white/[0.06] max-w-xs w-full overflow-hidden"
-                        style={{ background: 'rgba(6,6,6,0.97)', boxShadow: '0 0 0 1px rgba(196,168,124,0.04), 0 24px 48px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.025)' }}>
+                        style={{ background: 'rgba(6,6,6,0.97)', boxShadow: '0 24px 48px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.025)' }}>
                         {/* Corner accent */}
                         <div className="absolute top-0 left-0 w-5 h-px bg-red-400/30" />
                         <div className="absolute top-0 left-0 w-px h-5 bg-red-400/30" />

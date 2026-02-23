@@ -51,9 +51,9 @@ function PermBadge({
             onClick={onToggle}
             disabled={disabled}
             title={active ? `Revoke ${perm}` : `Grant ${perm}`}
-            className={`px-2 py-0.5 text-[8px] font-sans tracking-[0.15em] uppercase border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${active
-                    ? 'border-[#c4a87c]/40 text-[#c4a87c]/70 bg-[#c4a87c]/[0.06] hover:bg-[#c4a87c]/[0.02] hover:border-[#c4a87c]/20'
-                    : 'border-white/[0.06] text-white/20 hover:border-[#c4a87c]/30 hover:text-[#c4a87c]/40'
+            className={`px-2 py-0.5 text-[8px] font-sans tracking-[0.15em] uppercase border rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${active
+                ? 'border-white/20 text-white/60 bg-white/[0.06] hover:bg-white/[0.04] hover:border-white/15'
+                : 'border-white/[0.06] text-white/20 hover:border-white/15 hover:text-white/40'
                 }`}
         >
             {perm}
@@ -177,11 +177,11 @@ export default function UsersTab() {
                     placeholder="Search by email or nickname…"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="flex-1 max-w-xs bg-transparent border border-white/[0.08] text-white/50 placeholder:text-white/20 text-[11px] px-3 py-1.5 focus:border-[#c4a87c]/30 focus:text-white/60 outline-none transition-colors"
+                    className="flex-1 max-w-xs bg-transparent border border-white/[0.08] rounded-[12px] text-white/50 placeholder:text-white/20 text-[11px] px-3 py-1.5 focus:border-white/[0.15] focus:text-white/60 outline-none transition-colors"
                 />
                 <button
                     onClick={fetchUsers}
-                    className="ml-auto px-4 py-1.5 text-[9px] font-sans tracking-[0.18em] uppercase border border-[#c4a87c]/20 text-[#c4a87c]/50 hover:border-[#c4a87c]/40 hover:text-[#c4a87c]/70 transition-all duration-300"
+                    className="ml-auto px-4 py-1.5 text-[9px] font-sans tracking-[0.18em] uppercase border border-white/[0.08] rounded-full text-white/40 hover:border-white/[0.15] hover:text-white/60 transition-all duration-300"
                 >
                     Refresh
                 </button>
@@ -265,8 +265,8 @@ export default function UsersTab() {
                                         <td className="py-3 pr-6">
                                             <span
                                                 className={`text-[9px] font-sans tracking-[0.15em] uppercase ${isAdmin
-                                                        ? 'text-[#c4a87c]/70'
-                                                        : 'text-white/30'
+                                                    ? 'text-white/70'
+                                                    : 'text-white/30'
                                                     }`}
                                             >
                                                 {user.role}
@@ -299,8 +299,8 @@ export default function UsersTab() {
                                         <td className="py-3 pr-6">
                                             <span
                                                 className={`text-[9px] font-sans tracking-[0.15em] uppercase ${user.is_active
-                                                        ? 'text-emerald-400/50'
-                                                        : 'text-red-400/40'
+                                                    ? 'text-emerald-400/50'
+                                                    : 'text-red-400/40'
                                                     }`}
                                             >
                                                 {user.is_active ? 'Active' : 'Inactive'}
@@ -331,9 +331,9 @@ export default function UsersTab() {
                                                                 ? 'Demote to user'
                                                                 : 'Promote to admin'
                                                         }
-                                                        className={`px-2 py-0.5 text-[8px] font-sans tracking-[0.12em] uppercase border transition-all duration-200 disabled:opacity-40 ${isAdmin
-                                                                ? 'border-[#c4a87c]/25 text-[#c4a87c]/50 hover:border-red-500/30 hover:text-red-400/50'
-                                                                : 'border-white/[0.06] text-white/25 hover:border-[#c4a87c]/30 hover:text-[#c4a87c]/50'
+                                                        className={`px-2 py-0.5 text-[8px] font-sans tracking-[0.12em] uppercase border rounded-full transition-all duration-200 disabled:opacity-40 ${isAdmin
+                                                            ? 'border-white/15 text-white/50 hover:border-red-500/30 hover:text-red-400/50'
+                                                            : 'border-white/[0.06] text-white/25 hover:border-white/15 hover:text-white/50'
                                                             }`}
                                                     >
                                                         {isPending && actionPending === user.id + ':role'
@@ -353,8 +353,8 @@ export default function UsersTab() {
                                                                 : 'Activate'
                                                         }
                                                         className={`px-2 py-0.5 text-[8px] font-sans tracking-[0.12em] uppercase border transition-all duration-200 disabled:opacity-40 ${user.is_active
-                                                                ? 'border-white/[0.06] text-white/25 hover:border-red-500/30 hover:text-red-400/50'
-                                                                : 'border-emerald-800/30 text-emerald-500/40 hover:border-emerald-600/40 hover:text-emerald-400/60'
+                                                            ? 'border-white/[0.06] text-white/25 hover:border-red-500/30 hover:text-red-400/50'
+                                                            : 'border-emerald-800/30 text-emerald-500/40 hover:border-emerald-600/40 hover:text-emerald-400/60'
                                                             }`}
                                                     >
                                                         {isPending &&

@@ -129,7 +129,6 @@ cftc/
 │   ├── pyproject.toml                     # Project metadata & entry points
 │   ├── requirements.txt                   # Dependencies
 │   ├── alembic.ini                        # Alembic migration config
-│   ├── seed_users.py                      # Seed initial admin user
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── main.py                        # FastAPI app factory + lifespan
@@ -274,7 +273,6 @@ venv\Scripts\activate          # Windows
 # source venv/bin/activate     # Linux/macOS
 pip install -r requirements.txt
 alembic upgrade head           # PostgreSQL migrations
-python seed_users.py           # Create initial admin user
 python scripts/run_pipeline.py --verbose  # Download COT data
 
 # 4. Start API server (separate terminal)
@@ -465,7 +463,6 @@ venv\Scripts\activate          # Windows
 # source venv/bin/activate     # Linux/macOS
 pip install -r requirements.txt
 alembic upgrade head           # Міграції PostgreSQL
-python seed_users.py           # Створити початкового адміна
 python scripts/run_pipeline.py --verbose  # Завантажити COT дані
 
 # 4. Запустити API сервер (окремий термінал)

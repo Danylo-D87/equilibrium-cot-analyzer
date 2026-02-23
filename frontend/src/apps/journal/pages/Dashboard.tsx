@@ -70,8 +70,8 @@ export default function Dashboard() {
     const CustomTooltip = ({ active, payload }: any) => {
         if (!active || !payload?.length) return null;
         return (
-            <div className="bg-surface border border-border p-3 shadow-xl rounded-sm">
-                <p className="text-[10px] uppercase tracking-wider text-text-secondary mb-2">
+            <div className="bg-surface border border-border p-4 rounded-[16px]">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-white/40 mb-2">
                     {new Date(payload[0].payload.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </p>
                 {payload.map((entry: any, i: number) => {
@@ -99,7 +99,7 @@ export default function Dashboard() {
     if (loading) {
         return (
             <div className="journal-root flex items-center justify-center h-screen">
-                <div className="animate-spin rounded-full h-7 w-7 border-t border-b border-bronze/50" />
+                <div className="animate-spin rounded-full h-7 w-7 border-t border-b border-white/30" />
             </div>
         );
     }
@@ -107,7 +107,7 @@ export default function Dashboard() {
     return (
         <div className="journal-root relative min-h-screen">
             {/* Subtle background grid with radial mask */}
-            <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.15]" style={{
+            <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.08]" style={{
                 backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
                 backgroundSize: '64px 64px',
                 maskImage: 'radial-gradient(ellipse 100% 100% at 50% 50%, black 20%, transparent 80%)',
@@ -117,11 +117,8 @@ export default function Dashboard() {
             {/* ── Journal top header ── */}
             <div className="fixed top-0 left-0 journal-header z-50" style={{ right: '300px' }}>
                 <div className="px-6 h-[52px] flex items-center">
-                    <Link to="/" className="flex items-center bg-[#060606]/80 backdrop-blur-md h-[34px] px-4 rounded-full border border-white/[0.04] shadow-[0_4px_24px_rgba(0,0,0,0.4)] hover:bg-[#0a0a0a]/90 hover:border-white/[0.08] transition-all duration-500 group overflow-hidden">
-                        <div className="flex items-center overflow-hidden transition-all duration-500 w-0 opacity-0 group-hover:w-[12px] group-hover:opacity-100">
-                            <div className="w-[5px] h-[5px] rounded-full bg-bronze shadow-[0_0_8px_rgba(196,168,124,0.6)]" />
-                        </div>
-                        <span className="font-serif text-[11px] font-normal tracking-[0.22em] text-white/[0.65] group-hover:text-white/[0.85] uppercase mt-[1px] pl-[0.22em] transition-colors duration-500 whitespace-nowrap">Equilibrium</span>
+                    <Link to="/" className="flex items-center bg-[#111111] h-[36px] px-5 rounded-full border border-white/[0.04] hover:border-white/[0.08] transition-all duration-300 group">
+                        <span className="font-sans text-[12px] font-medium tracking-[0.12em] text-white/50 group-hover:text-white/80 uppercase transition-colors duration-300">Equilibrium</span>
                     </Link>
                 </div>
             </div>
@@ -137,31 +134,9 @@ export default function Dashboard() {
                                 className="group relative overflow-hidden h-full flex flex-col cursor-pointer"
                                 onClick={() => setShowEquityCurveModal(true)}
                             >
-                                {/* top-left corner L-bracket accent */}
-                                <div className="absolute top-0 left-0 w-5 h-px bg-bronze/25 group-hover:bg-bronze/60 transition-colors duration-700" />
-                                <div className="absolute top-0 left-0 w-px h-5 bg-bronze/25 group-hover:bg-bronze/60 transition-colors duration-700" />
-                                {/* bottom accent line - thinner */}
-                                <div className="absolute bottom-0 left-0 right-0 h-[0.5px]">
-                                    <div className="h-full bg-gradient-to-r from-transparent via-bronze/[0.05] to-transparent group-hover:via-bronze/[0.20] transition-all duration-700" />
-                                </div>
+                                {/* Clean card — no decorative elements */}
 
-                                {/* Folded corner bottom-right — opens chart modal */}
-                                <div
-                                    className="absolute bottom-0 right-0 z-10"
-                                    title="Expand chart"
-                                >
-                                    <div style={{
-                                        width: 0, height: 0,
-                                        borderStyle: 'solid',
-                                        borderWidth: '0 0 14px 14px',
-                                        borderColor: 'transparent transparent rgba(196,168,124,0.18) transparent',
-                                        position: 'absolute', bottom: 0, right: 0,
-                                        transition: 'border-color 0.3s',
-                                    }}
-                                        className="group-hover:[border-bottom-color:rgba(196,168,124,0.42)!important]"
-                                    />
-                                </div>
-                                <CardHeader className="flex flex-row items-center justify-between border-b border-white/[0.02]">
+                                <CardHeader className="flex flex-row items-center justify-between border-b border-white/[0.04]">
                                     <CardTitle>Equity Curve</CardTitle>
                                 </CardHeader>
                                 <CardContent className="flex-1 pt-4">
@@ -200,7 +175,7 @@ export default function Dashboard() {
                 {/* ── Trades Tab ── */}
                 {activeTab === 'trades' && (
                     <div className="space-y-4">
-                        <h2 className="journal-section-label"><span className="text-bronze/50">—</span>&nbsp;Trades</h2>
+                        <h2 className="journal-section-label">Trades</h2>
                         <TradesTable
                             trades={sortedTrades}
                             loading={tradesLoading}
@@ -213,7 +188,7 @@ export default function Dashboard() {
                 {/* ── Live Tab ── */}
                 {activeTab === 'live' && (
                     <div className="space-y-6">
-                        <h2 className="journal-section-label"><span className="text-bronze/50">—</span>&nbsp;Live Dashboard</h2>
+                        <h2 className="journal-section-label">Live Dashboard</h2>
                         <LiveAssetsExposure trades={trades} loading={tradesLoading} metrics={metrics} />
                     </div>
                 )}

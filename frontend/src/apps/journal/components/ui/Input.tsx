@@ -15,7 +15,7 @@ export function Input({ label, className, ...props }: InputProps) {
             )}
             <input
                 className={cn(
-                    'w-full h-9 px-3 bg-white/[0.02] border border-white/[0.06] rounded-md text-[12px] text-white/[0.80] placeholder:text-white/[0.18] focus:outline-none focus:border-bronze/25 focus:bg-bronze/[0.02] hover:border-white/[0.12] transition-all duration-500 font-mono',
+                    'w-full h-9 px-3 bg-white/[0.03] border border-white/[0.06] rounded-[12px] text-[12px] text-white/80 placeholder:text-white/20 focus:outline-none focus:border-white/[0.15] hover:border-white/[0.12] transition-all duration-300 font-mono',
                     className,
                 )}
                 {...props}

@@ -24,7 +24,7 @@ export default function AssetsExposure({ exposureData, loading, metrics }: Props
     if (loading) {
         return (
             <Card><CardHeader><CardTitle>Assets Exposure</CardTitle></CardHeader>
-                <CardContent><div className="flex items-center justify-center h-48"><div className="animate-spin rounded-full h-5 w-5 border-t border-b border-bronze/50" /></div></CardContent>
+                <CardContent><div className="flex items-center justify-center h-48"><div className="animate-spin rounded-full h-5 w-5 border-t border-b border-white/30" /></div></CardContent>
             </Card>
         );
     }
@@ -49,24 +49,12 @@ export default function AssetsExposure({ exposureData, loading, metrics }: Props
             <Card
                 className="relative overflow-hidden group"
             >
-                {/* Folded corner top-right — opens chart modal */}
+                {/* Corner indicator */}
                 <div
-                    className="absolute top-0 right-0 z-10 cursor-pointer"
+                    className="absolute top-3 right-3 z-10 w-1.5 h-1.5 rounded-full bg-white/[0.08] group-hover:bg-white/[0.25] transition-colors duration-500 cursor-pointer"
                     onClick={() => setShowChart(true)}
                     title="View chart"
-                >
-                    {/* Triangle creating folded corner effect */}
-                    <div style={{
-                        width: 0, height: 0,
-                        borderStyle: 'solid',
-                        borderWidth: '0 16px 16px 0',
-                        borderColor: 'transparent rgba(196,168,124,0.22) transparent transparent',
-                        position: 'absolute', top: 0, right: 0,
-                        transition: 'border-color 0.3s',
-                    }}
-                        className="group-hover:[border-right-color:rgba(196,168,124,0.48)!important]"
-                    />
-                </div>
+                />
                 <CardHeader className="flex flex-row items-center justify-between border-b border-white/[0.02]">
                     <CardTitle>Assets Exposure Analysis</CardTitle>
                 </CardHeader>
@@ -113,15 +101,15 @@ export default function AssetsExposure({ exposureData, loading, metrics }: Props
                     {/* Summary */}
                     <div className="mt-2 p-6 border-t border-white/[0.04] grid grid-cols-3 gap-4 bg-white/[0.01]">
                         <div className="text-center">
-                            <div className="text-[9px] uppercase tracking-[0.2em] text-bronze/40 mb-2">Total Pairs</div>
+                            <div className="text-[9px] uppercase tracking-[0.2em] text-white/[0.35] mb-2">Total Pairs</div>
                             <div className="text-2xl font-mono font-light text-white/[0.80]">{exposureData.length}</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-[9px] uppercase tracking-[0.2em] text-bronze/40 mb-2">Total Trades</div>
+                            <div className="text-[9px] uppercase tracking-[0.2em] text-white/[0.35] mb-2">Total Trades</div>
                             <div className="text-2xl font-mono font-light text-white/[0.80]">{exposureData.reduce((s, a) => s + a.total_trades, 0)}</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-[9px] uppercase tracking-[0.2em] text-bronze/40 mb-2">Total P&L</div>
+                            <div className="text-[9px] uppercase tracking-[0.2em] text-white/[0.35] mb-2">Total P&L</div>
                             <div className={`text-2xl font-mono font-light ${totalPnl > 0 ? 'text-green-400/90' : totalPnl < 0 ? 'text-red-400/90' : 'text-white/[0.80]'}`}>
                                 {displayMode === 'percentage' && metrics?.initial_balance ? fmtVal(totalPnl) : `$${totalPnl.toFixed(2)}`}
                             </div>

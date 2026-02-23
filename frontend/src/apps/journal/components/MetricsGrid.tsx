@@ -115,33 +115,13 @@ function MetricCard({ title, value, icon: Icon, trend, subtitle, chart }: Metric
                 className="group min-h-[100px] flex flex-col justify-center relative overflow-hidden cursor-pointer"
                 onClick={() => setShowCardModal(true)}
             >
-                {/* top-left corner L-bracket accent */}
-                <div className="absolute top-0 left-0 w-5 h-px bg-bronze/25 group-hover:bg-bronze/60 transition-colors duration-700" />
-                <div className="absolute top-0 left-0 w-px h-5 bg-bronze/25 group-hover:bg-bronze/60 transition-colors duration-700" />
-                {/* bottom accent line - thinner */}
-                <div className="absolute bottom-0 left-0 right-0 h-[0.5px]">
-                    <div className="h-full bg-gradient-to-r from-transparent via-bronze/[0.05] to-transparent group-hover:via-bronze/[0.20] transition-all duration-700" />
-                </div>
-
-                {/* Folded corner — opens chart modal */}
+                {/* Subtle chart indicator */}
                 {chart && (
                     <div
-                        className="absolute bottom-0 right-0 z-10"
+                        className="absolute top-3 right-3 z-10 w-1.5 h-1.5 rounded-full bg-white/[0.08] group-hover:bg-white/[0.25] transition-colors duration-500"
                         onClick={(e) => { e.stopPropagation(); setShowInfo(true); }}
                         title="View chart"
-                    >
-                        {/* bronze triangle */}
-                        <div style={{
-                            width: 0, height: 0,
-                            borderStyle: 'solid',
-                            borderWidth: '0 0 14px 14px',
-                            borderColor: 'transparent transparent rgba(196,168,124,0.18) transparent',
-                            position: 'absolute', bottom: 0, right: 0,
-                            transition: 'border-color 0.3s',
-                        }}
-                            className="group-hover:[border-bottom-color:rgba(196,168,124,0.42)!important]"
-                        />
-                    </div>
+                    />
                 )}
 
                 <CardContent className="p-4 flex flex-col gap-2 relative">

@@ -81,7 +81,7 @@ export default function CotApp() {
                     <p className="text-destructive-fg text-sm font-medium">{marketsError.message}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="text-xs text-text-secondary hover:text-bronze transition-all duration-300 tracking-[0.14em] uppercase px-6 py-2.5 rounded-sm border border-border hover:border-bronze/20 hover:bg-bronze-glow"
+                        className="text-xs text-white/60 hover:text-white transition-all duration-300 tracking-[0.1em] uppercase px-6 py-2.5 rounded-full bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.06]"
                     >
                         Reload
                     </button>
@@ -93,13 +93,13 @@ export default function CotApp() {
     return (
         <>
             {/* Single unified header — brand + tabs + controls */}
-            <header className="flex-shrink-0 h-11 flex items-center px-5 gap-0 app-topnav relative z-30">
+            <header className="flex-shrink-0 h-12 flex items-center px-5 gap-0 app-topnav relative z-30">
                 {/* Brand */}
                 <Link
                     to="/"
                     className="flex items-center gap-2 flex-shrink-0 select-none group mr-5"
                 >
-                    <span className="font-serif text-[13px] font-medium tracking-[0.18em] text-white/50 uppercase group-hover:text-white/75 transition-colors duration-500">
+                    <span className="font-sans text-[14px] font-medium tracking-[0.12em] text-white/50 uppercase group-hover:text-white/80 transition-colors duration-300">
                         Equilibrium
                     </span>
                 </Link>
@@ -108,22 +108,21 @@ export default function CotApp() {
                 <div className="w-px h-4 bg-white/[0.06] flex-shrink-0 mr-4" />
 
                 {/* View tabs: Report / Screener */}
-                <nav className="flex items-center gap-0 flex-shrink-0 mr-4">
+                <nav className="flex items-center gap-1 flex-shrink-0 mr-4">
                     <button
                         onClick={() => setActiveTab('report')}
-                        className={`px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] uppercase transition-all duration-300 rounded-sm ${activeTab === 'report'
-                            ? 'text-white/90'
-                            : 'text-white/25 hover:text-white/50'
+                        className={`px-3 py-1 text-[11px] font-medium tracking-[0.1em] uppercase transition-all duration-300 rounded-full ${activeTab === 'report'
+                            ? 'text-black bg-white'
+                            : 'text-white/30 hover:text-white/60'
                             }`}
                     >
                         Report
                     </button>
-                    <span className="text-white/[0.08] text-[8px] select-none mx-0.5">·</span>
                     <button
                         onClick={() => setActiveTab('screener')}
-                        className={`px-2.5 py-1 text-[10px] font-semibold tracking-[0.14em] uppercase transition-all duration-300 rounded-sm ${activeTab === 'screener'
-                            ? 'text-white/90'
-                            : 'text-white/25 hover:text-white/50'
+                        className={`px-3 py-1 text-[11px] font-medium tracking-[0.1em] uppercase transition-all duration-300 rounded-full ${activeTab === 'screener'
+                            ? 'text-black bg-white'
+                            : 'text-white/30 hover:text-white/60'
                             }`}
                     >
                         Screener
@@ -134,14 +133,14 @@ export default function CotApp() {
                 <div className="w-px h-4 bg-white/[0.06] flex-shrink-0 mr-3" />
 
                 {/* Report Type pill group */}
-                <div className="flex items-center gap-0.5 flex-shrink-0 mr-2 bg-white/[0.02] border border-white/[0.04] rounded-sm p-0.5">
+                <div className="flex items-center gap-0.5 flex-shrink-0 mr-2 bg-white/[0.03] border border-white/[0.04] rounded-full p-0.5">
                     {REPORT_TYPES.map((rt) => (
                         <button
                             key={rt.key}
                             onClick={() => setReportType(rt.key)}
-                            className={`px-2 py-0.5 text-[10px] font-semibold tracking-[0.1em] uppercase transition-all duration-300 rounded-sm ${reportType === rt.key
-                                ? 'text-white/80 bg-white/[0.06]'
-                                : 'text-white/25 hover:text-white/45'
+                            className={`px-2.5 py-0.5 text-[10px] font-medium tracking-[0.08em] uppercase transition-all duration-300 rounded-full ${reportType === rt.key
+                                ? 'text-white/90 bg-white/[0.08]'
+                                : 'text-white/30 hover:text-white/50'
                                 }`}
                         >
                             {rt.shortLabel}
@@ -150,14 +149,14 @@ export default function CotApp() {
                 </div>
 
                 {/* Subtype pill group */}
-                <div className="flex items-center gap-0.5 flex-shrink-0 bg-white/[0.02] border border-white/[0.04] rounded-sm p-0.5">
+                <div className="flex items-center gap-0.5 flex-shrink-0 bg-white/[0.03] border border-white/[0.04] rounded-full p-0.5">
                     {SUBTYPES.map((st) => (
                         <button
                             key={st.key}
                             onClick={() => setSubtype(st.key)}
-                            className={`px-2 py-0.5 text-[10px] font-semibold tracking-[0.1em] uppercase transition-all duration-300 rounded-sm ${subtype === st.key
-                                ? 'text-white/80 bg-white/[0.06]'
-                                : 'text-white/25 hover:text-white/45'
+                            className={`px-2.5 py-0.5 text-[10px] font-medium tracking-[0.08em] uppercase transition-all duration-300 rounded-full ${subtype === st.key
+                                ? 'text-white/90 bg-white/[0.08]'
+                                : 'text-white/30 hover:text-white/50'
                                 }`}
                         >
                             {st.shortLabel}
@@ -169,7 +168,7 @@ export default function CotApp() {
                 <div className="flex-1" />
 
                 {/* Right — search + actions */}
-                <div className="flex-shrink-0 flex items-center gap-1.5">
+                <div className="flex-shrink-0 flex items-center gap-2">
                     {activeTab === 'report' && (
                         <>
                             <MarketSelector
@@ -179,7 +178,7 @@ export default function CotApp() {
                             />
                             <button
                                 onClick={() => setChartOpen(true)}
-                                className="h-7 w-7 flex items-center justify-center rounded-sm text-white/25 hover:text-white/60 hover:bg-white/[0.04] transition-all duration-300"
+                                className="h-8 w-8 flex items-center justify-center rounded-full text-white/25 hover:text-white/60 hover:bg-white/[0.06] transition-all duration-300"
                                 title="Charts"
                             >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -191,7 +190,7 @@ export default function CotApp() {
                     )}
                     <button
                         onClick={() => setDocsOpen(true)}
-                        className="h-7 w-7 flex items-center justify-center rounded-sm text-white/25 hover:text-white/60 hover:bg-white/[0.04] transition-all duration-300"
+                        className="h-8 w-8 flex items-center justify-center rounded-full text-white/25 hover:text-white/60 hover:bg-white/[0.06] transition-all duration-300"
                         title="Documentation"
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -230,29 +229,7 @@ export default function CotApp() {
                             {marketData && (
                                 <button
                                     onClick={toggleFitMode}
-                                    className="fixed bottom-5 right-5 z-40 w-10 h-10 flex items-center justify-center rounded-sm transition-all duration-300"
-                                    style={{
-                                        background: fitMode ? '#1a1611' : '#0e0e0e',
-                                        border: fitMode
-                                            ? '1px solid rgba(196,168,124,0.25)'
-                                            : '1px solid #222',
-                                        color: fitMode ? '#c4a87c' : '#555',
-                                        boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
-                                    }}
-                                    onMouseEnter={e => {
-                                        if (!fitMode) {
-                                            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(196,168,124,0.20)';
-                                            (e.currentTarget as HTMLElement).style.color = '#c4a87c';
-                                            (e.currentTarget as HTMLElement).style.background = '#151210';
-                                        }
-                                    }}
-                                    onMouseLeave={e => {
-                                        if (!fitMode) {
-                                            (e.currentTarget as HTMLElement).style.borderColor = '#222';
-                                            (e.currentTarget as HTMLElement).style.color = '#555';
-                                            (e.currentTarget as HTMLElement).style.background = '#0e0e0e';
-                                        }
-                                    }}
+                                    className={`fixed bottom-5 right-5 z-40 w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${fitMode ? 'bg-white text-black' : 'bg-[#111111] text-white/40 border border-white/[0.06] hover:text-white/70 hover:bg-[#1a1a1a]'}`}
                                     title={fitMode ? 'Normal size' : 'Fit to screen'}
                                 >
                                     {fitMode ? (

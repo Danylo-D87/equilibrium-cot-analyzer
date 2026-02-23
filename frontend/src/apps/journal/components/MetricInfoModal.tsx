@@ -25,10 +25,10 @@ export default function MetricInfoModal({ isOpen, onClose, title, description, f
                 {/* Header */}
                 <div className="border-b border-white/[0.04] px-6 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                        <div className="w-[5px] h-[5px] rounded-full bg-bronze/40" />
+                        <div className="w-[5px] h-[5px] rounded-full bg-white/30" />
                         <h3 className="text-[9px] font-sans font-medium uppercase tracking-[0.28em] text-white/[0.40]">{title}</h3>
                     </div>
-                    <button onClick={onClose} className="flex items-center justify-center p-2 transition-all duration-300 border outline-none focus:outline-none text-white/[0.55] [background:rgba(196,168,124,0.03)] [border-color:rgba(196,168,124,0.12)] hover:[border-color:rgba(196,168,124,0.18)] hover:text-white/[0.68]">
+                    <button onClick={onClose} className="flex items-center justify-center p-2 transition-all duration-300 border rounded-full outline-none focus:outline-none text-white/[0.55] border-white/[0.06] hover:border-white/[0.15] hover:text-white/[0.80] hover:bg-white/[0.04]">
                         <X size={14} strokeWidth={1.5} />
                     </button>
                 </div>
@@ -44,7 +44,7 @@ export default function MetricInfoModal({ isOpen, onClose, title, description, f
                     {/* Description */}
                     {description && (
                         <div className="bg-white/[0.015] border border-white/[0.05] p-5">
-                            <h4 className="text-[8px] font-medium text-bronze/40 uppercase tracking-[0.28em] mb-3 pb-2 border-b border-white/[0.04]">{t(translations.metricInfo.descriptionHeader)}</h4>
+                            <h4 className="text-[8px] font-medium text-white/[0.35] uppercase tracking-[0.28em] mb-3 pb-2 border-b border-white/[0.04]">{t(translations.metricInfo.descriptionHeader)}</h4>
                             <p className="text-[12px] font-light text-white/[0.55] leading-relaxed">{description}</p>
                         </div>
                     )}
@@ -52,7 +52,7 @@ export default function MetricInfoModal({ isOpen, onClose, title, description, f
                     {/* Interpretation */}
                     {interpretation && interpretation.length > 0 && (
                         <div className="bg-white/[0.015] border border-white/[0.05] p-5">
-                            <h4 className="text-[8px] font-medium text-bronze/40 uppercase tracking-[0.28em] mb-3 pb-2 border-b border-white/[0.04]">{t(translations.metricInfo.interpretationHeader)}</h4>
+                            <h4 className="text-[8px] font-medium text-white/[0.35] uppercase tracking-[0.28em] mb-3 pb-2 border-b border-white/[0.04]">{t(translations.metricInfo.interpretationHeader)}</h4>
                             <div className="text-[12px] font-light text-white/[0.50] space-y-2">
                                 {interpretation.map((item, idx) => {
                                     // Empty line → spacer
@@ -66,7 +66,7 @@ export default function MetricInfoModal({ isOpen, onClose, title, description, f
                                     if (item.startsWith('•')) {
                                         return (
                                             <div key={idx} className="flex items-start gap-2 pl-1">
-                                                <span className="text-bronze/30 mt-0.5 flex-shrink-0">–</span>
+                                                <span className="text-white/30 mt-0.5 flex-shrink-0">–</span>
                                                 <span>{item.slice(1).trim()}</span>
                                             </div>
                                         );
@@ -91,7 +91,7 @@ export default function MetricInfoModal({ isOpen, onClose, title, description, f
                     {/* Formula */}
                     {formula && (
                         <div className="bg-white/[0.015] border border-white/[0.05] p-5">
-                            <h4 className="text-[8px] font-medium text-bronze/40 uppercase tracking-[0.28em] mb-3 pb-2 border-b border-white/[0.04]">{t(translations.metricInfo.formulaHeader)}</h4>
+                            <h4 className="text-[8px] font-medium text-white/[0.35] uppercase tracking-[0.28em] mb-3 pb-2 border-b border-white/[0.04]">{t(translations.metricInfo.formulaHeader)}</h4>
                             <div className="bg-white/[0.02] border border-white/[0.04] p-4">
                                 <code className="text-[12px] text-white/[0.65] font-mono">{formula}</code>
                             </div>

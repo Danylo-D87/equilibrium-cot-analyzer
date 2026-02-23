@@ -1,7 +1,7 @@
 /**
  * AdminPanel — main admin interface.
  * Tabs: Statistics | Users
- * Design mirrors the main Landing page aesthetic (dark, bronze accents, serif headings).
+ * Design mirrors the main Landing page aesthetic (dark, monochrome, clean minimalism).
  */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -34,7 +34,7 @@ export default function AdminPanel() {
                             ← Equilibrium
                         </Link>
                         <div className="w-px h-4 bg-white/[0.06]" />
-                        <span className="text-[11px] font-sans tracking-[0.2em] text-[#c4a87c]/50 uppercase">
+                        <span className="text-[11px] font-sans tracking-[0.2em] text-white/40 uppercase">
                             Admin Panel
                         </span>
                     </div>
@@ -60,7 +60,7 @@ export default function AdminPanel() {
             <div className="pt-[72px] px-6 md:px-10 py-12 max-w-[1200px] mx-auto">
                 {/* Page header */}
                 <div className="mb-10">
-                    <h1 className="font-serif text-[clamp(1.6rem,3vw,2.8rem)] font-normal tracking-[0.04em] text-white/[0.75]">
+                    <h1 className="font-sans text-[clamp(1.6rem,3vw,2.8rem)] font-light tracking-[0.04em] text-white/[0.85]">
                         Administration
                     </h1>
                     <p className="mt-2 text-[11px] font-sans tracking-[0.15em] text-white/25 uppercase">
@@ -75,14 +75,14 @@ export default function AdminPanel() {
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
                             className={`relative px-6 py-3 text-[9px] font-sans tracking-[0.22em] uppercase transition-all duration-300 ${activeTab === tab.key
-                                    ? 'text-[#c4a87c]/80'
-                                    : 'text-white/25 hover:text-white/45'
+                                ? 'text-white'
+                                : 'text-white/25 hover:text-white/45'
                                 }`}
                         >
                             {tab.label}
                             {/* Active indicator */}
                             {activeTab === tab.key && (
-                                <div className="absolute bottom-0 left-0 right-0 h-px bg-[#c4a87c]/50" />
+                                <div className="absolute bottom-0 left-0 right-0 h-px bg-white/60" />
                             )}
                         </button>
                     ))}

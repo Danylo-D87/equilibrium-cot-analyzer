@@ -57,7 +57,7 @@ function SortableImageItem({ id, image, index, caption, onRemove, onCaptionChang
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="relative group bg-[#0a0a0a] border border-white/[0.05] rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+        <div ref={setNodeRef} style={style} className="relative group bg-[#111111] border border-white/[0.06] rounded-[20px] overflow-hidden flex flex-col">
             <div className="relative w-full flex-1 flex items-center justify-center bg-black/40 overflow-hidden">
                 <img
                     src={image}
@@ -322,13 +322,13 @@ export default function TradeFormModal() {
     );
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-black/20" onClick={() => close(false)}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-black/60" onClick={() => close(false)}>
             <div className="w-full max-w-[1600px] h-full max-h-[900px] flex gap-8" onClick={(e) => e.stopPropagation()}>
 
                 {/* ── Left: Form Island (400px) ── */}
                 <div className="w-[420px] shrink-0 flex flex-col gap-5 h-full">
                     {/* Form Island */}
-                    <div className="flex-1 bg-[#0a0a0a] border border-white/[0.05] rounded-[2rem] p-8 overflow-y-auto shadow-2xl flex flex-col gap-6 custom-scrollbar-left pl-4">
+                    <div className="flex-1 bg-[#111111] border border-white/[0.06] rounded-[20px] p-8 overflow-y-auto flex flex-col gap-6 custom-scrollbar-left pl-4">
                         <h2 className="text-xs font-medium uppercase tracking-widest text-white/50 pb-4 border-b border-white/10">
                             New Trade
                         </h2>
@@ -418,9 +418,9 @@ export default function TradeFormModal() {
                                         onClick={() => { setRiskMode(riskMode === '$' ? '%' : '$'); setErrors([]); }}
                                         className="flex items-center gap-1 text-[10px] font-mono transition-colors duration-300"
                                     >
-                                        <span className={riskMode === '$' ? 'text-bronze/90' : 'text-white/30'}>$</span>
+                                        <span className={riskMode === '$' ? 'text-white' : 'text-white/30'}>$</span>
                                         <span className="text-white/20">/</span>
-                                        <span className={riskMode === '%' ? 'text-bronze/90' : 'text-white/30'}>%</span>
+                                        <span className={riskMode === '%' ? 'text-white' : 'text-white/30'}>%</span>
                                     </button>
                                 </div>
                                 <input
@@ -430,7 +430,7 @@ export default function TradeFormModal() {
                                     placeholder={riskMode === '%' ? '1.0' : '100'}
                                     value={formData.risk_amount}
                                     onChange={handleChange}
-                                    className="w-full h-10 px-4 bg-white/[0.03] border border-white/10 rounded-xl text-sm text-white/90 placeholder:text-white/20 focus:outline-none focus:border-bronze/40 focus:bg-bronze/[0.03] hover:border-white/20 transition-all duration-300 font-mono"
+                                    className="w-full h-10 px-4 bg-white/[0.03] border border-white/[0.06] rounded-[12px] text-sm text-white/90 placeholder:text-white/20 focus:outline-none focus:border-white/[0.15] hover:border-white/[0.12] transition-all duration-300 font-mono"
                                 />
                                 {riskMode === '%' && portfolioCapital > 0 && formData.risk_amount && (
                                     <div className="text-[10px] font-mono text-white/40 pl-1 pt-1">
@@ -449,7 +449,7 @@ export default function TradeFormModal() {
                                     placeholder="2.5"
                                     value={formData.rr_ratio}
                                     onChange={handleChange}
-                                    className="w-full h-10 px-4 bg-white/[0.03] border border-white/10 rounded-xl text-sm text-white/90 placeholder:text-white/20 focus:outline-none focus:border-bronze/40 focus:bg-bronze/[0.03] hover:border-white/20 transition-all duration-300 font-mono"
+                                    className="w-full h-10 px-4 bg-white/[0.03] border border-white/[0.06] rounded-[12px] text-sm text-white/90 placeholder:text-white/20 focus:outline-none focus:border-white/[0.15] hover:border-white/[0.12] transition-all duration-300 font-mono"
                                 />
                                 {/* Calculated P&L – Compact */}
                                 {formData.risk_amount && formData.rr_ratio && formData.status && (
@@ -481,11 +481,11 @@ export default function TradeFormModal() {
                     </div>
 
                     {/* Buttons Island */}
-                    <div className="bg-[#0a0a0a] border border-white/[0.05] rounded-[1.5rem] p-4 shadow-2xl flex justify-between items-center shrink-0">
+                    <div className="bg-[#111111] border border-white/[0.06] rounded-[16px] p-4 flex justify-between items-center shrink-0">
                         <button
                             type="button"
                             onClick={() => close(false)}
-                            className="px-6 py-3 text-xs font-medium tracking-widest uppercase text-white/40 hover:text-white/90 hover:bg-white/5 rounded-xl transition-all duration-300"
+                            className="px-6 py-3 text-xs font-medium tracking-widest uppercase text-white/40 hover:text-white/90 hover:bg-white/5 rounded-full transition-all duration-300"
                         >
                             Cancel
                         </button>
@@ -493,7 +493,7 @@ export default function TradeFormModal() {
                             type="button"
                             onClick={handleSubmit}
                             disabled={loading}
-                            className="px-8 py-3 text-xs font-medium tracking-widest uppercase rounded-xl transition-all duration-300 outline-none focus:outline-none text-bronze/90 bg-bronze/10 border border-bronze/20 hover:bg-bronze/20 hover:border-bronze/40 hover:text-bronze disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(196,168,124,0.1)]"
+                            className="px-8 py-3 text-xs font-medium tracking-widest uppercase rounded-full transition-all duration-300 outline-none focus:outline-none bg-white text-black hover:bg-white/90 disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                             {loading ? 'Saving...' : 'Log Trade'}
                         </button>
@@ -523,7 +523,7 @@ export default function TradeFormModal() {
                     )}
 
                     {/* Upload Island */}
-                    <label className="group flex flex-col items-center justify-center gap-4 p-12 bg-[#0a0a0a] border-2 border-dashed border-white/10 rounded-[2rem] cursor-pointer hover:border-white/30 hover:bg-[#111] transition-all duration-500 shadow-2xl min-h-[200px]">
+                    <label className="group flex flex-col items-center justify-center gap-4 p-12 bg-[#111111] border-2 border-dashed border-white/[0.06] rounded-[20px] cursor-pointer hover:border-white/[0.15] hover:bg-[#161616] transition-all duration-500 min-h-[200px]">
                         <div className="p-4 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-500">
                             <Upload size={24} className="text-white/50 group-hover:text-white/90 transition-colors duration-500" />
                         </div>

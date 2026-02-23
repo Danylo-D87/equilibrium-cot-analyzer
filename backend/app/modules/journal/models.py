@@ -97,7 +97,7 @@ class Trade(Base):
     )
     date: Mapped[date_type] = mapped_column(Date, nullable=False)
     pair: Mapped[str] = mapped_column(String(50), nullable=False)
-    type: Mapped[str | None] = mapped_column(String(20))     # Option, Futures, Crypto
+    type: Mapped[str | None] = mapped_column(String(20))     # Option, Futures
     style: Mapped[str | None] = mapped_column(String(20))    # Swing, Intraday, Smart Idea
     direction: Mapped[str | None] = mapped_column(String(10))  # Long, Short
     status: Mapped[str | None] = mapped_column(String(10))   # TP, SL, BE, Active

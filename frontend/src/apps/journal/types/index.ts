@@ -5,7 +5,7 @@
 
 // ── Enums ──────────────────────────────────────────────
 
-export type TradeType = 'Option' | 'Futures' | 'Crypto';
+export type TradeType = 'Option' | 'Futures';
 export type TradeStyle = 'Swing' | 'Intraday' | 'Smart Idea';
 export type TradeDirection = 'Long' | 'Short';
 export type TradeStatus = 'TP' | 'SL' | 'BE' | 'Active';

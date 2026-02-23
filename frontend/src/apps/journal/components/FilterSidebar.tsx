@@ -110,7 +110,7 @@ export default function FilterSidebar({ onAddTradeClick }: FilterSidebarProps) {
             Array.isArray(val) ? val.length > 0 : val !== undefined && val !== '',
         );
 
-    const types = ['Futures', 'Option', 'Crypto'];
+    const types = ['Futures', 'Option'];
     const styles = ['Swing', 'Intraday', 'Smart Idea'];
     const presetBtns = [
         { key: 'week', label: 'Week' },
@@ -125,9 +125,9 @@ export default function FilterSidebar({ onAddTradeClick }: FilterSidebarProps) {
         { key: 'trades', label: 'Trades' },
     ];
 
-    const pillActive = 'text-white/[0.55] [background:rgba(196,168,124,0.03)] [border-color:rgba(196,168,124,0.12)]';
-    const pillInactive = 'bg-transparent text-white/[0.22] [border-color:rgba(255,255,255,0.04)] hover:[border-color:rgba(255,255,255,0.08)] hover:text-white/[0.42]';
-    const pillClass = 'px-2 py-1.5 text-[9px] font-medium uppercase tracking-[0.18em] transition-all duration-300 border outline-none focus:outline-none';
+    const pillActive = 'text-white bg-white/[0.08] [border-color:rgba(255,255,255,0.12)]';
+    const pillInactive = 'bg-transparent text-white/[0.30] [border-color:rgba(255,255,255,0.04)] hover:[border-color:rgba(255,255,255,0.10)] hover:text-white/[0.55]';
+    const pillClass = 'px-2 py-1.5 text-[9px] font-medium uppercase tracking-[0.18em] transition-all duration-300 border rounded-full outline-none focus:outline-none';
 
     return (
         <div className="w-72 bg-transparent flex flex-col h-full z-40 relative">
@@ -137,18 +137,16 @@ export default function FilterSidebar({ onAddTradeClick }: FilterSidebarProps) {
                 <div className="flex items-center gap-0.5 bg-white/[0.02] p-0.5 border border-white/[0.05]">
                     <button
                         onClick={toggleDisplayMode}
-                        className={`flex items-center justify-center w-7 h-6 text-[8px] font-medium uppercase tracking-wider transition-all duration-300 ${
-                            displayMode === 'currency' ? 'bg-bronze/[0.08] text-bronze' : 'bg-transparent text-white/[0.22] hover:text-white/[0.48]'
-                        }`}
+                        className={`flex items-center justify-center w-7 h-6 text-[8px] font-medium uppercase tracking-wider transition-all duration-300 rounded-full ${displayMode === 'currency' ? 'bg-white/[0.10] text-white' : 'bg-transparent text-white/[0.22] hover:text-white/[0.48]'
+                            }`}
                         title="Currency mode"
                     >
                         <DollarSign size={9} />
                     </button>
                     <button
                         onClick={toggleDisplayMode}
-                        className={`flex items-center justify-center w-7 h-6 text-[8px] font-medium uppercase tracking-wider transition-all duration-300 ${
-                            displayMode === 'percentage' ? 'bg-bronze/[0.08] text-bronze' : 'bg-transparent text-white/[0.22] hover:text-white/[0.48]'
-                        }`}
+                        className={`flex items-center justify-center w-7 h-6 text-[8px] font-medium uppercase tracking-wider transition-all duration-300 rounded-full ${displayMode === 'percentage' ? 'bg-white/[0.10] text-white' : 'bg-transparent text-white/[0.22] hover:text-white/[0.48]'
+                            }`}
                         title="Percentage mode"
                     >
                         <Percent size={9} />
@@ -157,7 +155,7 @@ export default function FilterSidebar({ onAddTradeClick }: FilterSidebarProps) {
                 {/* Settings */}
                 <button
                     onClick={() => setSettingsOpen(true)}
-                    className="flex items-center justify-center w-7 h-7 border border-white/[0.05] text-white/[0.22] hover:text-bronze/60 hover:border-bronze/20 hover:bg-bronze/[0.03] transition-all duration-500"
+                    className="flex items-center justify-center w-7 h-7 rounded-full border border-white/[0.05] text-white/[0.22] hover:text-white/60 hover:border-white/[0.12] hover:bg-white/[0.04] transition-all duration-300"
                     title="Settings"
                 >
                     <Settings size={12} strokeWidth={1} />
@@ -171,9 +169,8 @@ export default function FilterSidebar({ onAddTradeClick }: FilterSidebarProps) {
                         <button
                             key={t.key}
                             onClick={() => setActiveTab(t.key)}
-                            className={`w-full text-center py-2.5 px-2 text-[9px] font-medium uppercase tracking-[0.18em] transition-all duration-300 border outline-none focus:outline-none ${
-                                activeTab === t.key ? pillActive : pillInactive
-                            }`}
+                            className={`w-full text-center py-2.5 px-2 text-[9px] font-medium uppercase tracking-[0.18em] transition-all duration-300 border outline-none focus:outline-none ${activeTab === t.key ? pillActive : pillInactive
+                                }`}
                         >
                             {t.label}
                         </button>
@@ -182,9 +179,9 @@ export default function FilterSidebar({ onAddTradeClick }: FilterSidebarProps) {
 
                 {/* Filters Header */}
                 <div className="flex items-center justify-between pb-2 border-b border-white/[0.04]">
-                    <h3 className="text-[8px] font-sans tracking-[0.30em] text-bronze/35 uppercase">Filters</h3>
+                    <h3 className="text-[8px] font-sans tracking-[0.30em] text-white/30 uppercase">Filters</h3>
                     {hasActiveFilters && (
-                        <button onClick={clearFilters} className="text-[9px] text-white/[0.28] hover:text-bronze/60 transition-colors uppercase tracking-wider font-medium">
+                        <button onClick={clearFilters} className="text-[9px] text-white/[0.28] hover:text-white/60 transition-colors uppercase tracking-wider font-medium">
                             Reset
                         </button>
                     )}
@@ -194,7 +191,7 @@ export default function FilterSidebar({ onAddTradeClick }: FilterSidebarProps) {
                 {activePortfolios.length > 0 && (
                     <div className="space-y-2">
                         <label className="text-[9px] font-sans tracking-[0.2em] text-white/[0.30] uppercase flex items-center gap-2">
-                            <Briefcase size={11} className="text-bronze/40" />
+                            <Briefcase size={11} className="text-white/30" />
                             Portfolio
                         </label>
                         <div className="flex flex-col gap-2">
@@ -257,7 +254,7 @@ export default function FilterSidebar({ onAddTradeClick }: FilterSidebarProps) {
                             <button
                                 key={p.key}
                                 onClick={() => applyDatePreset(p.key)}
-                                className={`px-3 py-1.5 rounded-sm text-[11px] font-bold uppercase tracking-wider transition-all duration-200 border ${activePreset === p.key ? pillActive : pillInactive
+                                className={`px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-200 border ${activePreset === p.key ? pillActive : pillInactive
                                     }`}
                             >
                                 {p.label}
@@ -267,9 +264,9 @@ export default function FilterSidebar({ onAddTradeClick }: FilterSidebarProps) {
 
                     <button
                         onClick={() => setShowCustomDates(!showCustomDates)}
-                        className="flex items-center gap-2 text-[10px] text-white/[0.28] hover:text-bronze/60 transition-colors uppercase tracking-wider font-medium"
+                        className="flex items-center gap-2 text-[10px] text-white/[0.28] hover:text-white/60 transition-colors uppercase tracking-wider font-medium"
                     >
-                        <Calendar size={11} className="text-bronze/40" />
+                        <Calendar size={11} className="text-white/30" />
                         <span>Custom Range</span>
                     </button>
 
@@ -302,7 +299,7 @@ export default function FilterSidebar({ onAddTradeClick }: FilterSidebarProps) {
             <div className="p-4 border-t border-white/[0.04] relative">
                 <button
                     onClick={onAddTradeClick}
-                    className="w-full py-3 text-[9px] font-medium uppercase tracking-[0.22em] transition-all duration-300 border outline-none focus:outline-none text-white/[0.55] [background:rgba(196,168,124,0.03)] [border-color:rgba(196,168,124,0.12)] hover:[border-color:rgba(196,168,124,0.18)] hover:text-white/[0.68]"
+                    className="w-full py-3 text-[9px] font-medium uppercase tracking-[0.22em] transition-all duration-300 border rounded-full outline-none focus:outline-none bg-white text-black hover:bg-white/90"
                 >
                     + New Entry
                 </button>

@@ -45,17 +45,17 @@ function formatDisplayDate(iso: string): string {
 
 function StatCard({ label, value, sub, highlight = false }: { label: string; value: number; sub?: string; highlight?: boolean }) {
     return (
-        <div className={`relative overflow-hidden border p-6 flex flex-col gap-2 transition-colors duration-500 ${highlight
-                ? 'border-[#c4a87c]/20 bg-gradient-to-b from-[#c4a87c]/[0.05] to-transparent'
-                : 'border-white/[0.04] bg-white/[0.015] hover:bg-white/[0.02]'
+        <div className={`relative overflow-hidden border rounded-[20px] p-6 flex flex-col gap-2 transition-colors duration-500 ${highlight
+            ? 'border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent'
+            : 'border-white/[0.04] bg-white/[0.015] hover:bg-white/[0.02]'
             }`}>
             {highlight && (
-                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#c4a87c]/50 to-transparent opacity-50" />
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
             )}
-            <span className={`text-[9px] font-sans tracking-[0.22em] uppercase ${highlight ? 'text-[#c4a87c]/60' : 'text-white/30'}`}>
+            <span className={`text-[9px] font-sans tracking-[0.22em] uppercase ${highlight ? 'text-white/40' : 'text-white/30'}`}>
                 {label}
             </span>
-            <span className={`text-[2.2rem] font-serif font-normal leading-none ${highlight ? 'text-[#c4a87c]/90' : 'text-white/80'}`}>
+            <span className={`text-[2.2rem] font-sans font-light leading-none ${highlight ? 'text-white/90' : 'text-white/80'}`}>
                 {value.toLocaleString()}
             </span>
             {sub && (
@@ -105,11 +105,11 @@ function RegistrationChart({ data }: { data: { date: string; count: number }[] }
                                 >
                                     {/* Tooltip */}
                                     <div className="relative flex-1 flex flex-col items-center justify-end w-full">
-                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#121212] border border-[#c4a87c]/20 px-2.5 py-1 text-[9px] text-[#c4a87c]/80 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-20 shadow-lg shadow-black/50 transform group-hover:-translate-y-1">
+                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#111111] border border-white/[0.08] rounded-[12px] px-2.5 py-1 text-[9px] text-white/70 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-20 shadow-lg shadow-black/50 transform group-hover:-translate-y-1">
                                             {d.count} reg
                                         </div>
                                         <div
-                                            className="w-full bg-gradient-to-t from-[#c4a87c]/20 to-[#c4a87c]/40 group-hover:from-[#c4a87c]/40 group-hover:to-[#c4a87c]/70 transition-all duration-300 rounded-t-sm"
+                                            className="w-full bg-gradient-to-t from-white/15 to-white/30 group-hover:from-white/30 group-hover:to-white/50 transition-all duration-300 rounded-t-sm"
                                             style={{ height: `${heightPct}%`, minHeight: d.count > 0 ? '4px' : '0' }}
                                         />
                                     </div>
@@ -182,9 +182,9 @@ export default function StatsTab() {
                     <button
                         key={p.key}
                         onClick={() => setPreset(p.key)}
-                        className={`px-4 py-1.5 text-[9px] font-sans tracking-[0.18em] uppercase border transition-all duration-300 ${preset === p.key
-                                ? 'border-[#c4a87c]/50 text-[#c4a87c]/80 bg-[#c4a87c]/[0.06]'
-                                : 'border-white/[0.06] text-white/25 hover:border-white/[0.12] hover:text-white/40'
+                        className={`px-4 py-1.5 text-[9px] font-sans tracking-[0.18em] uppercase border rounded-full transition-all duration-300 ${preset === p.key
+                            ? 'border-white/20 text-white/80 bg-white/[0.06]'
+                            : 'border-white/[0.06] text-white/25 hover:border-white/[0.12] hover:text-white/40'
                             }`}
                     >
                         {p.label}
@@ -198,7 +198,7 @@ export default function StatsTab() {
                             value={customFrom}
                             max={customTo}
                             onChange={e => setCustomFrom(e.target.value)}
-                            className="bg-transparent border border-white/[0.08] text-white/40 text-[10px] px-2 py-1 focus:border-[#c4a87c]/40 focus:text-white/60 outline-none transition-colors"
+                            className="bg-transparent border border-white/[0.08] rounded-[12px] text-white/40 text-[10px] px-2 py-1 focus:border-white/[0.15] focus:text-white/60 outline-none transition-colors"
                         />
                         <span className="text-white/20 text-[10px]">—</span>
                         <input
@@ -207,7 +207,7 @@ export default function StatsTab() {
                             min={customFrom}
                             max={today}
                             onChange={e => setCustomTo(e.target.value)}
-                            className="bg-transparent border border-white/[0.08] text-white/40 text-[10px] px-2 py-1 focus:border-[#c4a87c]/40 focus:text-white/60 outline-none transition-colors"
+                            className="bg-transparent border border-white/[0.08] rounded-[12px] text-white/40 text-[10px] px-2 py-1 focus:border-white/[0.15] focus:text-white/60 outline-none transition-colors"
                         />
                     </div>
                 )}
@@ -215,7 +215,7 @@ export default function StatsTab() {
                 <button
                     onClick={fetchStats}
                     disabled={loading}
-                    className="ml-auto px-4 py-1.5 text-[9px] font-sans tracking-[0.18em] uppercase border border-[#c4a87c]/20 text-[#c4a87c]/50 hover:border-[#c4a87c]/40 hover:text-[#c4a87c]/70 transition-all duration-300 disabled:opacity-40"
+                    className="ml-auto px-4 py-1.5 text-[9px] font-sans tracking-[0.18em] uppercase border border-white/[0.08] rounded-full text-white/40 hover:border-white/[0.15] hover:text-white/60 transition-all duration-300 disabled:opacity-40"
                 >
                     {loading ? 'Loading...' : 'Refresh'}
                 </button>

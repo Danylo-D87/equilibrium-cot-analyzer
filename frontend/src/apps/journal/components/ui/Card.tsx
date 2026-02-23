@@ -13,7 +13,7 @@ export function Card({ className, children, onClick, onMouseEnter, onMouseLeave 
     return (
         <div
             className={cn(
-                'journal-card border border-white/[0.04] transition-all duration-700 rounded-sm',
+                'journal-card border border-white/[0.06] transition-all duration-500 rounded-[20px]',
                 className,
             )}
             onClick={onClick}

@@ -263,7 +263,7 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
                 <p className="text-destructive-fg text-sm font-medium">{error?.message || 'Unknown error'}</p>
                 <button
                     onClick={() => window.location.reload()}
-                    className="text-xs text-text-secondary hover:text-bronze transition-all duration-300 tracking-[0.14em] uppercase px-6 py-2.5 rounded-sm border border-border hover:border-bronze/20 hover:bg-bronze-glow"
+                    className="text-xs text-text-secondary hover:text-white transition-all duration-300 tracking-[0.14em] uppercase px-6 py-2.5 rounded-full border border-border hover:border-white/[0.15] hover:bg-white/[0.04]"
                 >
                     Reload
                 </button>
@@ -335,8 +335,8 @@ export default function ScreenerTable({ onSelectMarket, reportType = 'legacy', s
                                 <th
                                     key={col.key}
                                     onClick={() => col.sortable && handleSort(col.key, col.sortBy)}
-                                    className={`px-1.5 py-2 text-[10px] font-medium border-b border-r border-border-subtle select-none uppercase tracking-[0.10em] ${col.sortable ? 'cursor-pointer hover:text-bronze' : ''
-                                        } ${sortKey === (col.sortBy || col.key) ? 'text-bronze' : 'text-muted'} ${col.sticky ? 'sticky left-0 z-10' : ''
+                                    className={`px-1.5 py-2 text-[10px] font-medium border-b border-r border-border-subtle select-none uppercase tracking-[0.10em] ${col.sortable ? 'cursor-pointer hover:text-white' : ''
+                                        } ${sortKey === (col.sortBy || col.key) ? 'text-white' : 'text-muted'} ${col.sticky ? 'sticky left-0 z-10' : ''
                                         }`}
                                     style={{ width: col.width, minWidth: col.width, maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis', textAlign: col.align, background: '#0a0907' }}
                                     title={col.label}
@@ -436,7 +436,7 @@ function renderCell(row: EnrichedScreenerRow, col: ScreenerColumn): React.ReactN
             if (col.key === 'name') {
                 const assetName = v ? v.split(' - ')[0] : '';
                 return (
-                    <span className="text-primary group-hover:text-bronze font-medium transition-colors truncate block max-w-[180px]" title={v ?? undefined}>
+                    <span className="text-primary group-hover:text-white font-medium transition-colors truncate block max-w-[180px]" title={v ?? undefined}>
                         {assetName}
                     </span>
                 );

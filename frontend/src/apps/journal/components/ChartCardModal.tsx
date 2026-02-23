@@ -65,18 +65,18 @@ export default function ChartCardModal({ isOpen, onClose, title, children }: Cha
             <div className="absolute inset-0" onClick={onClose} />
             <div className="relative max-w-6xl w-full mx-4">
                 <div className="absolute -top-14 right-0 z-10">
-                    <button onClick={onClose} className="flex items-center justify-center gap-2.5 px-8 py-3 text-[9px] font-medium uppercase tracking-[0.22em] transition-all duration-300 border outline-none focus:outline-none text-white/[0.55] [background:rgba(196,168,124,0.03)] [border-color:rgba(196,168,124,0.12)] hover:[border-color:rgba(196,168,124,0.18)] hover:text-white/[0.68]">
+                    <button onClick={onClose} className="flex items-center justify-center gap-2.5 px-8 py-3 text-[9px] font-medium uppercase tracking-[0.22em] transition-all duration-300 border rounded-full outline-none focus:outline-none text-white/[0.55] border-white/[0.06] hover:border-white/[0.15] hover:text-white/[0.80] hover:bg-white/[0.04]">
                         <X size={14} strokeWidth={1.5} />
                         <span>Close</span>
                     </button>
                 </div>
 
-                <div ref={cardRef} className="bg-[#0a0a0a] border border-white/[0.06] shadow-2xl overflow-hidden relative">
+                <div ref={cardRef} className="bg-[#111111] border border-white/[0.06] rounded-[20px] overflow-hidden relative">
                     {/* Subtle background glow */}
                     <div className="absolute inset-0 pointer-events-none"
                         style={{
                             background: `
-                                radial-gradient(circle at 50% 0%, rgba(138,122,98,0.08) 0%, transparent 70%),
+                                radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 70%),
                                 radial-gradient(circle at 50% 100%, rgba(255,255,255,0.02) 0%, transparent 50%)
                             `,
                         }}
@@ -97,7 +97,7 @@ export default function ChartCardModal({ isOpen, onClose, title, children }: Cha
                                 <span className="text-[10px] font-sans font-medium tracking-[0.25em] text-white/40 uppercase">
                                     {nickname ? `Equilibrium × ${nickname}` : 'Equilibrium'}
                                 </span>
-                                <span className="text-[8px] font-sans tracking-[0.2em] text-[#8a7a62]/60 uppercase">
+                                <span className="text-[8px] font-sans tracking-[0.2em] text-white/30 uppercase">
                                     Analytical Space
                                 </span>
                             </div>
@@ -114,13 +114,13 @@ export default function ChartCardModal({ isOpen, onClose, title, children }: Cha
                         </div>
 
                         {/* Footer line */}
-                        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#8a7a62]/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/[0.04] to-transparent" />
                     </div>
                 </div>
 
                 <div className="mt-6 flex justify-center">
-                    <button onClick={handleCopyImage} disabled={copying} className="flex items-center justify-center gap-2.5 px-8 py-3 text-[9px] font-medium uppercase tracking-[0.22em] transition-all duration-300 border outline-none focus:outline-none text-white/[0.55] [background:rgba(196,168,124,0.03)] [border-color:rgba(196,168,124,0.12)] hover:[border-color:rgba(196,168,124,0.18)] hover:text-white/[0.68] disabled:opacity-40">
-                        {copied ? <><Check size={14} strokeWidth={1.5} /><span>Image copied!</span></> : copying ? <><div className="animate-spin rounded-full h-3.5 w-3.5 border-b border-bronze/50" /><span>Creating...</span></> : <><Copy size={14} strokeWidth={1.5} /><span>Copy chart</span></>}
+                    <button onClick={handleCopyImage} disabled={copying} className="flex items-center justify-center gap-2.5 px-8 py-3 text-[9px] font-medium uppercase tracking-[0.22em] transition-all duration-300 border rounded-full outline-none focus:outline-none bg-white text-black hover:bg-white/90 disabled:opacity-40">
+                        {copied ? <><Check size={14} strokeWidth={1.5} /><span>Image copied!</span></> : copying ? <><div className="animate-spin rounded-full h-3.5 w-3.5 border-b border-white/50" /><span>Creating...</span></> : <><Copy size={14} strokeWidth={1.5} /><span>Copy chart</span></>}
                     </button>
                 </div>
             </div>

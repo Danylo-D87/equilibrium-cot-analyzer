@@ -193,13 +193,13 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                     onClick={handleInputClick}
                     onChange={(e) => { setQuery(e.target.value); setOpen(true); setActiveIdx(0); setActiveCategory(null); }}
                     onKeyDown={handleKeyDown}
-                    className="h-9 pl-10 pr-3 rounded-sm text-[12px] text-primary placeholder-muted focus:outline-none transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                    className="h-9 pl-10 pr-3 rounded-full text-[12px] text-primary placeholder-muted focus:outline-none transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
                     style={{
                         width: open ? '380px' : '200px',
-                        borderColor: open ? 'rgba(196,168,124,0.30)' : 'rgba(255,255,255,0.06)',
-                        border: open ? '1px solid rgba(196,168,124,0.30)' : '1px solid rgba(255,255,255,0.06)',
-                        backgroundColor: open ? '#0e0d0a' : 'rgba(255,255,255,0.03)',
-                        boxShadow: open ? '0 0 0 1px rgba(196,168,124,0.08), 0 10px 40px rgba(0,0,0,0.5)' : 'none',
+                        borderColor: open ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)',
+                        border: open ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(255,255,255,0.06)',
+                        backgroundColor: open ? '#111111' : 'rgba(255,255,255,0.03)',
+                        boxShadow: open ? '0 10px 40px rgba(0,0,0,0.5)' : 'none',
                     }}
                 />
                 {/* Selected market exchange badge */}
@@ -224,10 +224,10 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                         maxHeight: 420,
                         overflow: 'hidden',
                         zIndex: 50,
-                        borderRadius: 3,
-                        background: '#0a0a08',
-                        border: '1px solid rgba(196,168,124,0.12)',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.9), 0 0 0 1px rgba(0,0,0,0.5), inset 0 1px 0 rgba(196,168,124,0.03)',
+                        borderRadius: 16,
+                        background: '#111111',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.9)',
                         animation: 'popoverIn 0.18s ease-out',
                     }}
                 >
@@ -235,7 +235,7 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                     {!query && grouped.length > 1 && (
                         <div
                             className="flex-shrink-0 px-3 py-2 flex gap-1 flex-wrap"
-                            style={{ background: 'linear-gradient(180deg, rgba(196,168,124,0.04) 0%, rgba(196,168,124,0.01) 100%)', borderBottom: '1px solid rgba(196,168,124,0.06)' }}
+                            style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
                         >
                             {grouped.map(g => {
                                 const isActive = activeCategory === g.category;
@@ -250,9 +250,9 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                                             fontWeight: 700,
                                             letterSpacing: '0.12em',
                                             textTransform: 'uppercase' as const,
-                                            background: isActive ? 'rgba(196,168,124,0.12)' : 'transparent',
-                                            color: isActive ? '#c4a87c' : 'rgba(255,255,255,0.30)',
-                                            border: isActive ? '1px solid rgba(196,168,124,0.18)' : '1px solid transparent',
+                                            background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                                            color: isActive ? '#ffffff' : 'rgba(255,255,255,0.30)',
+                                            border: isActive ? '1px solid rgba(255,255,255,0.12)' : '1px solid transparent',
                                             transition: 'all 0.3s',
                                         }}
                                     >
@@ -267,7 +267,7 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                     <div
                         ref={listRef}
                         className="overflow-y-auto overflow-x-hidden"
-                        style={{ maxHeight: !query && grouped.length > 1 ? 'calc(420px - 40px)' : '420px', background: '#0a0a08' }}
+                        style={{ maxHeight: !query && grouped.length > 1 ? 'calc(420px - 40px)' : '420px', background: '#111111' }}
                     >
                         {flat.length === 0 ? (
                             <div className="px-4 py-12 text-center">
@@ -283,11 +283,11 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                                         className="sticky top-0 z-10"
                                         style={{
                                             padding: '8px 14px',
-                                            background: '#0c0b09',
-                                            borderBottom: '1px solid rgba(196,168,124,0.05)',
+                                            background: '#161616',
+                                            borderBottom: '1px solid rgba(255,255,255,0.04)',
                                         }}
                                     >
-                                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.16em', color: 'rgba(196,168,124,0.50)', textTransform: 'uppercase' }}>
+                                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.16em', color: 'rgba(255,255,255,0.40)', textTransform: 'uppercase' }}>
                                             {group.display}
                                         </span>
                                         <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.15)', marginLeft: 8, fontWeight: 500 }}>{group.markets.length}</span>
@@ -309,25 +309,25 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                                                 style={{
                                                     padding: '7px 14px',
                                                     background: isActive
-                                                        ? 'rgba(196,168,124,0.06)'
+                                                        ? 'rgba(255,255,255,0.06)'
                                                         : isSelected
-                                                            ? 'rgba(196,168,124,0.03)'
+                                                            ? 'rgba(255,255,255,0.03)'
                                                             : 'transparent',
-                                                    borderLeft: isSelected ? '2px solid rgba(196,168,124,0.40)' : '2px solid transparent',
+                                                    borderLeft: isSelected ? '2px solid rgba(255,255,255,0.30)' : '2px solid transparent',
                                                 }}
                                                 onMouseEnter={e => {
-                                                    if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(196,168,124,0.04)';
+                                                    if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
                                                 }}
                                                 onMouseLeave={e => {
                                                     (e.currentTarget as HTMLElement).style.background = isActive
-                                                        ? 'rgba(196,168,124,0.06)'
-                                                        : isSelected ? 'rgba(196,168,124,0.03)' : 'transparent';
+                                                        ? 'rgba(255,255,255,0.06)'
+                                                        : isSelected ? 'rgba(255,255,255,0.03)' : 'transparent';
                                                 }}
                                             >
                                                 {/* Selected indicator */}
                                                 <div style={{ width: 5, flexShrink: 0 }}>
                                                     {isSelected && (
-                                                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#c4a87c' }} />
+                                                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#ffffff' }} />
                                                     )}
                                                 </div>
 
@@ -338,7 +338,7 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                                                     overflow: 'hidden',
                                                     textOverflow: 'ellipsis',
                                                     whiteSpace: 'nowrap',
-                                                    color: isSelected ? '#c4a87c' : 'rgba(255,255,255,0.55)',
+                                                    color: isSelected ? '#ffffff' : 'rgba(255,255,255,0.55)',
                                                     fontWeight: isSelected ? 500 : 400,
                                                 }}>
                                                     {m.name.split(' - ')[0]}
@@ -354,8 +354,8 @@ export default function MarketSelector({ markets, selected, onChange }: MarketSe
                                                     color: 'rgba(255,255,255,0.18)',
                                                     padding: '2px 6px',
                                                     borderRadius: 2,
-                                                    background: 'rgba(196,168,124,0.03)',
-                                                    border: '1px solid rgba(196,168,124,0.06)',
+                                                    background: 'rgba(255,255,255,0.03)',
+                                                    border: '1px solid rgba(255,255,255,0.06)',
                                                 }}>
                                                     {m.exchange_code || m.exchange}
                                                 </span>

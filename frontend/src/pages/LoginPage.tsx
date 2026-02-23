@@ -3,8 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../lib/api';
 
-
-
 export default function LoginPage() {
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -33,76 +31,75 @@ export default function LoginPage() {
 
     return (
         <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
-            <div className="auth-page-enter w-full max-w-[380px]">
+            <div className="auth-page-enter w-full max-w-[400px]">
                 {/* Brand */}
-                <Link to="/" className="block text-center mb-12 group">
-                    <span className="font-serif text-[15px] tracking-[0.18em] text-bronze/60 group-hover:text-bronze transition-colors duration-300 uppercase">
+                <Link to="/" className="block text-center mb-14 group">
+                    <span className="font-sans text-[14px] tracking-[0.12em] text-white/40 group-hover:text-white/70 transition-colors duration-300 uppercase">
                         Equilibrium
                     </span>
                 </Link>
 
-                {/* Title */}
-                <h1 className="text-[11px] font-sans font-medium tracking-[0.25em] text-white/50 uppercase text-center mb-8">
-                    Sign In
-                </h1>
+                {/* Card */}
+                <div className="bg-[#111111] border border-white/[0.04] rounded-[20px] p-8">
+                    <h1 className="text-[11px] font-sans font-medium tracking-[0.2em] text-white/40 uppercase text-center mb-8">
+                        Sign In
+                    </h1>
 
-                {/* Error */}
-                {error && (
-                    <div className="mb-6 px-4 py-3 border border-red-500/20 bg-red-500/5 rounded-sm">
-                        <p className="text-[11px] text-red-400/80 text-center">{error}</p>
-                    </div>
-                )}
+                    {error && (
+                        <div className="mb-6 px-4 py-3 border border-red-500/20 bg-red-500/5 rounded-[12px]">
+                            <p className="text-[12px] text-red-400/80 text-center">{error}</p>
+                        </div>
+                    )}
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-5">
-                    <div>
-                        <label className="block text-[9px] font-sans tracking-[0.2em] text-white/30 uppercase mb-2">
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-sm px-4 py-2.5
-                                       text-[13px] text-white/80 placeholder-white/20
-                                       focus:outline-none focus:border-bronze/30 transition-colors"
-                            placeholder="your@email.com"
-                        />
-                    </div>
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                            <label className="block text-[10px] font-sans tracking-[0.15em] text-white/30 uppercase mb-2.5">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                required
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                className="w-full bg-white/[0.03] border border-white/[0.06] rounded-[12px] px-4 py-3
+                                           text-[14px] text-white/80 placeholder-white/20
+                                           focus:outline-none focus:border-white/[0.16] transition-colors"
+                                placeholder="your@email.com"
+                            />
+                        </div>
 
-                    <div>
-                        <label className="block text-[9px] font-sans tracking-[0.2em] text-white/30 uppercase mb-2">
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            required
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-sm px-4 py-2.5
-                                       text-[13px] text-white/80 placeholder-white/20
-                                       focus:outline-none focus:border-bronze/30 transition-colors"
-                            placeholder="********"
-                        />
-                    </div>
+                        <div>
+                            <label className="block text-[10px] font-sans tracking-[0.15em] text-white/30 uppercase mb-2.5">
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                required
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                className="w-full bg-white/[0.03] border border-white/[0.06] rounded-[12px] px-4 py-3
+                                           text-[14px] text-white/80 placeholder-white/20
+                                           focus:outline-none focus:border-white/[0.16] transition-colors"
+                                placeholder="********"
+                            />
+                        </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full py-2.5 border border-bronze/25 bg-bronze/[0.06] rounded-sm
-                                   text-[10px] font-sans font-medium tracking-[0.2em] text-bronze/80 uppercase
-                                   hover:bg-bronze/[0.12] hover:border-bronze/40 transition-all duration-300
-                                   disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                        {loading ? 'Signing in...' : 'Sign In'}
-                    </button>
-                </form>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-3 bg-white text-black rounded-full
+                                       text-[12px] font-sans font-medium tracking-[0.1em] uppercase
+                                       hover:bg-white/90 transition-all duration-300
+                                       disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            {loading ? 'Signing in...' : 'Sign In'}
+                        </button>
+                    </form>
+                </div>
 
-                {/* Footer link */}
-                <p className="mt-8 text-center text-[11px] text-white/25">
+                <p className="mt-8 text-center text-[12px] text-white/25">
                     Don't have an account?{' '}
-                    <Link to="/register" className="text-bronze/50 hover:text-bronze transition-colors">
+                    <Link to="/register" className="text-white/50 hover:text-white/80 transition-colors">
                         Create one
                     </Link>
                 </p>
@@ -110,4 +107,3 @@ export default function LoginPage() {
         </div>
     );
 }
-

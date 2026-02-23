@@ -1,6 +1,6 @@
 /** Journal module constants */
 
-export const TRADE_TYPES = ['Option', 'Futures', 'Crypto'] as const;
+export const TRADE_TYPES = ['Option', 'Futures'] as const;
 export const TRADE_STYLES = ['Swing', 'Intraday', 'Smart Idea'] as const;
 export const TRADE_DIRECTIONS = ['Long', 'Short'] as const;
 export const TRADE_STATUSES = ['TP', 'SL', 'BE', 'Active'] as const;
