@@ -17,6 +17,7 @@ from app.modules.prices.scheduler import price_update_manager, get_price_update_
 from app.modules.cot.schemas import (
     MarketMeta, MarketDetailResponse, ScreenerRow,
     GroupDef, StatusResponse, PaginatedResponse,
+    DashboardResponse,
 )
 from app.core.cache import TTLCache
 from app.middleware.auth import require_permission
@@ -36,10 +37,12 @@ router = APIRouter(
 MARKET_CACHE_TTL = 600       # 10 min — individual market detail
 SCREENER_CACHE_TTL = 300     # 5 min — screener table
 MARKETS_LIST_CACHE_TTL = 600 # 10 min — markets list
+DASHBOARD_CACHE_TTL = 600    # 10 min — dashboard data
 
 _market_cache = TTLCache(name="cot.market", default_ttl=MARKET_CACHE_TTL)
 _screener_cache = TTLCache(name="cot.screener", default_ttl=SCREENER_CACHE_TTL)
 _markets_list_cache = TTLCache(name="cot.markets_list", default_ttl=MARKETS_LIST_CACHE_TTL)
+_dashboard_cache = TTLCache(name="cot.dashboard", default_ttl=DASHBOARD_CACHE_TTL)
 
 
 def invalidate_cot_caches() -> None:
@@ -47,6 +50,7 @@ def invalidate_cot_caches() -> None:
     _market_cache.invalidate()
     _screener_cache.invalidate()
     _markets_list_cache.invalidate()
+    _dashboard_cache.invalidate()
     logger.info("All COT caches invalidated")
 
 
@@ -66,6 +70,34 @@ SubType = Literal["fo", "co"]
 # ==================================================================
 # Endpoints
 # ==================================================================
+
+
+@router.get("/dashboard/{code}", response_model=DashboardResponse)
+async def get_dashboard(
+    code: str,
+    report_type: ReportType | None = None,
+    subtype: SubType = "fo",
+    service: CotService = Depends(get_cot_service),
+):
+    """Dashboard data for a single market.
+
+    Returns raw weekly data (oldest → newest) with g1-g5 columns
+    for frontend computation of percentiles, COT Index, flips, etc.
+
+    If *report_type* is omitted, auto-detects the primary report
+    based on market sector.
+    """
+    cache_key = f"dashboard:{code}:{report_type or 'auto'}:{subtype}"
+    cached = _dashboard_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    data = await asyncio.to_thread(service.get_dashboard, code, report_type, subtype)
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"Market '{code}' not found")
+
+    _dashboard_cache.set(cache_key, data)
+    return data
 
 @router.get("/markets/{report_type}/{subtype}", response_model=list[MarketMeta])
 async def list_markets(
@@ -144,6 +176,29 @@ async def get_screener(
         rows = await asyncio.to_thread(service.get_screener, report_type, subtype)
         if not rows:
             raise HTTPException(status_code=404, detail="No screener data for this combination")
+        _screener_cache.set(cache_key, rows)
+
+    return PaginatedResponse(items=rows, total=len(rows), limit=0, offset=0)
+
+
+@router.get("/screener-v2", response_model=PaginatedResponse)
+async def get_screener_v2(
+    subtype: SubType = "fo",
+    service: CotService = Depends(get_cot_service),
+):
+    """Screener V2: auto-detects primary report type per market.
+
+    Returns one row per market using the best report type for its sector
+    (TFF for financials, Disagg for commodities, Legacy fallback).
+    """
+    cache_key = f"screener-v2:{subtype}"
+    cached = _screener_cache.get(cache_key)
+    if cached is not None:
+        rows = cached
+    else:
+        rows = await asyncio.to_thread(service.get_screener_v2, subtype)
+        if not rows:
+            raise HTTPException(status_code=404, detail="No screener data found")
         _screener_cache.set(cache_key, rows)
 
     return PaginatedResponse(items=rows, total=len(rows), limit=0, offset=0)

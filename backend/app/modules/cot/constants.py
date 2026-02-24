@@ -41,6 +41,11 @@ COLUMN_MAP_LEGACY = {
     "% of OI-Nonreportable-Short (All)": "g3_pct_short",
     "Total Reportable Positions-Long (All)": "total_rept_long",
     "Total Reportable Positions-Short (All)": "total_rept_short",
+    # Concentration ratios (Gross, All)
+    "Concentration-Gross LT 4 TDR-Long (All)": "conc_top4_long",
+    "Concentration-Gross LT 4 TDR-Short (All)": "conc_top4_short",
+    "Concentration-Gross LT 8 TDR-Long (All)": "conc_top8_long",
+    "Concentration-Gross LT 8 TDR-Short (All)": "conc_top8_short",
 }
 
 COLUMN_MAP_DISAGG = {
@@ -92,6 +97,11 @@ COLUMN_MAP_DISAGG = {
     "Pct_of_OI_NonRept_Short_All": "g5_pct_short",
     "Tot_Rept_Positions_Long_All": "total_rept_long",
     "Tot_Rept_Positions_Short_All": "total_rept_short",
+    # Concentration ratios (Gross, All)
+    "Conc_Gross_LE_4_TDR_Long_All": "conc_top4_long",
+    "Conc_Gross_LE_4_TDR_Short_All": "conc_top4_short",
+    "Conc_Gross_LE_8_TDR_Long_All": "conc_top8_long",
+    "Conc_Gross_LE_8_TDR_Short_All": "conc_top8_short",
 }
 
 COLUMN_MAP_TFF = {
@@ -146,6 +156,11 @@ COLUMN_MAP_TFF = {
     "Pct_of_OI_NonRept_Short_All": "g5_pct_short",
     "Tot_Rept_Positions_Long_All": "total_rept_long",
     "Tot_Rept_Positions_Short_All": "total_rept_short",
+    # Concentration ratios (Gross, All)
+    "Conc_Gross_LE_4_TDR_Long_All": "conc_top4_long",
+    "Conc_Gross_LE_4_TDR_Short_All": "conc_top4_short",
+    "Conc_Gross_LE_8_TDR_Long_All": "conc_top8_long",
+    "Conc_Gross_LE_8_TDR_Short_All": "conc_top8_short",
 }
 
 COLUMN_MAPS: dict[str, dict[str, str]] = {

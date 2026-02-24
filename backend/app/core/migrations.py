@@ -80,7 +80,16 @@ _MIGRATIONS: list[tuple[int, str, str]] = [
         """,
     ),
     # ── Future migrations go here ──────────────────────────────
-    # (2, "Add some_column to cot_data", "ALTER TABLE cot_data ADD COLUMN some_column REAL;"),
+    (   
+        2,
+        "Add concentration ratio columns (top-4/top-8 gross %)",
+        """
+        ALTER TABLE cot_data ADD COLUMN conc_top4_long REAL;
+        ALTER TABLE cot_data ADD COLUMN conc_top4_short REAL;
+        ALTER TABLE cot_data ADD COLUMN conc_top8_long REAL;
+        ALTER TABLE cot_data ADD COLUMN conc_top8_short REAL;
+        """,
+    ),
 ]
 
 

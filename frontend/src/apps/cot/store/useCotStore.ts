@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { ReportType, Subtype } from '../types';
+import type { ReportType, Subtype, DisplayRange } from '../types';
 
 interface CotState {
     // Persisted
@@ -8,10 +8,15 @@ interface CotState {
     subtype: Subtype;
     selectedMarketCode: string | null;
 
+    // Dashboard
+    displayRange: DisplayRange;
+
     // Transient
     fitMode: boolean;
     docsOpen: boolean;
     chartOpen: boolean;
+    /** Report types available for the current market (set by DashboardPage). */
+    availableReports: ReportType[];
 
     // Actions
     setReportType: (rt: ReportType) => void;
@@ -21,6 +26,8 @@ interface CotState {
     toggleFitMode: () => void;
     setDocsOpen: (open: boolean) => void;
     setChartOpen: (open: boolean) => void;
+    setDisplayRange: (range: DisplayRange) => void;
+    setAvailableReports: (reports: ReportType[]) => void;
 }
 
 export const useCotStore = create<CotState>()(
@@ -31,10 +38,14 @@ export const useCotStore = create<CotState>()(
             subtype: 'fo',
             selectedMarketCode: null,
 
+            // Dashboard defaults
+            displayRange: '2Y',
+
             // Transient defaults
             fitMode: false,
             docsOpen: false,
             chartOpen: false,
+            availableReports: [],
 
             // Actions
             setReportType: (reportType) => set({ reportType }),
@@ -44,6 +55,8 @@ export const useCotStore = create<CotState>()(
             toggleFitMode: () => set((s) => ({ fitMode: !s.fitMode })),
             setDocsOpen: (open) => set({ docsOpen: open }),
             setChartOpen: (open) => set({ chartOpen: open }),
+            setDisplayRange: (displayRange) => set({ displayRange }),
+            setAvailableReports: (availableReports) => set({ availableReports }),
         }),
         {
             name: 'equilibrium-cot',
@@ -51,6 +64,7 @@ export const useCotStore = create<CotState>()(
                 reportType: state.reportType,
                 subtype: state.subtype,
                 selectedMarketCode: state.selectedMarketCode,
+                displayRange: state.displayRange,
             }),
         },
     ),

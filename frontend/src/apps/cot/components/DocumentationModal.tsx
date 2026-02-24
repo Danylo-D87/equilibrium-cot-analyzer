@@ -5,6 +5,7 @@ import { T, SECTIONS } from './documentation/sections';
 import ReportDocContent from './documentation/ReportDocContent';
 import ScreenerDocContent from './documentation/ScreenerDocContent';
 import ChartsDocContent from './documentation/ChartsDocContent';
+import DashboardDocContent from './documentation/DashboardDocContent';
 
 /* =====================================================
    Modal wrapper  (~190 lines — layout + sidebar only)
@@ -82,7 +83,7 @@ export default function DocumentationModal({ isOpen, onClose }: DocumentationMod
 
                     {/* Doc Tab Switcher */}
                     <div className="px-3 py-3 border-b border-border flex gap-1">
-                        {['report', 'charts', 'screener'].map(tab => (
+                        {['report', 'charts', 'dashboard', 'screener'].map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => switchDocTab(tab)}
@@ -91,7 +92,10 @@ export default function DocumentationModal({ isOpen, onClose }: DocumentationMod
                                     : 'text-muted hover:text-text-secondary hover:bg-surface-hover'
                                     }`}
                             >
-                                {tab === 'report' ? T.tabReport[lang] : tab === 'charts' ? T.tabCharts[lang] : T.tabScreener[lang]}
+                                {tab === 'report' ? T.tabReport[lang]
+                                    : tab === 'charts' ? T.tabCharts[lang]
+                                    : tab === 'dashboard' ? T.tabDashboard[lang]
+                                    : T.tabScreener[lang]}
                             </button>
                         ))}
                     </div>
@@ -184,6 +188,7 @@ export default function DocumentationModal({ isOpen, onClose }: DocumentationMod
                         {docTab === 'report' && <ReportDocContent lang={lang} />}
                         {docTab === 'screener' && <ScreenerDocContent lang={lang} />}
                         {docTab === 'charts' && <ChartsDocContent lang={lang} />}
+                        {docTab === 'dashboard' && <DashboardDocContent lang={lang} />}
                     </div>
                 </div>
             </div>

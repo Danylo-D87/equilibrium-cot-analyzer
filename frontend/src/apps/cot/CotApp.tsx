@@ -251,7 +251,7 @@ export default function CotApp() {
                             )}
                         </>
                     ) : (
-                        <ScreenerTable onSelectMarket={handleScreenerSelect} reportType={reportType} subtype={subtype} />
+                        <ScreenerTable onSelectMarket={handleScreenerSelect} />
                     )}
                 </ErrorBoundary>
             </main>

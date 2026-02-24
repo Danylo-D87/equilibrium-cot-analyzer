@@ -3,7 +3,7 @@
 // =====================================================
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchMarkets, fetchMarketData, fetchScreener, fetchGroups } from '@/lib/api';
+import { fetchMarkets, fetchMarketData, fetchScreener, fetchGroups, fetchScreenerV2 } from '@/lib/api';
 
 /**
  * Fetch market list for a given report type + subtype.
@@ -51,5 +51,25 @@ export function useScreenerData(reportType: string, subtype: string) {
         isLoading: screener.isLoading || groupsQuery.isLoading,
         error: screener.error || groupsQuery.error,
         refetch: screener.refetch,
+    };
+}
+
+/**
+ * Fetch all markets in a single request using the screener-v2 endpoint.
+ * Each row uses its auto-detected primary report type — no report-type
+ * filter needed.
+ */
+export function useAllScreenerData() {
+    const { data, isLoading, error, refetch } = useQuery({
+        queryKey: ['screener-v2'],
+        queryFn: () => fetchScreenerV2('fo'),
+        staleTime: 5 * 60_000,
+    });
+
+    return {
+        screenerData: data ?? null,
+        isLoading,
+        error,
+        refetch,
     };
 }

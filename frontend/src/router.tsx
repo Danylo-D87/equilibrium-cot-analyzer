@@ -1,30 +1,42 @@
-﻿
-import { createBrowserRouter } from 'react-router-dom';
+﻿import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import AppShell from './layouts/AppShell';
 import PublicLayout from './layouts/PublicLayout';
 import Landing from './pages/Landing';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import OAuthCallbackPage from './pages/OAuthCallbackPage';
-import CotApp from './apps/cot/CotApp';
 import JournalDashboard from './apps/journal/pages/Dashboard';
 import JournalPage from './apps/journal/pages/JournalPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
 import AdminPanel from './pages/admin/AdminPanel';
 
+/* -- Lazy-loaded COT pages ----------------------------------------- */
+const ScreenerPage  = lazy(() => import('./apps/cot/pages/ScreenerPage'));
+const DashboardPage = lazy(() => import('./apps/cot/pages/DashboardPage'));
+const ReportPage    = lazy(() => import('./apps/cot/pages/ReportPage'));
+
+const CotSuspense = ({ children }: { children: React.ReactNode }) => (
+    <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500">Loading...</div>}>
+        {children}
+    </Suspense>
+);
+
 /**
  * Application router.
  *
  * Routes:
- *  /              в†’ Landing page (app hub)
- *  /login         в†’ Sign in
- *  /register      в†’ Create account
- *  /auth/callback в†’ OAuth callback handler
- *  /cot           в†’ COT Analyzer вЂ“ report view   (requires auth + 'cot' perm)
- *  /cot/screener  в†’ COT Analyzer вЂ“ screener view (requires auth + 'cot' perm)
- *  /journal       в†’ Trading Journal вЂ“ dashboard   (requires auth + 'journal' perm)
- *  /journal/orphan в†’ Trading Journal вЂ“ orphan mgmt (requires auth + 'journal' perm)
+ *  /                      -> Landing page (app hub)
+ *  /login                 -> Sign in
+ *  /register              -> Create account
+ *  /auth/callback         -> OAuth callback handler
+ *  /cot                   -> Redirect -> /cot/screener
+ *  /cot/screener          -> COT Screener          (requires auth + 'cot' perm)
+ *  /cot/dashboard/:code   -> COT Dashboard          (requires auth + 'cot' perm)
+ *  /cot/report/:code      -> COT Report Table       (requires auth + 'cot' perm)
+ *  /journal               -> Trading Journal - dashboard   (requires auth + 'journal' perm)
+ *  /journal/orphan        -> Trading Journal - orphan mgmt (requires auth + 'journal' perm)
  */
 export const router = createBrowserRouter([
     {
@@ -44,11 +56,19 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         path: '/cot',
-                        element: <CotApp />,
+                        element: <Navigate to="/cot/screener" replace />,
                     },
                     {
                         path: '/cot/screener',
-                        element: <CotApp />,
+                        element: <CotSuspense><ScreenerPage /></CotSuspense>,
+                    },
+                    {
+                        path: '/cot/dashboard/:code',
+                        element: <CotSuspense><DashboardPage /></CotSuspense>,
+                    },
+                    {
+                        path: '/cot/report/:code',
+                        element: <CotSuspense><ReportPage /></CotSuspense>,
                     },
                 ],
             },

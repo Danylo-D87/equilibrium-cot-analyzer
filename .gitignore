@@ -40,6 +40,13 @@ backend/_legacy_*
 # === Environment ===
 .env
 
+# === SSH Keys ===
+*.pem
+
+# === Dev notes ===
+context.txt
+prompt.txt
+
 # === Uploads (user images) ===
 backend/uploads/
 

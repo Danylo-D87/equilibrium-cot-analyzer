@@ -22,6 +22,7 @@ export const T = {
     tabReport: { ua: 'Report', en: 'Report' },
     tabCharts: { ua: 'Charts', en: 'Charts' },
     tabScreener: { ua: 'Screener', en: 'Screener' },
+    tabDashboard: { ua: 'Dashboard', en: 'Dashboard' },
 };
 
 export const SECTIONS: Record<string, (lang: string) => Section[]> = {
@@ -95,5 +96,24 @@ export const SECTIONS: Record<string, (lang: string) => Section[]> = {
         { id: 'ch-8signals', title: '8 COT Signals', icon: '⚡' },
         { id: 'ch-bubbles', title: lang === 'ua' ? 'Режим Bubbles' : 'Bubbles View', icon: '◉' },
         { id: 'ch-positions', title: lang === 'ua' ? 'Режим Positions' : 'Positions View', icon: '▣' },
+    ],
+    dashboard: (lang) => [
+        { id: 'dash-overview', title: lang === 'ua' ? 'Огляд Dashboard' : 'Dashboard Overview', icon: '◈' },
+        { id: 'dash-net', title: 'Net Long / Short', icon: '◉' },
+        { id: 'dash-divergence', title: lang === 'ua' ? 'Дивергенція' : 'Divergence', icon: '◎' },
+        { id: 'dash-oi', title: 'OI Pulse', icon: '◇' },
+        { id: 'dash-distribution', title: lang === 'ua' ? 'Розподіл' : 'Distribution', icon: '▣' },
+        { id: 'dash-flip', title: 'FLIP Detection', icon: '⚡' },
+        {
+            id: 'dash-indicators', title: lang === 'ua' ? 'Індикатори' : 'Indicators', icon: '◈', children: [
+                { id: 'dash-market-power', title: 'Market Power' },
+                { id: 'dash-velocity', title: 'Velocity' },
+                { id: 'dash-sentiment', title: lang === 'ua' ? 'Sentiment Divergence' : 'Sentiment Divergence' },
+            ]
+        },
+        { id: 'dash-concentration', title: 'Concentration', icon: '◉' },
+        { id: 'dash-triple', title: 'Triple Lookback', icon: '◎' },
+        { id: 'dash-sector', title: 'Sector Context', icon: '◇' },
+        { id: 'dash-range', title: lang === 'ua' ? 'Діапазон' : 'Range Selector', icon: '⚙' },
     ],
 };

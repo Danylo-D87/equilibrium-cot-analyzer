@@ -182,6 +182,68 @@ class StatusResponse(BaseModel):
 
 
 # ------------------------------------------------------------------
+# Dashboard
+# ------------------------------------------------------------------
+
+class DashboardWeekSchema(BaseModel):
+    """Single week of raw COT data for dashboard computation."""
+
+    model_config = ConfigDict(extra="allow")
+
+    date: str
+    open_interest: float
+    oi_change: float
+
+
+class DashboardMarketInfo(BaseModel):
+    """Market metadata for dashboard header."""
+
+    code: str
+    name: str
+    exchange_code: str
+    sector: str
+    primary_report: str
+    spec_group: str
+    comm_group: str | None = None
+    available_reports: list[str]
+
+
+class DashboardPricePoint(BaseModel):
+    """Single price data point."""
+
+    date: str
+    close: float
+
+
+class ConcentrationData(BaseModel):
+    """Concentration ratio data (Top 4/8 traders)."""
+
+    top4_long_pct: float | None = None
+    top4_short_pct: float | None = None
+    top8_long_pct: float | None = None
+    top8_short_pct: float | None = None
+
+
+class DashboardMeta(BaseModel):
+    """Dashboard metadata."""
+
+    data_as_of: str
+    published_at: str | None = None
+    latest_week_index: int
+
+
+class DashboardResponse(BaseModel):
+    """Full response for GET /cot/dashboard/{code}."""
+
+    market: DashboardMarketInfo
+    groups: list[GroupDef]
+    weeks: list[DashboardWeekSchema]
+    prices: list[DashboardPricePoint]
+    concentration: ConcentrationData | None = None
+    meta: DashboardMeta
+
+
+# ------------------------------------------------------------------
 # Paginated response wrapper
 # ------------------------------------------------------------------
 

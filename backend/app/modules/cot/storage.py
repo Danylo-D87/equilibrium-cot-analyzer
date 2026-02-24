@@ -41,6 +41,8 @@ class CotStorage:
         "g5_long_change", "g5_short_change", "g5_spread_change",
         "g5_pct_long", "g5_pct_short", "g5_pct_spread",
         "total_rept_long", "total_rept_short",
+        "conc_top4_long", "conc_top4_short",
+        "conc_top8_long", "conc_top8_short",
     ]
 
     # Columns actually used by CotCalculator (avoids SELECT *)
@@ -52,6 +54,8 @@ class CotStorage:
         "g3_long", "g3_short", "g3_spread", "g3_long_change", "g3_short_change",
         "g4_long", "g4_short", "g4_spread", "g4_long_change", "g4_short_change",
         "g5_long", "g5_short", "g5_spread", "g5_long_change", "g5_short_change",
+        "conc_top4_long", "conc_top4_short",
+        "conc_top8_long", "conc_top8_short",
     ]
 
     _QUERY_COLS_SQL = ", ".join(_QUERY_COLS)
@@ -271,6 +275,15 @@ class CotStorage:
                 "first_date": row[3],
                 "last_date": row[4],
             }
+
+    def get_available_reports(self, cftc_code: str) -> list[str]:
+        """Return which report types have data for a given market code."""
+        with self._conn() as conn:
+            cur = conn.execute(
+                "SELECT DISTINCT report_type FROM cot_data WHERE cftc_contract_code = ?",
+                (cftc_code,),
+            )
+            return [row[0] for row in cur.fetchall()]
 
     def delete_report_data(self, report_type: str, subtype: str) -> None:
         with self._conn() as conn:

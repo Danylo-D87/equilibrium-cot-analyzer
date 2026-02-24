@@ -6,7 +6,7 @@
 // On 401, a silent refresh is attempted once before failing.
 // =====================================================
 
-import type { Market, MarketData, Group, ScreenerRow } from '../apps/cot/types';
+import type { Market, MarketData, Group, ScreenerRow, DashboardResponse } from '../apps/cot/types';
 
 /** Custom API error with status code */
 export class ApiError extends Error {
@@ -95,8 +95,8 @@ export async function fetchJson<T>(
             if (body?.detail) {
                 detail = Array.isArray(body.detail)
                     ? body.detail.map((e: { loc?: unknown[]; msg?: string }) =>
-                          `${(e.loc ?? []).slice(1).join('.')}: ${e.msg ?? e}`
-                      ).join(' | ')
+                        `${(e.loc ?? []).slice(1).join('.')}: ${e.msg ?? e}`
+                    ).join(' | ')
                     : String(body.detail);
             }
         } catch {
@@ -134,7 +134,31 @@ export async function fetchScreener(reportType: string, subtype: string): Promis
     return Array.isArray(res) ? res : res.items;
 }
 
+/**
+ * Fetch screener-v2 data: all markets, each using its auto-detected
+ * primary report type. No report-type filter required.
+ */
+export async function fetchScreenerV2(subtype = 'fo'): Promise<ScreenerRow[]> {
+    const res = await fetchJson<{ items: ScreenerRow[] } | ScreenerRow[]>(
+        `${BASE}/screener-v2?subtype=${subtype}`,
+    );
+    return Array.isArray(res) ? res : res.items;
+}
+
 /** Fetch group definitions */
 export async function fetchGroups(reportType: string): Promise<Group[]> {
     return fetchJson<Group[]>(`${BASE}/groups/${reportType}`);
+}
+
+/** Fetch dashboard data (5Y raw weeks + prices) for a single market. */
+export async function fetchDashboard(
+    code: string,
+    reportType?: string,
+    subtype?: string,
+): Promise<DashboardResponse> {
+    const params = new URLSearchParams();
+    if (reportType) params.set('report_type', reportType);
+    if (subtype) params.set('subtype', subtype);
+    const qs = params.toString();
+    return fetchJson<DashboardResponse>(`${BASE}/dashboard/${code}${qs ? `?${qs}` : ''}`);
 }

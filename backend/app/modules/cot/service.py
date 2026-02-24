@@ -16,6 +16,30 @@ from app.utils.categories import build_market_meta
 
 logger = logging.getLogger(__name__)
 
+# Maps backend category → frontend sector label
+_CATEGORY_TO_SECTOR: dict[str, str] = {
+    "currencies": "Currencies",
+    "crypto": "Crypto",
+    "metals": "Metals",
+    "energy": "Energy",
+    "grains": "Grains",
+    "softs": "Softs",
+    "livestock": "Livestock",
+    "indices": "Indices",
+    "rates": "Rates",
+}
+
+# Primary report type heuristic: use disagg for commodities, legacy for financial
+_COMMODITY_SECTORS = {"Metals", "Energy", "Grains", "Softs", "Livestock"}
+_FINANCIAL_SECTORS = {"Currencies", "Crypto", "Indices", "Rates"}
+
+# Spec/comm group mapping per report type
+_SPEC_GROUP: dict[str, str] = {"legacy": "g1", "disagg": "g3", "tff": "g3"}
+# NOTE: TFF has no single "commercial" equivalent — g1 (Dealers) is used as a
+# rough proxy for the hedging counterpart. For per-market accuracy the frontend
+# overrides this via assetConfig (e.g. Indices use g2 = Asset Managers as comm).
+_COMM_GROUP: dict[str, str] = {"legacy": "g2", "disagg": "g1", "tff": "g1"}
+
 
 class CotService:
     """Read-only service for COT API responses."""
@@ -131,6 +155,48 @@ class CotService:
         return rows, total
 
     # ------------------------------------------------------------------
+    # Screener V2 (auto-detect primary report per market)
+    # ------------------------------------------------------------------
+
+    def get_screener_v2(self, subtype: str = "fo") -> list[dict]:
+        """Build screener rows using auto-detected primary report per market.
+
+        Iterates all report types, de-duplicates by market code
+        keeping the best (primary) report type per sector classification.
+        """
+        # Collect all market codes across report types
+        seen: dict[str, dict] = {}  # code → best screener row
+
+        for rt in ("tff", "disagg", "legacy"):
+            all_data = self.store.get_all_market_data_bulk(rt, subtype)
+            if not all_data:
+                continue
+
+            for code, raw_rows in all_data.items():
+                if not raw_rows or code in seen:
+                    continue
+
+                name = raw_rows[0].get("market_and_exchange") or code
+                exchange_code = raw_rows[0].get("exchange_code", "")
+                sector = self._classify_sector(name)
+                available = self.store.get_available_reports(code)
+                primary = self._primary_report(sector, available)
+
+                # Only include if this report type IS the primary one
+                if rt != primary:
+                    continue
+
+                entry = self._builder.build_screener_entry(
+                    code, name, exchange_code, rt, raw_rows,
+                )
+                if entry:
+                    entry["sector"] = sector
+                    entry["primary_report"] = primary
+                    seen[code] = entry
+
+        return list(seen.values())
+
+    # ------------------------------------------------------------------
     # Groups metadata
     # ------------------------------------------------------------------
 
@@ -148,3 +214,142 @@ class CotService:
             for st in cot_settings.subtypes:
                 variants[f"{rt}_{st}"] = self.store.get_db_stats(rt, st)
         return {"overall": overall, "variants": variants}
+
+    # ------------------------------------------------------------------
+    # Dashboard (new 3-page flow)
+    # ------------------------------------------------------------------
+
+    def _classify_sector(self, market_name: str) -> str:
+        """Classify a market into a sector using keyword matching."""
+        name_upper = market_name.upper()
+        for cat_key, cat_info in cot_settings.market_categories.items():
+            for kw in cat_info["keywords"]:
+                if kw in name_upper:
+                    return _CATEGORY_TO_SECTOR.get(cat_key, "Other")
+        return "Other"
+
+    def _primary_report(self, sector: str, available: list[str]) -> str:
+        """Pick the best report type for a market given available data."""
+        if sector in _COMMODITY_SECTORS and "disagg" in available:
+            return "disagg"
+        if sector in _FINANCIAL_SECTORS and "tff" in available:
+            return "tff"
+        # fallback
+        if "legacy" in available:
+            return "legacy"
+        return available[0] if available else "legacy"
+
+    def get_dashboard(
+        self,
+        code: str,
+        report_type: str | None = None,
+        subtype: str = "fo",
+    ) -> dict | None:
+        """Build the dashboard payload for a single market.
+
+        If *report_type* is None, auto-detect the primary report type.
+        Returns a dict matching the DashboardResponse schema, or None if
+        no data is found.
+        """
+        # 1. Determine available report types
+        available_reports = self.store.get_available_reports(code)
+        if not available_reports:
+            return None
+
+        # 2. Fetch the first available data to get name/exchange
+        sample_rt = available_reports[0]
+        sample_rows = self.store.get_market_data(code, sample_rt, subtype)
+        if not sample_rows:
+            # Try "co" if "fo" has no data
+            subtype = "co"
+            sample_rows = self.store.get_market_data(code, sample_rt, subtype)
+            if not sample_rows:
+                return None
+
+        market_name = sample_rows[0].get("market_and_exchange") or code
+        exchange_code = sample_rows[0].get("exchange_code", "")
+        sector = self._classify_sector(market_name)
+
+        # 3. Select report type
+        primary = self._primary_report(sector, available_reports)
+        rt = report_type if report_type and report_type in available_reports else primary
+
+        # 4. Load all weekly rows for this report type / subtype
+        raw_rows = self.store.get_market_data(code, rt, subtype)
+        if not raw_rows:
+            return None
+
+        # 5. Build flat weeks list (oldest → newest for frontend)
+        weeks: list[dict] = []
+        for r in reversed(raw_rows):  # storage returns newest→oldest
+            week: dict = {
+                "date": r.get("report_date"),
+                "open_interest": r.get("open_interest") or 0,
+                "oi_change": r.get("oi_change") or 0,
+            }
+            # Add g1..g5 data
+            for gi in range(1, 6):
+                pfx = f"g{gi}"
+                long_val = r.get(f"{pfx}_long")
+                # Only add groups that have data
+                if long_val is not None:
+                    week[f"{pfx}_long"] = long_val or 0
+                    week[f"{pfx}_short"] = r.get(f"{pfx}_short") or 0
+                    week[f"{pfx}_spread"] = r.get(f"{pfx}_spread") or 0
+                    week[f"{pfx}_net"] = (long_val or 0) - (r.get(f"{pfx}_short") or 0)
+                    week[f"{pfx}_change_long"] = r.get(f"{pfx}_long_change") or 0
+                    week[f"{pfx}_change_short"] = r.get(f"{pfx}_short_change") or 0
+            weeks.append(week)
+
+        # 6. Groups metadata
+        groups = cot_settings.report_groups.get(rt, [])
+
+        # 7. Prices
+        prices: list[dict] = []
+        if self.price_service and self.price_service.has_ticker(code):
+            price_data = self.price_service.get_prices(code)
+            if price_data:
+                for p in price_data:
+                    prices.append({"date": p["date"], "close": p["close"]})
+
+        # 8. Concentration (from latest week's data)
+        concentration = None
+        latest_row = raw_rows[0]  # newest first
+        c4l = latest_row.get("conc_top4_long")
+        c4s = latest_row.get("conc_top4_short")
+        c8l = latest_row.get("conc_top8_long")
+        c8s = latest_row.get("conc_top8_short")
+        if any(v is not None for v in (c4l, c4s, c8l, c8s)):
+            concentration = {
+                "top4_long_pct": c4l,
+                "top4_short_pct": c4s,
+                "top8_long_pct": c8l,
+                "top8_short_pct": c8s,
+            }
+
+        # 9. Meta
+        latest_date = raw_rows[0].get("report_date", "")
+        spec_group = _SPEC_GROUP.get(rt, "g1")
+        comm_group = _COMM_GROUP.get(rt, "g2")
+
+        return {
+            "market": {
+                "code": code,
+                "name": market_name,
+                "exchange_code": exchange_code,
+                "sector": sector,
+                "primary_report": primary,
+                "spec_group": spec_group,
+                "comm_group": comm_group,
+                "available_reports": available_reports,
+            },
+            "groups": groups,
+            "weeks": weeks,
+            "prices": prices,
+            "concentration": concentration,
+            "meta": {
+                "data_as_of": latest_date,
+                "published_at": None,
+                "latest_week_index": len(weeks) - 1,
+            },
+        }
