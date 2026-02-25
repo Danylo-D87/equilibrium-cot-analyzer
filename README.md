@@ -14,7 +14,6 @@
 | 🐍 **[backend/BACKEND_README.md](backend/BACKEND_README.md)** | Backend: API, modules, database, auth, configuration |
 | ⚛️ **[frontend/FRONTEND_README.md](frontend/FRONTEND_README.md)** | Frontend: components, state, routing, auth, journal, charts |
 | 🚀 **[deploy/DEPLOY.md](deploy/DEPLOY.md)** | Deployment: Docker, nginx, systemd, HTTPS, monitoring |
-| 📋 **[INTEGRATION_PLAN.md](INTEGRATION_PLAN.md)** | Architecture RFC: Auth + Journal integration plan |
 
 ---
 
