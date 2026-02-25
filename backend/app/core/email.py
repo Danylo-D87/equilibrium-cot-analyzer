@@ -115,106 +115,76 @@ def _base_layout(content: str) -> str:
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Equilibrium</title>
-  <style>
-    body {{
-      margin: 0; padding: 0;
-      background: #0a0a0a;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      color: #e5e5e5;
-    }}
-    .wrapper {{
-      max-width: 520px;
-      margin: 40px auto;
-      background: #111111;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 4px;
-      overflow: hidden;
-    }}
-    .header {{
-      padding: 32px 40px 24px;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-    }}
-    .brand {{
-      font-family: Georgia, serif;
-      font-size: 13px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: #c8a96e;
-    }}
-    .body {{
-      padding: 32px 40px;
-    }}
-    .footer {{
-      padding: 20px 40px;
-      border-top: 1px solid rgba(255,255,255,0.04);
-      font-size: 11px;
-      color: rgba(255,255,255,0.25);
-    }}
-    h2 {{
-      margin: 0 0 16px;
-      font-size: 16px;
-      font-weight: 500;
-      color: #ffffff;
-      letter-spacing: 0.04em;
-    }}
-    p {{
-      margin: 0 0 16px;
-      font-size: 13px;
-      line-height: 1.6;
-      color: rgba(255,255,255,0.6);
-    }}
-    .code-block {{
-      display: block;
-      margin: 24px 0;
-      padding: 16px 24px;
-      background: rgba(200,169,110,0.06);
-      border: 1px solid rgba(200,169,110,0.2);
-      border-radius: 3px;
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: 0.3em;
-      text-align: center;
-      color: #c8a96e;
-    }}
-    .note {{
-      font-size: 11px;
-      color: rgba(255,255,255,0.25);
-    }}
-  </style>
 </head>
-<body>
-  <div class="wrapper">
-    <div class="header">
-      <div class="brand">Equilibrium</div>
-    </div>
-    <div class="body">
-      {content}
-    </div>
-    <div class="footer">
-      This email was sent from <a href="https://equilibriumm.tech" style="color:#c8a96e;text-decoration:none;">equilibriumm.tech</a>.
-      If you did not request this, please ignore it.
-    </div>
-  </div>
+<body style="margin:0;padding:0;background:#060606;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#e5e5e5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#060606;padding:48px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
+
+          <!-- Brand -->
+          <tr>
+            <td align="center" style="padding-bottom:32px;">
+              <span style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);font-weight:500;">Equilibrium</span>
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td style="background:#111111;border:1px solid rgba(255,255,255,0.05);border-radius:20px;overflow:hidden;">
+              <div style="padding:40px;">
+                {content}
+              </div>
+              <!-- Footer inside card -->
+              <div style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.04);">
+                <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.2);line-height:1.6;">
+                  Sent from <a href="https://equilibriumm.tech" style="color:rgba(255,255,255,0.35);text-decoration:none;">equilibriumm.tech</a>.
+                  If you did not request this, please ignore.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>"""
 
 
 def _verification_html(email: str, code: str) -> str:
     content = f"""
-    <h2>Confirm your email</h2>
-    <p>Use the code below to verify your email address. It expires in <strong>10 minutes</strong>.</p>
-    <span class="code-block">{code}</span>
-    <p class="note">If you did not create an account on Equilibrium, you can safely ignore this email.</p>
+    <p style="margin:0 0 8px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.3);font-weight:500;">Verify your email</p>
+    <p style="margin:0 0 28px;font-size:20px;font-weight:400;color:rgba(255,255,255,0.85);letter-spacing:0.01em;line-height:1.3;">Enter this code to<br>confirm your account</p>
+
+    <div style="margin:0 0 28px;padding:20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;text-align:center;">
+      <span style="font-size:36px;font-weight:600;letter-spacing:0.35em;color:#ffffff;font-family:'Courier New',monospace;">{code}</span>
+    </div>
+
+    <p style="margin:0 0 8px;font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6;">
+      This code expires in <span style="color:rgba(255,255,255,0.7);">10 minutes</span>.
+    </p>
+    <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.2);line-height:1.6;">
+      If you didn't create an Equilibrium account, you can safely ignore this email.
+    </p>
     """
     return _base_layout(content)
 
 
 def _welcome_html(display_name: str) -> str:
     content = f"""
-    <h2>Welcome, {display_name}</h2>
-    <p>Your account has been successfully created on <strong>Equilibrium</strong>.</p>
-    <p>You now have access to COT analytics, the trading journal, and market data tools.
-    Visit <a href="https://equilibriumm.tech" style="color:#c8a96e;">equilibriumm.tech</a> to get started.</p>
-    <p class="note">If you did not create this account, please contact us immediately.</p>
+    <p style="margin:0 0 8px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.3);font-weight:500;">Welcome</p>
+    <p style="margin:0 0 28px;font-size:20px;font-weight:400;color:rgba(255,255,255,0.85);letter-spacing:0.01em;line-height:1.3;">You're in, {display_name}</p>
+
+    <p style="margin:0 0 16px;font-size:13px;color:rgba(255,255,255,0.45);line-height:1.7;">
+      Your account is ready. You now have access to COT analytics, the trading journal, and market data tools.
+    </p>
+    <p style="margin:0 0 28px;font-size:13px;color:rgba(255,255,255,0.45);line-height:1.7;">
+      <a href="https://equilibriumm.tech" style="color:rgba(255,255,255,0.7);text-decoration:none;">equilibriumm.tech</a>
+    </p>
+    <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.2);line-height:1.6;">
+      If you didn't create this account, please contact us immediately.
+    </p>
     """
     return _base_layout(content)

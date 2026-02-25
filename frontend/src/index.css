@@ -25,6 +25,17 @@
     }
 }
 
+/* Override browser autofill background to match site theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #111111 inset !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.8) !important;
+    caret-color: rgba(255, 255, 255, 0.8);
+    transition: background-color 9999s ease-in-out 0s;
+}
+
 /* Hide number input spin buttons */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
@@ -167,6 +178,7 @@ body {
         opacity: 0;
         transform: translateY(-4px) scale(0.98);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -175,8 +187,13 @@ body {
 
 /* Modal animations */
 @keyframes modalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes modalSlideIn {
@@ -184,6 +201,7 @@ body {
         opacity: 0;
         transform: scale(0.97) translateY(6px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -191,9 +209,17 @@ body {
 }
 
 @keyframes shimmer {
-    0% { opacity: 0.5; }
-    50% { opacity: 1; }
-    100% { opacity: 0.5; }
+    0% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.5;
+    }
 }
 
 /* ============================================= */
@@ -334,6 +360,7 @@ body {
         opacity: 0;
         transform: translateY(24px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -345,10 +372,13 @@ body {
 }
 
 @keyframes breathe {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.15;
         transform: translateY(0);
     }
+
     50% {
         opacity: 0.35;
         transform: translateY(4px);
@@ -364,6 +394,7 @@ body {
         opacity: 0;
         letter-spacing: 0.08em;
     }
+
     to {
         opacity: 1;
         letter-spacing: 0.04em;
@@ -377,8 +408,13 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .hero-sub {
@@ -392,6 +428,7 @@ body {
         opacity: 0;
         transform: translateY(12px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -403,8 +440,13 @@ body {
 }
 
 @keyframes authBgEnter {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .auth-bg-enter {

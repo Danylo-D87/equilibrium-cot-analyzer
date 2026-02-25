@@ -3,12 +3,19 @@ Shared FastAPI dependencies for journal sub-routers.
 =====================================================
 Centralises: permission checks, PortfolioAnalyzer construction,
 the chart-data fetcher, and the thread-pool runner for CPU-bound analysis.
+
+Includes a short-lived per-user/filter cache so that when the frontend fires
+multiple analytics endpoints at once (metrics, equity, charts …) only the
+first request does the actual DB query + serialisation.
 """
 
 from __future__ import annotations
 
 import asyncio
 import functools
+import hashlib
+import json
+import time
 import uuid
 from datetime import date
 from typing import Optional
@@ -29,6 +36,25 @@ from app.modules.journal.service import (
     get_initial_balance_for_trades,
     trades_to_dicts,
 )
+
+# ── In-memory TTL cache for fetch_chart_data ─────────────
+_CACHE_TTL = 20  # seconds
+_chart_cache: dict[str, tuple[float, list[dict], PortfolioAnalyzer]] = {}
+_chart_locks: dict[str, asyncio.Lock] = {}
+
+
+def _cache_key(user_id: uuid.UUID, filters: dict, portfolio_ids) -> str:
+    raw = f"{user_id}:{json.dumps(filters, sort_keys=True, default=str)}:{portfolio_ids}"
+    return hashlib.md5(raw.encode()).hexdigest()
+
+
+def _evict_stale() -> None:
+    now = time.monotonic()
+    stale = [k for k, (ts, _, _) in _chart_cache.items() if now - ts > _CACHE_TTL * 3]
+    for k in stale:
+        _chart_cache.pop(k, None)
+        _chart_locks.pop(k, None)
+
 
 # ── Permission dependencies ──────────────────────────────────
 
@@ -104,16 +130,44 @@ async def fetch_chart_data(
     portfolio_id: list[uuid.UUID] | None,
     include_inactive: bool,
 ) -> tuple[list[dict], PortfolioAnalyzer]:
-    """Fetch trades + build analyzer — shared by all analytics/chart endpoints."""
+    """Fetch trades + build analyzer — shared by all analytics/chart endpoints.
+
+    Results are cached for _CACHE_TTL seconds per user+filters so that
+    parallel requests (metrics, equity, charts) reuse the same data.
+    """
     filters = build_filter_kwargs(
         trade_type=trade_type, style=style, direction=direction,
         status=status, pair=pair, date_from=date_from,
         date_to=date_to, portfolio_id=portfolio_id,
         include_inactive=include_inactive,
     )
-    trades_orm = await storage.get_all_trades_for_analysis(db, user_id, **filters)
-    trade_dicts = trades_to_dicts(trades_orm)
-    analyzer = await build_analyzer(db, user_id, portfolio_id)
+
+    key = _cache_key(user_id, filters, portfolio_id)
+    now = time.monotonic()
+
+    # Fast path — cache hit (no lock needed)
+    cached = _chart_cache.get(key)
+    if cached and now - cached[0] < _CACHE_TTL:
+        return cached[1], cached[2]
+
+    # Slow path — acquire per-key lock so only one request computes
+    if key not in _chart_locks:
+        _chart_locks[key] = asyncio.Lock()
+    lock = _chart_locks[key]
+
+    async with lock:
+        # Re-check after acquiring lock (another request may have filled cache)
+        cached = _chart_cache.get(key)
+        if cached and time.monotonic() - cached[0] < _CACHE_TTL:
+            return cached[1], cached[2]
+
+        trades_orm = await storage.get_all_trades_for_analysis(db, user_id, **filters)
+        trade_dicts = trades_to_dicts(trades_orm)
+        analyzer = await build_analyzer(db, user_id, portfolio_id)
+
+        _chart_cache[key] = (time.monotonic(), trade_dicts, analyzer)
+        _evict_stale()
+
     return trade_dicts, analyzer
 
 

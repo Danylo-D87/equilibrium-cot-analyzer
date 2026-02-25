@@ -61,7 +61,7 @@ function AccessModal({ title, message, cta }: {
 }
 
 export default function ProtectedRoute({ permission }: Props) {
-    const { isAuthenticated, isLoading, hasPermission } = useAuth();
+    const { isAuthenticated, isLoading, hasPermission, user } = useAuth();
 
     if (isLoading) {
         return (
@@ -81,6 +81,21 @@ export default function ProtectedRoute({ permission }: Props) {
                     title="Sign In Required"
                     message="This section is available to registered users only."
                     cta={{ label: 'Sign In', to: '/login' }}
+                />
+            </>
+        );
+    }
+
+    if (user && !user.email_verified) {
+        return (
+            <>
+                <div className="pointer-events-none select-none">
+                    <Landing />
+                </div>
+                <AccessModal
+                    title="Email Not Verified"
+                    message="Please verify your email address to access this section. Check your inbox for the verification code."
+                    cta={{ label: 'Verify Email', to: '/login' }}
                 />
             </>
         );

@@ -1,7 +1,8 @@
-﻿import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../lib/api';
+import VerifyStep from '../components/auth/VerifyStep';
 
 export default function LoginPage() {
     const { login } = useAuth();
@@ -10,6 +11,7 @@ export default function LoginPage() {
 
     const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/';
 
+    const [step, setStep] = useState<'form' | 'verify'>('form');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,11 @@ export default function LoginPage() {
             await login(email, password);
             navigate(from, { replace: true });
         } catch (err) {
-            setError(err instanceof ApiError ? err.message : 'Login failed');
+            if (err instanceof ApiError && err.status === 403 && err.message === 'Email not verified') {
+                setStep('verify');
+            } else {
+                setError(err instanceof ApiError ? err.message : 'Login failed');
+            }
         } finally {
             setLoading(false);
         }
@@ -41,60 +47,75 @@ export default function LoginPage() {
 
                 {/* Card */}
                 <div className="bg-[#111111] border border-white/[0.04] rounded-[20px] p-8">
-                    <h1 className="text-[11px] font-sans font-medium tracking-[0.2em] text-white/40 uppercase text-center mb-8">
-                        Sign In
-                    </h1>
+                    {step === 'verify' ? (
+                        <>
+                            <h1 className="text-[11px] font-sans font-medium tracking-[0.2em] text-white/40 uppercase text-center mb-8">
+                                Verify Email
+                            </h1>
+                            <VerifyStep
+                                email={email}
+                                onSuccess={() => navigate(from, { replace: true })}
+                                onBack={() => setStep('form')}
+                            />
+                        </>
+                    ) : (
+                        <>
+                            <h1 className="text-[11px] font-sans font-medium tracking-[0.2em] text-white/40 uppercase text-center mb-8">
+                                Sign In
+                            </h1>
 
-                    {error && (
-                        <div className="mb-6 px-4 py-3 border border-red-500/20 bg-red-500/5 rounded-[12px]">
-                            <p className="text-[12px] text-red-400/80 text-center">{error}</p>
-                        </div>
+                            {error && (
+                                <div className="mb-6 px-4 py-3 border border-red-500/20 bg-red-500/5 rounded-[12px]">
+                                    <p className="text-[12px] text-red-400/80 text-center">{error}</p>
+                                </div>
+                            )}
+
+                            <form onSubmit={handleSubmit} className="space-y-5">
+                                <div>
+                                    <label className="block text-[10px] font-sans tracking-[0.15em] text-white/30 uppercase mb-2.5">
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={e => setEmail(e.target.value)}
+                                        className="w-full bg-white/[0.03] border border-white/[0.06] rounded-[12px] px-4 py-3
+                                                   text-[14px] text-white/80 placeholder-white/20
+                                                   focus:outline-none focus:border-white/[0.16] transition-colors"
+                                        placeholder="your@email.com"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-sans tracking-[0.15em] text-white/30 uppercase mb-2.5">
+                                        Password
+                                    </label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={password}
+                                        onChange={e => setPassword(e.target.value)}
+                                        className="w-full bg-white/[0.03] border border-white/[0.06] rounded-[12px] px-4 py-3
+                                                   text-[14px] text-white/80 placeholder-white/20
+                                                   focus:outline-none focus:border-white/[0.16] transition-colors"
+                                        placeholder="********"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full py-3 bg-white text-black rounded-full
+                                               text-[12px] font-sans font-medium tracking-[0.1em] uppercase
+                                               hover:bg-white/90 transition-all duration-300
+                                               disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? 'Signing in...' : 'Sign In'}
+                                </button>
+                            </form>
+                        </>
                     )}
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div>
-                            <label className="block text-[10px] font-sans tracking-[0.15em] text-white/30 uppercase mb-2.5">
-                                Email
-                            </label>
-                            <input
-                                type="email"
-                                required
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                className="w-full bg-white/[0.03] border border-white/[0.06] rounded-[12px] px-4 py-3
-                                           text-[14px] text-white/80 placeholder-white/20
-                                           focus:outline-none focus:border-white/[0.16] transition-colors"
-                                placeholder="your@email.com"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] font-sans tracking-[0.15em] text-white/30 uppercase mb-2.5">
-                                Password
-                            </label>
-                            <input
-                                type="password"
-                                required
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                className="w-full bg-white/[0.03] border border-white/[0.06] rounded-[12px] px-4 py-3
-                                           text-[14px] text-white/80 placeholder-white/20
-                                           focus:outline-none focus:border-white/[0.16] transition-colors"
-                                placeholder="********"
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-3 bg-white text-black rounded-full
-                                       text-[12px] font-sans font-medium tracking-[0.1em] uppercase
-                                       hover:bg-white/90 transition-all duration-300
-                                       disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                            {loading ? 'Signing in...' : 'Sign In'}
-                        </button>
-                    </form>
                 </div>
 
                 <p className="mt-8 text-center text-[12px] text-white/25">

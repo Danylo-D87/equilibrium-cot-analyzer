@@ -10,7 +10,6 @@ import {
     ResponsiveContainer, Legend,
 } from 'recharts';
 import { useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import MetricsGrid from '../components/MetricsGrid';
 import AssetsExposure from '../components/AssetsExposure';
@@ -27,11 +26,6 @@ import {
 } from '../hooks/useJournalQueries';
 
 export default function Dashboard() {
-    const qc = useQueryClient();
-    useEffect(() => {
-        qc.invalidateQueries({ queryKey: ['journal'] });
-    }, []);
-
     const displayMode = useJournalStore((s) => s.displayMode);
     const activeTab = useJournalStore((s) => s.activeTab);
     const filters = useJournalStore((s) => s.filters);

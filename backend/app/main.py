@@ -7,6 +7,8 @@ and manages the scheduler lifecycle.
 
 import logging
 import sys
+import asyncio
+import concurrent.futures
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -52,6 +54,11 @@ async def lifespan(app: FastAPI):
     register_scheduled_job()       # COT pipeline — every Friday 23:00 Kyiv
     register_daily_price_job()     # Price update — every day 00:00 Kyiv
     core_scheduler.start()
+
+    # Cap the default thread-pool to 2 workers so that heavy numpy/pandas
+    # analytics don't run 5+ in parallel and thrash the 1 GB RAM.
+    loop = asyncio.get_running_loop()
+    loop.set_default_executor(concurrent.futures.ThreadPoolExecutor(max_workers=2))
 
     yield
 

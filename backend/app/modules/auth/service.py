@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import (
     AuthenticationError,
     ConflictError,
+    ForbiddenError,
     NotFoundError,
     ValidationError,
 )
@@ -377,6 +378,9 @@ async def login_user(
 
     if not user.is_active:
         raise AuthenticationError("Account is deactivated")
+
+    if not user.email_verified:
+        raise ForbiddenError("Email not verified")
 
     # Revoke old refresh tokens (keep max 5)
     await _cleanup_old_tokens(db, user.id)

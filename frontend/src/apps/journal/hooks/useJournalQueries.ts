@@ -65,6 +65,16 @@ const K = {
     enums: ['journal', 'enums'] as const,
 };
 
+/** Invalidate only core dashboard data (trades, metrics, equity, exposure).
+ *  Charts invalidated separately only when user opens Analytics tab.  */
+function invalidateDashboard(qc: ReturnType<typeof useQueryClient>) {
+    qc.invalidateQueries({ queryKey: ['journal', 'trades'] });
+    qc.invalidateQueries({ queryKey: ['journal', 'metrics'] });
+    qc.invalidateQueries({ queryKey: ['journal', 'equity'] });
+    qc.invalidateQueries({ queryKey: ['journal', 'exposure'] });
+    qc.invalidateQueries({ queryKey: ['journal', 'chart'] });
+}
+
 // ── Trades ──────────────────────────────────────────────
 
 export function useTrades(filters?: TradeFilters) {
@@ -97,7 +107,7 @@ export function useCreateTrade() {
     return useMutation({
         mutationFn: (data: TradeCreate) => createTrade(data),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['journal'] });
+            invalidateDashboard(qc);
         },
     });
 }
@@ -107,7 +117,7 @@ export function useUpdateTrade() {
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: TradeUpdate }) => updateTrade(id, data),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['journal'] });
+            invalidateDashboard(qc);
         },
     });
 }
@@ -117,7 +127,7 @@ export function useDeleteTrade() {
     return useMutation({
         mutationFn: (id: string) => deleteTrade(id),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['journal'] });
+            invalidateDashboard(qc);
         },
     });
 }
@@ -130,7 +140,8 @@ export function useUploadImage() {
         mutationFn: ({ tradeId, file }: { tradeId: string; file: File }) =>
             uploadTradeImage(tradeId, file),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['journal'] });
+            qc.invalidateQueries({ queryKey: ['journal', 'trade'] });
+            qc.invalidateQueries({ queryKey: ['journal', 'trades'] });
         },
     });
 }
@@ -141,7 +152,8 @@ export function useDeleteImage() {
         mutationFn: ({ tradeId, imageId }: { tradeId: string; imageId: string }) =>
             deleteTradeImage(tradeId, imageId),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['journal'] });
+            qc.invalidateQueries({ queryKey: ['journal', 'trade'] });
+            qc.invalidateQueries({ queryKey: ['journal', 'trades'] });
         },
     });
 }
@@ -152,7 +164,7 @@ export function useReorderImages() {
         mutationFn: ({ tradeId, imageIds }: { tradeId: string; imageIds: string[] }) =>
             reorderTradeImages(tradeId, imageIds),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['journal'] });
+            qc.invalidateQueries({ queryKey: ['journal', 'trade'] });
         },
     });
 }
@@ -163,7 +175,7 @@ export function useUpdateImageCaption() {
         mutationFn: ({ imageId, caption }: { imageId: string; caption: string | null }) =>
             updateImageCaption(imageId, caption),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['journal'] });
+            qc.invalidateQueries({ queryKey: ['journal', 'trade'] });
         },
     });
 }
@@ -203,7 +215,8 @@ export function useDeletePortfolio() {
     return useMutation({
         mutationFn: (id: string) => deletePortfolio(id),
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['journal'] });
+            qc.invalidateQueries({ queryKey: K.portfolios });
+            invalidateDashboard(qc);
         },
     });
 }
