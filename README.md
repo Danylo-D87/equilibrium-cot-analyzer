@@ -259,8 +259,8 @@ cftc/
 
 ```bash
 # 1. Clone
-git clone https://github.com/Danylo-D87/equilibrium-cot-analyzer.git
-cd equilibrium-cot-analyzer
+git clone https://github.com/Danylo-D87/equilibrium-main.git
+cd equilibrium-main
 
 # 2. Start PostgreSQL (Docker)
 docker compose up -d
@@ -449,8 +449,8 @@ MIT. COT data is public domain (U.S. government). Price data provided by Yahoo F
 
 ```bash
 # 1. Клонувати
-git clone https://github.com/Danylo-D87/equilibrium-cot-analyzer.git
-cd equilibrium-cot-analyzer
+git clone https://github.com/Danylo-D87/equilibrium-main.git
+cd equilibrium-main
 
 # 2. Запустити PostgreSQL (Docker)
 docker compose up -d
